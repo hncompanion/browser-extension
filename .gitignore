@@ -4,14 +4,6 @@
 # Mac system files
 .DS_Store
 
-# Script generated files and input data
-/scripts/output
-
-# SQLite database (the db and wal files)
-/scripts/data
-
-/scripts/.env
-
 # WXT files
 .output
 stats.html
