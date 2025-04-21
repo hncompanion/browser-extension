@@ -156,8 +156,8 @@ Transform your Hacker News experience with intelligent navigation, AI-powered su
 ## 🛠️ Development Setup
 1. Clone the repository:
    ```bash
-   git clone https://github.com/levelup-apps/hn-enhancer.git
-   cd hn-enhancer
+   git clone https://github.com/hncompanion/browser-extension.git
+   cd browser-extension
    ```
 
 2. Load in Chrome:
@@ -219,7 +219,7 @@ cd ../..
     * Clear browser cache
 
 ### Support
-* GitHub Issues: [Report bugs](https://github.com/levelup-apps/hn-enhancer/issues)
+* GitHub Issues: [Report bugs](https://github.com/hncompanion/browser-extension/issues)
 
 ## 📜 License
 MIT Licensed - free to use, modify, and distribute

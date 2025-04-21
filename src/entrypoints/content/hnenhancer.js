@@ -872,7 +872,7 @@ class HNEnhancer {
 
         const footer = document.createElement('div');
         footer.className = 'keyboard-help-footer';
-        footer.innerHTML = 'Learn more about features and updates on our <a href="https://github.com/levelup-apps/hn-enhancer/" target="_blank" rel="noopener">GitHub page</a> ↗️';
+        footer.innerHTML = 'Learn more about features and updates on our <a href="https://github.com/hncompanion/browser-extension/" target="_blank" rel="noopener">GitHub page</a> ↗️';
         content.appendChild(footer);
 
         modal.appendChild(content);

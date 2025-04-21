@@ -58,7 +58,7 @@ class SummaryPanel {
         content.className = 'summary-panel-content';
         content.innerHTML = `
             <div class="summary-metadata"></div>
-            <div class="summary-text">Select a thread to summarize. More details <a class="navs" href="https://github.com/levelup-apps/hn-enhancer" target="_blank">here</a>.</div>
+            <div class="summary-text">Select a thread to summarize. More details <a class="navs" href="https://github.com/hncompanion/browser-extension" target="_blank">here</a>.</div>
         `;
 
         panel.appendChild(header);

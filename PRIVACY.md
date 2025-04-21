@@ -17,9 +17,9 @@ No user data is stored either locally or remotely.
 This privacy policy may be updated as the extension evolves. Please review the GitHub repository for any changes.
 
 ## Open Source
-This extension is open source. You can review the complete source code at: https://github.com/levelup-apps/hn-enhancer
+This extension is open source. You can review the complete source code at: https://github.com/hncompanion/browser-extension
 
 ## Contact
-For questions about this privacy policy or the extension's privacy practices, please file an [issue](https://github.com/levelup-apps/hn-enhancer/issues) on our GitHub repository.
+For questions about this privacy policy or the extension's privacy practices, please file an [issue](https://github.com/hncompanion/browser-extension/issues) on our GitHub repository.
 
 Last Updated: January 29, 2025
