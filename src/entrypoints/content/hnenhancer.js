@@ -1204,7 +1204,7 @@ class HNEnhancer {
             return;
         }
         // If the summary is not available in the cache, fetch the comments from the API and summarize them
-        console.info(`Cached summary not available. Summarizing through the API...`);
+        console.info(`Cached summary not available. Generating summary using LLM configured in the extension.`);
 
         try {
 
@@ -1267,9 +1267,23 @@ class HNEnhancer {
         // Look for the summary in the HNCompanion cache
         const url = `https://app.hncompanion.com/api/posts/${postId}`;
         try {
+            //Send a message to the background script to fetch the summary from the server.
+            //  If the summary is not available, the server will return a 404 error, which is expected.
+            //  So we must handle the error gracefully by telling the background script that this is an expected error.
+            //  The background script will not throw an error if the status is 404.
             const data = await this.sendBackgroundMessage(
-                'FETCH_API_REQUEST', { url }
+                'FETCH_API_REQUEST',
+                {
+                    url, is404Expected: true // Tell the background script this 404 is expected
+                }
             );
+
+            // Handle the 404 error gracefully and return null
+            if (data.status === 404) {
+                console.log(`No cached summary found in HNCompanion server cache for post ID ${postId}`);
+                return null;
+            }
+
             if (!data || !data.summary) {
                 console.log(`No cached summary found in HNCompanion server cache for post ID ${postId}`);
                 return null;

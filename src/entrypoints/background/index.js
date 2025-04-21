@@ -101,7 +101,8 @@ function handleAsyncMessage(message, asyncOperation, sendResponse) {
 // Utility function for API calls with timeout
 async function fetchWithTimeout(url, options = {}) {
 
-    const {method = 'GET', headers = {}, body = null, timeout = 60_000} = options;
+    const {method = 'GET', headers = {}, body = null,
+           timeout = 60_000, is404Expected = false} = options;
 
     const controller = new AbortController();
     const id = setTimeout(() => controller.abort(), timeout);
@@ -117,12 +118,23 @@ async function fetchWithTimeout(url, options = {}) {
 
         if (!response.ok) {
             const responseText = await response.text();
+
+            // Handle 404 responses specially if they're expected, for eg. when checking cached summary of a post
+            if (response.status === 404 && is404Expected) {
+                // This is an expected 404, not an error. So return as data instead of throwing an error
+                return {
+                    status: 404,
+                    message: responseText || 'Not found'
+                };
+            }
+
             const errorText = `API Error: HTTP error code: ${response.status}, URL: ${url} \nBody: ${responseText}`;
             console.error(errorText);
-            throw new Error(errorText);
+            return Promise.reject(new Error(errorText));
         }
 
-            return await response.json();
+        return await response.json();
+
     } catch (error) {
         clearTimeout(id);
         if (error.name === 'AbortError') {
