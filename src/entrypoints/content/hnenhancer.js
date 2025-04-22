@@ -958,7 +958,7 @@ class HNEnhancer {
 
         // Show an in-progress text in the summary panel
         const metadata = `Analyzing discussion in ${highlightedAuthor} thread`;
-        const modelInfo = aiProvider ? ` using <strong>${aiProvider} ${model || ''}</strong>` : '';
+        const modelInfo = aiProvider ? ` using <strong>${aiProvider}/${model || ''}</strong>` : '';
 
         this.summaryPanel.updateContent({
             title: 'Thread Summary',
@@ -1176,6 +1176,14 @@ class HNEnhancer {
         navLinks.appendChild(summarizeLink);
     }
 
+    async canUseCachedSummaries() {
+        const settingsData = await chrome.storage.sync.get('settings');
+        const provider = settingsData.settings?.providerSelection;
+
+        // if the provider is 'hn-companion-server', then caching is enabled
+        return (provider === 'hn-companion-server');
+    }
+
     async getAIProviderModel() {
         const settingsData = await chrome.storage.sync.get('settings');
         const aiProvider = settingsData.settings?.providerSelection;
@@ -1194,28 +1202,35 @@ class HNEnhancer {
             this.summaryPanel.toggle();
         }
 
-        // Look for a cached version of the summary on the server. Show a loading message too.
-        this.summaryPanel.updateContent({
-            title: 'Post Summary',
-            metadata: `Analyzing all threads in this post...`,
-            text: `<div>Looking for a cached version on HNCompanion server...<span class="loading-spinner"></span></div>`
-        });
+        // Check if the user has configured the cached summary to be used. If yes, look for the summary in the cache.
+        // Otherwise, fetch the summary from the LLM API
+        if(await this.canUseCachedSummaries()) {
+            this.summaryPanel.updateContent({
+                title: 'Post Summary',
+                metadata: `Analyzing all threads in this post...`,
+                text: `<div>Looking for cached summary on HNCompanion server...<span class="loading-spinner"></span></div>`
+            });
 
-        const cacheResult = await this.getCachedSummary(itemId);
-        const cachedSummary = cacheResult?.summary;
-        if(cachedSummary && cachedSummary.length > 0) {
-            console.info(`Using cached summary from HNCompanion server for post ${itemId}`);
+            // Check if the summary is available in the cache and load it
+            const cacheResult = await this.getCachedSummary(itemId);
+            const cachedSummary = cacheResult?.summary;
+            if (cachedSummary && cachedSummary.length > 0) {
+                console.info(`Using cached summary from HNCompanion server for post ${itemId}`);
 
-            // Calculate how long ago the summary was generated.
-            const timeAgo = this.getTimeAgo(cacheResult.created_at);
+                // Calculate how long ago the summary was generated.
+                const timeAgo = this.getTimeAgo(cacheResult.created_at);
 
-            // Update the summary panel with the generated summary
-            // Cached summary already has the links resolved, so commentPathToIdMap is not needed
-            await this.showSummaryInPanel(cachedSummary, true, timeAgo);
-            return;
+                // Show the cached summary in the summary panel.
+                // Cached summaries already have links resolved, so we don't need to pass commentPathToIdMap
+                // Parameters: (summary, isCached=true, timeAgo, commentPathToIdMap=null)
+                await this.showSummaryInPanel(cachedSummary, true, timeAgo, null);
+
+                // Once the summary is shown, we can return immediately.
+                return;
+            }
+            // If the summary is not available in the cache, fetch the comments from the API and summarize them
+            console.info(`No cached summary found for post ID ${itemId}. Generating fresh summary using configured AI provider`);
         }
-        // If the summary is not available in the cache, fetch the comments from the API and summarize them
-        console.info(`No cached summary found for post ID ${itemId}. Generating fresh summary using configured AI provider`);
         try {
 
             const {aiProvider, model} = await this.getAIProviderModel();
@@ -1248,7 +1263,7 @@ class HNEnhancer {
                 return;
             }
             // Show a meaningful in-progress message before starting the summarization
-            const modelInfo = aiProvider ? ` using <strong>${aiProvider} ${model || ''}</strong>` : '';
+            const modelInfo = aiProvider ? ` using <strong>${aiProvider}/${model || ''}</strong>` : '';
             this.summaryPanel.updateContent({
                 title: 'Post Summary',
                 metadata: `Analyzing all threads in this post...`,
