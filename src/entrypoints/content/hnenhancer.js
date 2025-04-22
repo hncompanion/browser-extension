@@ -1177,15 +1177,12 @@ class HNEnhancer {
     }
 
     async canUseCachedSummaries() {
-        const settingsData = await chrome.storage.sync.get('settings');
-        const provider = settingsData.settings?.providerSelection;
-
-        // if the provider is 'hn-companion-server', then caching is enabled
-        return (provider === 'hn-companion-server');
+        const settingsData = await browser.storage.sync.get('settings');
+        return settingsData.settings?.serverCacheEnabled;
     }
 
     async getAIProviderModel() {
-        const settingsData = await chrome.storage.sync.get('settings');
+        const settingsData = await browser.storage.sync.get('settings');
         const aiProvider = settingsData.settings?.providerSelection;
         const model = settingsData.settings?.[aiProvider]?.model;
         return {aiProvider, model};

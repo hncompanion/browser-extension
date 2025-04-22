@@ -13,7 +13,7 @@ export default defineBackground(() => {
             await browser.storage.sync.set({
                 settings: {
                     serverCacheEnabled: true,
-                    providerSelection: '',
+                    providerSelection: 'google',
                     ollama: {
                         model: ''
                     },
