@@ -357,8 +357,8 @@
 .summary-metadata a,
 .summary-metadata a:visited,
 .summary-metadata a:active{
-    color: #ff6600;
-    text-decoration: underline;
+    color: #ff6600 !important;
+    text-decoration: underline !important;
 }
 
 .highlight-author {

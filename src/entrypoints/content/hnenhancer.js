@@ -1667,12 +1667,10 @@ class HNEnhancer {
 
     showConfigureAIMessage() {
         const message = 'To use the summarization feature, you need to configure an AI provider. <br/><br/>' +
-            'Please <a href="#" id="options-page-link">open the settings page</a> to select and configure your preferred AI provider ' +
-            '(OpenAI, Anthropic, <a href="https://ollama.com/" target="_blank">Ollama</a>, <a href="https://openrouter.ai/" target="_blank">OpenRouter</a> ' +
-            'or <a href="https://developer.chrome.com/docs/ai/built-in" target="_blank">Chrome Built-in AI</a>).';
+            '<a href="#" id="options-page-link">Open settings page</a> to select your preferred LLM provider and configure your API key.';
 
         this.summaryPanel.updateContent({
-            title: 'AI Provider Setup Required',
+            title: 'LLM Provider Setup Required',
             text: message
         });
 
@@ -1741,10 +1739,7 @@ class HNEnhancer {
         // Validate required parameters
         if (!text || !aiProvider || !modelId || !apiKey) {
             console.error('Missing required parameters for AI summarization');
-            this.summaryPanel.updateContent({
-                title: 'Error',
-                text: 'Missing API configuration'
-            });
+            this.showConfigureAIMessage();
             return;
         }
 
@@ -2111,10 +2106,7 @@ ${text}
         // Validate required parameters
         if (!text || !model) {
             console.error('Missing required parameters for Ollama summarization');
-            this.summaryPanel.updateContent({
-                title: 'Error',
-                text: 'Missing API configuration'
-            });
+            this.showConfigureAIMessage();
             return;
         }
 
