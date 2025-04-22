@@ -21,8 +21,7 @@ export default defineConfig({
                 "https://api.openai.com/v1/chat/completions/*",
                 "https://api.anthropic.com/v1/messages/*",
                 "http://localhost:11434/*",
-                "https://openrouter.ai/api/v1/*",
-                "https://api.deepseek.com/v1/chat/completions/*"
+                "https://openrouter.ai/api/v1/*"
             ],
             icons: {
                 16: '/icon/icon-16.png',

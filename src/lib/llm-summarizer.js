@@ -2,7 +2,7 @@ import { generateText } from 'ai';
 
 import { createOpenAI } from '@ai-sdk/openai';
 import { createAnthropic } from '@ai-sdk/anthropic';
-import { createDeepSeek } from '@ai-sdk/deepseek';
+import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 
 export async function summarizeText(data) {
@@ -12,7 +12,7 @@ export async function summarizeText(data) {
 
         let model;
         switch (aiProvider) {
-            // AI provider can be 'openai', 'anthropic', 'deepseek' or 'openrouter'
+            // AI provider can be 'openai', 'anthropic', 'google' or 'openrouter'
             case 'openai':
                 const openai = createOpenAI({
                     apiKey: apiKey,
@@ -30,11 +30,11 @@ export async function summarizeText(data) {
                 model = anthropic(modelId);
                 break;
 
-            case 'deepseek':
-                const deepseek = createDeepSeek({
+            case 'google':
+                const google = createGoogleGenerativeAI({
                     apiKey: apiKey,
                 });
-                model = deepseek(modelId);
+                model = google(modelId);
                 break;
 
             case 'openrouter':
@@ -67,15 +67,18 @@ export async function summarizeText(data) {
 
         return summary;
 
-    } catch (error) {
-        console.log('Error in summarizeText: ', error);
-        // Provide more detailed error information for better debugging
-        const errorInfo = {
-            message: error.message,
-            provider: data?.aiProvider,
-            model: data?.modelId,
-            stack: error.stack
-        };
-        throw errorInfo;
+    } catch (caughtError) {
+        const improveError = (error) => {
+            const errorPrefix = `AI SDK API generateText() threw error. Reason: ${error.reason}. ` +
+                `AI Provider: ${data?.aiProvider}, Model: ${data?.modelId}`;
+            if (error instanceof Error) {
+                error.message = `${errorPrefix} Message: ${error.message}`;
+                return  error;
+            }
+            return  new Error(`${errorPrefix}. Message: ${String(error)}`);
+        }
+        const error = improveError(caughtError);
+        console.error(error);
+        throw error;
     }
 }

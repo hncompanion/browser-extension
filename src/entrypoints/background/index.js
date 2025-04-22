@@ -16,7 +16,7 @@ export default defineBackground(() => {
                     ollama: {
                         model: ''
                     },
-                    google_gemini: {
+                    google: {
                         apiKey: '',
                         model: ''
                     },
@@ -94,7 +94,7 @@ function handleAsyncMessage(message, asyncOperation, sendResponse) {
             const response = await asyncOperation();
             sendResponse({success: true, data: response});
         } catch (error) {
-            console.error(`Message: ${message.type}. Error: ${error}`);
+            console.error(`Background script handler for ${message.type} message failed. Error: ${error}`);
             sendResponse({success: false, error: error.toString()});
         }
     })();
@@ -135,7 +135,7 @@ async function fetchWithTimeout(url, options = {}) {
 
             const errorText = `API Error: HTTP error code: ${response.status}, URL: ${url} \nBody: ${responseText}`;
             console.error(errorText);
-            return Promise.reject(new Error(errorText));
+            throw new Error(errorText);
         }
 
         return await response.json();
@@ -145,7 +145,12 @@ async function fetchWithTimeout(url, options = {}) {
         if (error.name === 'AbortError') {
             throw new Error(`Request timeout after ${timeout}ms: ${url}`);
         }
-        throw error;
+        const errorPrefix = `fetch API failed in fetchWithTimeout(). URL: ${url}, method: ${method}`;
+        if (error instanceof Error) {
+            error.message =  `${errorPrefix} Error: ${error.message}`;
+            throw error;
+        }
+        throw new Error(`${errorPrefix}. Error: ${String(error)}`);
     }
 }
 });

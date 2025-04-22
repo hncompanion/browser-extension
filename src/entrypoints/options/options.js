@@ -7,9 +7,9 @@ async function saveSettings() {
         ollama: {
             model: document.getElementById('ollama-model').value
         },
-        google_gemini: {
-            apiKey: document.getElementById('google-gemini-key').value,
-            model: document.getElementById('google-gemini-model').value
+        google: {
+            apiKey: document.getElementById('google-key').value,
+            model: document.getElementById('google-model').value
         },
         anthropic: {
             apiKey: document.getElementById('anthropic-key').value,
@@ -112,13 +112,13 @@ async function loadSettings() {
 
             // Set Ollama settings
             if (settings.ollama) {
-                document.getElementById('ollama-model').value = settings.ollama.model || 'llama2';
+                document.getElementById('ollama-model').value = settings.ollama.model || 'llama3.1';
             }
 
-            // Set DeepSeek settings
-            if (settings.google_gemini) {
-                document.getElementById('google-gemini-key').value = settings.deepseek.apiKey || '';
-                document.getElementById('google-gemini-model').value = settings.deepseek.model || 'deepseek-chat';
+            // Set Google settings
+            if (settings.google) {
+                document.getElementById('google-key').value = settings.google.apiKey || '';
+                document.getElementById('google-model').value = settings.google.model || 'gemini-2.0-flash';
             }
 
             // Set Anthropic settings
@@ -172,13 +172,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Enable/disable input fields based on selection
             const openaiInputs = document.querySelectorAll('#openai-key, #openai-model');
             const anthropicInputs = document.querySelectorAll('#anthropic-key, #anthropic-model');
-            const deepseekInputs = document.querySelectorAll('#deepseek-key, #deepseek-model');
+            const googleInputs = document.querySelectorAll('#google-key, #google-model');
             const ollamaInputs = document.querySelectorAll('#ollama-model');
             const openrouterInputs = document.querySelectorAll('#openrouter-key, #openrouter-model');
 
             openaiInputs.forEach(input => input.disabled = radio.id !== 'openai');
             anthropicInputs.forEach(input => input.disabled = radio.id !== 'anthropic');
-            deepseekInputs.forEach(input => input.disabled = radio.id !== 'deepseek');
+            googleInputs.forEach(input => input.disabled = radio.id !== 'google');
             ollamaInputs.forEach(input => input.disabled = radio.id !== 'ollama');
             openrouterInputs.forEach(input => input.disabled = radio.id !== 'openrouter');
         });

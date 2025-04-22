@@ -1720,10 +1720,10 @@ class HNEnhancer {
                 case 'ollama':
                     this.summarizeUsingOllama(formattedComment, model, commentPathToIdMap);
                     break;
-                // AI providers supported by Vercel AI SDK - use the common summarize method
+                // AI providers supported by Vercel AI SDK. Use the common summarize method
                 case 'openai':
                 case 'anthropic':
-                case 'deepseek':
+                case 'google':
                 case 'openrouter':
                     const apiKey = data.settings?.[aiProvider]?.apiKey;
                     this.summarizeTextWithLLM(aiProvider, model, apiKey, formattedComment, commentPathToIdMap);
@@ -1784,17 +1784,17 @@ class HNEnhancer {
         this.sendBackgroundMessage('HN_SUMMARIZE', llmInput).then(data => {
             const summary = data?.summary;
             if (!summary) {
-                throw new Error('No summary generated from API response');
+                throw new Error('Empty summary returned from background message HN_SUMMARIZE. data: ' + JSON.stringify(data));
             }
             // this.logDebug('4. Summary:', summary);
 
             // Update the summary panel with the generated summary
             this.showSummaryInPanel(summary, false, data.duration, commentPathToIdMap)
                 .catch(error => {
-                    console.error('Error showing summary:', error);
+                    console.error('Failed to show summary in summary panel in summarizeTextWithLLM(). Error:', error.message);
                 });
         }).catch(error => {
-            console.error('Error in AI summarization:', error);
+            console.error('LLM summarization failed in summarizeTextWithLLM(). Error:', error.message);
             this.handleSummaryError(error);
         });
     }
@@ -1821,8 +1821,8 @@ class HNEnhancer {
                 'claude-3-opus-20240229': { inputTokenLimit: 25000, outputTokenLimit: 3000, temperature: 0.7 },
                 'claude-3-sonnet-20240229': { inputTokenLimit: 20000, outputTokenLimit: 3000, temperature: 0.7 },
             },
-            'deepseek': {
-                'deepseek-chat': { inputTokenLimit: 15000, temperature: 0.7 }
+            'google': {
+                'gemini-2.0-flash': { inputTokenLimit: 15000, temperature: 0.7 }
             },
             'openrouter': {
                 // These are placeholders - adjust based on actual models
@@ -1868,7 +1868,7 @@ class HNEnhancer {
         // Update the summary panel with the error message
         this.summaryPanel.updateContent({
             title: 'Error',
-            text: errorMessage
+            text: `<div>${errorMessage}</div>`
         });
     }
 

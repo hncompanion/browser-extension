@@ -8,7 +8,7 @@ However, options settings (such as API keys) are synced using the browser's sync
 The extension makes API calls to:
 - `news.ycombinator.com` - to enhance comment navigation on Hacker News
 - `hn.algolia.com` - to fetch public user profile information for hover previews
-- Various LLM providers (e.g., `api.openai.com`, `api.anthropic.com`, `openrouter.ai`, `deepseek.com`) - to provide AI summaries and other enhancements
+- Various LLM providers (e.g., `api.openai.com`, `api.anthropic.com`, `openrouter.ai`, `google.com`) - to provide AI summaries and other enhancements
 
 ## Data Storage
 No user data is stored either locally or remotely.
