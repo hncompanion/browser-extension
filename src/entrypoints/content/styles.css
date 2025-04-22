@@ -354,6 +354,13 @@
     color: #333; /* Darken the color */
 }
 
+.summary-metadata a,
+.summary-metadata a:visited,
+.summary-metadata a:active{
+    color: #ff6600;
+    text-decoration: underline;
+}
+
 .highlight-author {
     padding: 2px 4px;
     background-color: rgba(255, 102, 0, 0.2);
@@ -420,11 +427,6 @@
 }
 
 .summary-text #options-page-link {
-    color: #ff6600;
-    text-decoration: underline;
-}
-
-.summary-text .primary-link {
     color: #ff6600;
     text-decoration: underline;
 }
