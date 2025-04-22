@@ -1,22 +1,23 @@
-// Save settings to Chrome storage
+// Save settings to Browser storage
+
 async function saveSettings() {
     const providerSelection = document.querySelector('input[name="provider-selection"]:checked').id;
     const settings = {
         providerSelection,
-        openai: {
-            apiKey: document.getElementById('openai-key').value,
-            model: document.getElementById('openai-model').value
+        ollama: {
+            model: document.getElementById('ollama-model').value
+        },
+        google_gemini: {
+            apiKey: document.getElementById('google-gemini-key').value,
+            model: document.getElementById('google-gemini-model').value
         },
         anthropic: {
             apiKey: document.getElementById('anthropic-key').value,
             model: document.getElementById('anthropic-model').value
         },
-        deepseek: {
-            apiKey: document.getElementById('deepseek-key').value,
-            model: document.getElementById('deepseek-model').value
-        },
-        ollama: {
-            model: document.getElementById('ollama-model').value
+        openai: {
+            apiKey: document.getElementById('openai-key').value,
+            model: document.getElementById('openai-model').value
         },
         openrouter: {
             apiKey: document.getElementById('openrouter-key').value,
@@ -25,8 +26,8 @@ async function saveSettings() {
     };
 
     try {
-        await chrome.storage.sync.set({ settings });
-        // Optional: Show save confirmation
+        await browser.storage.sync.set({ settings });
+
         const saveButton = document.querySelector('button[type="submit"]');
         const originalText = saveButton.textContent;
         saveButton.textContent = 'Saved!';
@@ -41,7 +42,7 @@ async function saveSettings() {
 async function sendBackgroundMessage(type, data) {
     let response;
     try {
-        response = await chrome.runtime.sendMessage({type, data});
+        response = await browser.runtime.sendMessage({type, data});
     } catch (error) {
         console.error(`Error sending browser runtime message ${type}:`, error);
         throw error;
@@ -98,10 +99,10 @@ async function fetchOllamaModels() {
     }
 }
 
-// Load settings from Chrome storage
+// Load settings from browser storage
 async function loadSettings() {
     try {
-        const data = await chrome.storage.sync.get('settings');
+        const data = await browser.storage.sync.get('settings');
         const settings = data.settings;
 
         if (settings) {
@@ -109,10 +110,15 @@ async function loadSettings() {
             const providerRadio = document.getElementById(settings.providerSelection);
             if (providerRadio) providerRadio.checked = true;
 
-            // Set OpenAI settings
-            if (settings.openai) {
-                document.getElementById('openai-key').value = settings.openai.apiKey || '';
-                document.getElementById('openai-model').value = settings.openai.model || 'gpt-4';
+            // Set Ollama settings
+            if (settings.ollama) {
+                document.getElementById('ollama-model').value = settings.ollama.model || 'llama2';
+            }
+
+            // Set DeepSeek settings
+            if (settings.google_gemini) {
+                document.getElementById('google-gemini-key').value = settings.deepseek.apiKey || '';
+                document.getElementById('google-gemini-model').value = settings.deepseek.model || 'deepseek-chat';
             }
 
             // Set Anthropic settings
@@ -121,15 +127,10 @@ async function loadSettings() {
                 document.getElementById('anthropic-model').value = settings.anthropic.model || 'claude-3-opus';
             }
 
-            // Set DeepSeek settings
-            if (settings.deepseek) {
-                document.getElementById('deepseek-key').value = settings.deepseek.apiKey || '';
-                document.getElementById('deepseek-model').value = settings.deepseek.model || 'deepseek-chat';
-            }
-
-            // Set Ollama settings
-            if (settings.ollama) {
-                document.getElementById('ollama-model').value = settings.ollama.model || 'llama2';
+            // Set OpenAI settings
+            if (settings.openai) {
+                document.getElementById('openai-key').value = settings.openai.apiKey || '';
+                document.getElementById('openai-model').value = settings.openai.model || 'gpt-4';
             }
 
             // Set OpenRouter settings

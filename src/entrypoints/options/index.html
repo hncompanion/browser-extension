@@ -11,8 +11,8 @@
     <meta name="manifest.open_in_tab" content="true"/>
 
 </head>
-<body class="flex items-center justify-center bg-gray-100" style="min-width: 800px">
-<div class="m-6 p-6 bg-white rounded-lg shadow-md mx-auto" style="min-width: 600px">
+<body class="flex items-center justify-center bg-gray-100" style="min-width: 600px">
+<div class="m-6 p-6 bg-white rounded-lg shadow-md mx-auto" style="min-width: 550px">
     <form>
         <fieldset>
             <legend class="text-sm/6 font-semibold text-gray-900">Hacker News Companion Settings</legend>
@@ -25,17 +25,43 @@
                         <div class="w-full border-t border-gray-300"></div>
                     </div>
                     <div class="relative flex justify-center">
-                        <span class="bg-white px-2 text-sm text-gray-500">Local LLMs (Free)</span>
+                        <span class="bg-white px-2 text-sm text-gray-500">Free Options</span>
                     </div>
                 </div>
 
-                <!-- Ollama -->
+                <!--HN Companion Backend id="hn-companion-server" -->
+                <div class="space-y-3">
+                    <div class="flex items-center ">
+                        <input id="hn-companion-server" name="provider-selection" type="radio"
+                               class="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden [&:not(:checked)]:before:hidden">
+                        <label for="hn-companion-server" class="ml-3 block text-sm font-medium text-gray-900">Hacker News Companion Server</label>
+
+                        <details class="ml-2 inline-block relative">
+                            <summary class="list-none text-gray-400 hover:text-gray-500 cursor-pointer">
+                                <svg class="size-5 sm:size-4" viewBox="0 0 16 16" fill="currentColor"
+                                     aria-hidden="true">
+                                    <path fill-rule="evenodd"
+                                          d="M15 8A7 7 0 1 1 1 8a7 7 0 0 1 14 0Zm-6 3.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM7.293 5.293a1 1 0 1 1 .99 1.667c-.459.134-1.033.566-1.033 1.29v.25a.75.75 0 1 0 1.5 0v-.115a2.5 2.5 0 1 0-2.518-4.153.75.75 0 1 0 1.061 1.06Z"
+                                          clip-rule="evenodd"/>
+                                </svg>
+                            </summary>
+                            <div class="absolute left-0 -translate-x-32  mt-2 w-80 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-10 p-4 text-sm text-gray-600">
+                                    <p class="font-medium mb-2">How this works:</p>
+                                    <p>💡 The HN Companion server periodically fetches stories from the Hacker News homepage and creates LLM summaries which are cached on our servers.</p>
+                                    <p class="pt-2">When this option is enabled and you request a summary for a story that's already cached,
+                                        the extension will display it immediately without needing to use your own API keys.</p>
+                                </div>
+                        </details>
+
+                    </div>
+                </div>
+
+                <!-- Ollama id="ollama" -->
                 <div class="space-y-3">
                     <div class="flex items-center">
                         <input id="ollama" name="provider-selection" type="radio"
                                class="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden [&:not(:checked)]:before:hidden">
                         <label for="ollama" class="ml-3 block text-sm font-medium text-gray-900">Ollama</label>
-
 
                         <details class="ml-2 inline-block relative">
                             <summary class="list-none text-gray-400 hover:text-gray-500 cursor-pointer">
@@ -81,7 +107,9 @@
                     <div class="ml-7 space-y-3">
                         <div>
                             <label for="ollama-model" class="block text-sm font-medium text-gray-900">Select Ollama
-                                Model</label>
+                                Model
+                                <span class="ml-2 inline-flex items-center rounded-md bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-800 ring-1 ring-inset ring-yellow-600/20">Make sure Ollama is running with CORS enabled</span>
+                            </label>
                             <div class="mt-2 grid grid-cols-1">
                                 <select id="ollama-model"
                                         name="ollama-model"
@@ -99,59 +127,6 @@
                     </div>
                 </div>
 
-                <!--Chrome Built-in AI-->
-                <div class="space-y-3">
-                    <div class="flex items-center ">
-                        <input id="chrome-ai" name="provider-selection" type="radio"
-                               class="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden [&:not(:checked)]:before:hidden">
-                        <label for="chrome-ai" class="ml-3 block text-sm font-medium text-gray-900">Chrome Built-in
-                            AI</label>
-                        <span class="inline-flex items-center rounded-md ml-3 bg-pink-50 px-2 py-1 text-xs font-medium text-pink-700 ring-1 ring-inset ring-pink-700/10 ">Experimental</span>
-
-
-                        <details class="ml-2 inline-block relative">
-                            <summary class="list-none text-gray-400 hover:text-gray-500 cursor-pointer">
-                                <svg class="size-5 sm:size-4" viewBox="0 0 16 16" fill="currentColor"
-                                     aria-hidden="true">
-                                    <path fill-rule="evenodd"
-                                          d="M15 8A7 7 0 1 1 1 8a7 7 0 0 1 14 0Zm-6 3.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM7.293 5.293a1 1 0 1 1 .99 1.667c-.459.134-1.033.566-1.033 1.29v.25a.75.75 0 1 0 1.5 0v-.115a2.5 2.5 0 1 0-2.518-4.153.75.75 0 1 0 1.061 1.06Z"
-                                          clip-rule="evenodd"/>
-                                </svg>
-                            </summary>
-                            <div class="absolute right-0 -translate-x-1 mt-2 w-80 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-10 p-4 text-sm text-gray-600">
-                                <p class="mb-3">Requires Chrome <span class="text-pink-700">131+</span> and a one-time
-                                    model download.</p>
-                                <p class="font-medium mb-1">Setup instructions:</p>
-                                <ol class="list-decimal ml-4 space-y-1">
-                                    <li>To start downloading the model, go to Chrome Dev <a class="underline"
-                                                                                            href="https://chrome.dev/web-ai-demos/summarization-api-playground/"
-                                                                                            target="_blank">Summarization
-                                        API Playground</a>.
-                                    </li>
-                                    <li>To verify that the model download is complete, navigate to 'Chrome components'
-                                        <code class="bg-gray-100 px-1 rounded">chrome://components</code>.
-                                    </li>
-                                    <li>Once the model is downloaded, you should see 'Optimization Guide On Device
-                                        Model' with version <code class="bg-gray-100 px-1 rounded">2024.9.25.2033</code>
-                                        or higher.
-                                    </li>
-                                    <li>For more troubleshooting instructions, visit project <a class="underline"
-                                                                                                href="https://github.com/hncompanion/browser-extension?tab=readme-ov-file#chrome-built-in-ai"
-                                                                                                title=""
-                                                                                                target="_blank">README</a>.
-                                    </li>
-                                </ol>
-                                <p class="mt-3 text-xs text-gray-500">💡 Best for shorter content: While free and
-                                    convenient, Chrome's built-in AI (Gemini Nano) works best with individual comments
-                                    or brief discussion threads.
-                                    It may struggle and hallucinate with full comment pages due to model size
-                                    limitations.</p>
-                            </div>
-                        </details>
-
-                    </div>
-                </div>
-
                 <div class="relative">
                     <div class="absolute inset-0 flex items-center" aria-hidden="true">
                         <div class="w-full border-t border-gray-300"></div>
@@ -161,14 +136,71 @@
                     </div>
                 </div>
 
-                <!-- Anthropic -->
+                <!-- Google Gemini id="google_gemini" -->
+                <div class="space-y-3">
+                    <div class="flex items-center">
+                        <input id="google_gemini" name="provider-selection" type="radio"
+                               class="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden [&:not(:checked)]:before:hidden">
+                        <label for="google_gemini" class="ml-3 block text-sm font-medium text-gray-900">Google Gemini</label>
+                        <span class="inline-flex items-center rounded-md ml-3 bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20"
+                              title="Supports larger context">🌟 Best performance and Cost effective 🌟</span>
+                    </div>
+                    <div class="ml-7 space-y-3">
+                        <div class="mt-2 grid grid-cols-1">
+                            <label for="google-gemini-key" class="sr-only">Enter Google Gemini API Key</label>
+                            <input type="password"
+                                   id="google-gemini-key"
+                                   name="google-gemini-key"
+                                   class="col-start-1 row-start-1 block w-full rounded-md bg-white px-3 py-1.5 text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 text-sm/6"
+                                   placeholder="Enter Google AI API Key">
+                            <details
+                                    class="col-start-1 row-start-1 justify-self-end self-center mr-3 inline-block relative">
+                                <summary class="list-none text-gray-400 hover:text-gray-500 cursor-pointer">
+                                    <svg class="size-5 sm:size-4" viewBox="0 0 16 16" fill="currentColor"
+                                         aria-hidden="true">
+                                        <path fill-rule="evenodd"
+                                              d="M15 8A7 7 0 1 1 1 8a7 7 0 0 1 14 0Zm-6 3.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM7.293 5.293a1 1 0 1 1 .99 1.667c-.459.134-1.033.566-1.033 1.29v.25a.75.75 0 1 0 1.5 0v-.115a2.5 2.5 0 1 0-2.518-4.153.75.75 0 1 0 1.061 1.06Z"
+                                              clip-rule="evenodd"/>
+                                    </svg>
+                                </summary>
+                                <div class="absolute right-0 mt-2 w-72 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-10 p-4 text-sm text-gray-600">
+                                    🔑 Get your API key from <a href="https://aistudio.google.com/apikey" target="_blank" class="underline">here</a>.<p class="pt-3"> API key is securely stored in your browser's local storage and can sync across
+                                    your devices with browser sync. The key is transmitted only to the selected LLM
+                                    provider when making requests.</p>
+                                </div>
+                            </details>
+                        </div>
+                        <div>
+                            <label for="google-gemini-model" class="block text-sm font-medium text-gray-900">Select Google Gemini
+                                Model</label>
+                            <div class="mt-2 grid grid-cols-1">
+                                <select id="google-gemini-model"
+                                        name="google-gemini-model"
+                                        class="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white py-1.5 pl-3 pr-8 text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 text-sm">
+                                    <option value="gemini-2.5-pro-preview-03-25">Gemini 2.5 Pro Preview</option>
+                                    <option value="gemini-2.5-flash-preview-04-17">Gemini 2.5 Flash Preview</option>
+                                    <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+                                    <option value="gemini-2.0-flash-lite">Gemini 2.0 Flash Lite	</option>
+                                    <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                                    <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                                </select>
+                                <svg class="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-gray-500 sm:size-4"
+                                     viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" data-slot="icon">
+                                    <path fill-rule="evenodd"
+                                          d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z"
+                                          clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Anthropic id="anthropic" -->
                 <div class="space-y-3">
                     <div class="flex items-center">
                         <input id="anthropic" name="provider-selection" type="radio"
                                class="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden [&:not(:checked)]:before:hidden">
                         <label for="anthropic" class="ml-3 block text-sm font-medium text-gray-900">Anthropic</label>
-                        <span class="inline-flex items-center rounded-md ml-3 bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20"
-                              title="Supports larger context">🌟 Best performance 🌟</span>
                     </div>
                     <div class="ml-7 space-y-3">
                         <div class="mt-2 grid grid-cols-1">
@@ -189,9 +221,9 @@
                                     </svg>
                                 </summary>
                                 <div class="absolute right-0 mt-2 w-72 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-10 p-4 text-sm text-gray-600">
-                                    🔑 API key is securely stored in your browser's local storage and can sync across
+                                    🔑 Get your API key from <a href="https://console.anthropic.com/settings/keys" target="_blank" class="underline">here</a>.<p class="pt-3"> API key is securely stored in your browser's local storage and can sync across
                                     your devices with browser sync. The key is transmitted only to the selected LLM
-                                    provider when making requests.
+                                    provider when making requests.</p>
                                 </div>
                             </details>
                         </div>
@@ -202,6 +234,7 @@
                                 <select id="anthropic-model"
                                         name="anthropic-model"
                                         class="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white py-1.5 pl-3 pr-8 text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 text-sm">
+                                    <option value="claude-3-7-sonnet-latest">Claude 3.7 Sonnet</option>
                                     <option value="claude-3-5-sonnet-latest">Claude 3.5 Sonnet</option>
                                     <option value="claude-3-5-haiku-latest">Claude 3.5 Haiku</option>
                                     <option value="claude-3-opus-latest">Claude 3 Opus</option>
@@ -217,59 +250,7 @@
                     </div>
                 </div>
 
-                <!-- DeepSeek -->
-                <div class="space-y-3">
-                    <div class="flex items-center">
-                        <input id="deepseek" name="provider-selection" type="radio"
-                               class="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden [&:not(:checked)]:before:hidden">
-                        <label for="deepseek" class="ml-3 block text-sm font-medium text-gray-900">DeepSeek</label>
-                    </div>
-                    <div class="ml-7 space-y-3">
-                        <div class="mt-2 grid grid-cols-1">
-                            <label for="deepseek-key" class="sr-only">Enter DepSeek API Key</label>
-                            <input type="password"
-                                   id="deepseek-key"
-                                   name="deepseek-key"
-                                   class="col-start-1 row-start-1 block w-full rounded-md bg-white px-3 py-1.5 text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 text-sm/6"
-                                   placeholder="Enter DeepSeek API Key">
-                            <details
-                                    class="col-start-1 row-start-1 justify-self-end self-center mr-3 inline-block relative">
-                                <summary class="list-none text-gray-400 hover:text-gray-500 cursor-pointer">
-                                    <svg class="size-5 sm:size-4" viewBox="0 0 16 16" fill="currentColor"
-                                         aria-hidden="true">
-                                        <path fill-rule="evenodd"
-                                              d="M15 8A7 7 0 1 1 1 8a7 7 0 0 1 14 0Zm-6 3.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM7.293 5.293a1 1 0 1 1 .99 1.667c-.459.134-1.033.566-1.033 1.29v.25a.75.75 0 1 0 1.5 0v-.115a2.5 2.5 0 1 0-2.518-4.153.75.75 0 1 0 1.061 1.06Z"
-                                              clip-rule="evenodd"/>
-                                    </svg>
-                                </summary>
-                                <div class="absolute right-0 mt-2 w-72 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-10 p-4 text-sm text-gray-600">
-                                    🔑 API key is securely stored in your browser's local storage and can sync across
-                                    your devices with browser sync. The key is transmitted only to the selected LLM
-                                    provider when making requests.
-                                </div>
-                            </details>
-                        </div>
-                        <div>
-                            <label for="deepseek-model" class="block text-sm font-medium text-gray-900">Select DeepSeek
-                                Model</label>
-                            <div class="mt-2 grid grid-cols-1">
-                                <select id="deepseek-model"
-                                        name="deepseek-model"
-                                        class="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white py-1.5 pl-3 pr-8 text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 text-sm">
-                                    <option value="deepseek-chat">DeepSeek V3</option>
-                                </select>
-                                <svg class="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-gray-500 sm:size-4"
-                                     viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" data-slot="icon">
-                                    <path fill-rule="evenodd"
-                                          d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z"
-                                          clip-rule="evenodd"/>
-                                </svg>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- OpenAI -->
+                <!-- OpenAI id="openai" -->
                 <div class="space-y-3">
                     <div class="flex items-center ">
                         <input id="openai" name="provider-selection" type="radio"
@@ -295,9 +276,9 @@
                                     </svg>
                                 </summary>
                                 <div class="absolute right-0 mt-2 w-72 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-10 p-4 text-sm text-gray-600">
-                                    🔑 API key is securely stored in your browser's local storage and can sync across
+                                    🔑 Get your API key from <a href="https://platform.openai.com/api-keys" target="_blank" class="underline">here</a>.<p class="pt-3"> API key is securely stored in your browser's local storage and can sync across
                                     your devices with browser sync. The key is transmitted only to the selected LLM
-                                    provider when making requests.
+                                    provider when making requests.</p>
                                 </div>
                             </details>
                         </div>
@@ -308,6 +289,8 @@
                                 <select id="openai-model"
                                         name="openai-model"
                                         class="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white py-1.5 pl-3 pr-8 text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 text-sm">
+                                    <option value="gpt-4.1-mini">GPT-4.1 mini</option>
+                                    <option value="gpt-4.1-nano">GPT-4.1 nano</option>
                                     <option value="gpt-4">GPT-4</option>
                                     <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
                                 </select>
@@ -322,7 +305,7 @@
                     </div>
                 </div>
 
-                <!-- OpenRouter -->
+                <!-- OpenRouter id="openrouter" -->
                 <div class="space-y-3">
                     <div class="flex items-center">
                         <input id="openrouter" name="provider-selection" type="radio"
@@ -348,9 +331,11 @@
                                     </svg>
                                 </summary>
                                 <div class="absolute right-0 mt-2 w-72 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-10 p-4 text-sm text-gray-600">
-                                    🔑 API key is securely stored in your browser's local storage and can sync across
+                                    🔑 Get your API key from <a href="https://openrouter.ai/settings/keys" target="_blank" class="underline">here</a>
+                                    and select a model <a href="https://openrouter.ai/models" class="underline" target="_blank">here</a>.
+                                    <p class="pt-3"> API key is securely stored in your browser's local storage and can sync across
                                     your devices with browser sync. The key is transmitted only to the selected LLM
-                                    provider when making requests.
+                                    provider when making requests.</p>
                                 </div>
                             </details>
                         </div>
@@ -361,8 +346,8 @@
                                 <input type="text"
                                        id="openrouter-model"
                                        name="openrouter-model"
-                                       value="anthropic/claude-3.5-sonnet"
-                                       placeholder="Enter model identifier"
+                                       value="deepseek/deepseek-chat"
+                                       placeholder="Enter model identifier. e.g. deepseek/deepseek-chat"
                                        class="col-start-1 row-start-1 block w-full rounded-md bg-white px-3 py-1.5 text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 text-sm">
                             </div>
                         </div>

@@ -2,16 +2,51 @@ import {summarizeText} from '../../lib/llm-summarizer.js';
 
 export default defineBackground(() => {
 
-    async function onInstalled() {
-        const data = await chrome.storage.sync.get('settings');
-        const providerSelection = data.settings?.providerSelection;
+    // Function to set default settings
+    async function setDefaultSettings() {
+        // Check if settings already exist
+        const existingSettings = await browser.storage.sync.get('settings');
 
-        if (!providerSelection) {
-            try {
-                chrome.runtime.openOptionsPage();
-            } catch (e) {
-                console.log('Error opening options page:', e);
-            }
+        // Only set defaults if no provider is already chosen
+        if (!existingSettings) {
+            // Set Hacker News Companion Server as default provider
+            await browser.storage.sync.set({
+                settings: {
+                    providerSelection: 'hn-companion-server',
+                    ollama: {
+                        model: ''
+                    },
+                    google_gemini: {
+                        apiKey: '',
+                        model: ''
+                    },
+                    anthropic: {
+                        apiKey: '',
+                        model: ''
+                    },
+                    openai: {
+                        apiKey: '',
+                        model: ''
+                    },
+                    openrouter: {
+                        apiKey: '',
+                        model: ''
+                    }
+                }
+            });
+
+            console.log('Default provider set to HN Companion Server');
+        }
+    }
+
+    browser.runtime.onInstalled.addListener(onInstalled);
+
+    async function onInstalled() {
+        await setDefaultSettings();
+        try {
+            browser.runtime.openOptionsPage();
+        } catch (e) {
+            console.log('Error opening options page:', e);
         }
     }
 
@@ -97,4 +132,4 @@ async function fetchWithTimeout(url, options = {}) {
     }
 }
 });
-// chrome.runtime.onInstalled.addListener(onInstalled);
+
