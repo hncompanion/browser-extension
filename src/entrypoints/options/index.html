@@ -24,7 +24,7 @@
                 <fieldset>
                     <legend class="sr-only">Notifications</legend>
                     <div class="space-y-5">
-                        <div class="flex gap-3">
+                        <div class="flex gap-3 items-center">
                             <div class="flex h-6 shrink-0 items-center">
                                 <div class="group grid size-4 grid-cols-1">
                                     <input id="hn-companion-server-enabled" aria-describedby="hn-companion-server-description" name="comments" type="checkbox" checked class="col-start-1 row-start-1 appearance-none rounded border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto">
@@ -36,26 +36,27 @@
                             </div>
                             <div class="text-sm/6">
                                 <label for="hn-companion-server-enabled" class="font-medium text-gray-900">Load summary from Hacker News Companion Server</label>
-                                <details class="ml-1 inline-block relative" id="hn-companion-server-description">
-                                    <summary class="list-none text-gray-400 hover:text-gray-500 cursor-pointer">
-                                        <svg class="size-5 sm:size-4" viewBox="0 0 16 16" fill="currentColor"
-                                             aria-hidden="true">
-                                            <path fill-rule="evenodd"
-                                                  d="M15 8A7 7 0 1 1 1 8a7 7 0 0 1 14 0Zm-6 3.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM7.293 5.293a1 1 0 1 1 .99 1.667c-.459.134-1.033.566-1.033 1.29v.25a.75.75 0 1 0 1.5 0v-.115a2.5 2.5 0 1 0-2.518-4.153.75.75 0 1 0 1.061 1.06Z"
-                                                  clip-rule="evenodd"/>
-                                        </svg>
-                                    </summary>
-                                    <div class="absolute left-0 -translate-x-32  mt-2 w-80 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-10 p-4 text-sm text-gray-600">
-                                        <p class="font-medium mb-2">How this works:</p>
-                                        <p>💡 The HN Companion server periodically fetches stories from the Hacker News
-                                            homepage and creates LLM summaries which are cached on our servers.</p>
-                                        <p class="pt-2">When this option is enabled and you request a summary for a
-                                            story that's already cached,
-                                            the extension will display it immediately without needing to use your own
-                                            API keys.</p>
-                                    </div>
-                                </details>
                             </div>
+                            <details class=" inline-block relative" id="hn-companion-server-description">
+                                <summary class="list-none text-gray-400 hover:text-gray-500 cursor-pointer">
+                                    <svg class="size-5 sm:size-4" viewBox="0 0 16 16" fill="currentColor"
+                                         aria-hidden="true">
+                                        <path fill-rule="evenodd"
+                                              d="M15 8A7 7 0 1 1 1 8a7 7 0 0 1 14 0Zm-6 3.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM7.293 5.293a1 1 0 1 1 .99 1.667c-.459.134-1.033.566-1.033 1.29v.25a.75.75 0 1 0 1.5 0v-.115a2.5 2.5 0 1 0-2.518-4.153.75.75 0 1 0 1.061 1.06Z"
+                                              clip-rule="evenodd"/>
+                                    </svg>
+                                </summary>
+                                <div class="absolute left-0 -translate-x-32  mt-2 w-80 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-10 p-4 text-sm text-gray-600">
+                                    <p class="font-medium mb-2">How this works:</p>
+                                    <p>💡 The HN Companion server periodically fetches stories from the Hacker News
+                                        homepage and creates LLM summaries which are cached on our servers.</p>
+                                    <p class="pt-2">When this option is enabled and you request a summary for a
+                                        story that's already cached,
+                                        the extension will display it immediately without needing to use your own
+                                        API keys.</p>
+                                </div>
+                            </details>
+
                         </div>
                     </div>
                 </fieldset>
