@@ -41,6 +41,11 @@ export default defineBackground(() => {
 
     browser.runtime.onInstalled.addListener(onInstalled);
 
+    browser.action.onClicked.addListener(() => {
+        // Opens your options page as defined in the manifest
+        browser.runtime.openOptionsPage();
+    });
+
     async function onInstalled() {
         await setDefaultSettings();
         try {
