@@ -1194,7 +1194,13 @@ class HNEnhancer {
             this.summaryPanel.toggle();
         }
 
-        // Serve the summary from cache if it is available
+        // Look for a cached version of the summary on the server. Show a loading message too.
+        this.summaryPanel.updateContent({
+            title: 'Post Summary',
+            metadata: `Analyzing all threads in this post...`,
+            text: `<div>Looking for a cached version on HNCompanion server...<span class="loading-spinner"></span></div>`
+        });
+
         const cacheResult = await this.getCachedSummary(itemId);
         const cachedSummary = cacheResult?.summary;
         if(cachedSummary && cachedSummary.length > 0) {
