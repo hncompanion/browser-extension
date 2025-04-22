@@ -144,7 +144,7 @@ async function loadSettings() {
             // Set OpenRouter settings
             if (settings.openrouter) {
                 document.getElementById('openrouter-key').value = settings.openrouter.apiKey || '';
-                document.getElementById('openrouter-model').value = settings.openrouter.model || 'anthropic/claude-3.5-sonnet';
+                document.getElementById('openrouter-model').value = settings.openrouter.model || 'deepseek/deepseek-chat';
             }
         }
     } catch (error) {

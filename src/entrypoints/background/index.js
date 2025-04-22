@@ -4,40 +4,33 @@ export default defineBackground(() => {
 
     // Function to set default settings
     async function setDefaultSettings() {
-        // Check if settings already exist
-        const existingSettings = await browser.storage.sync.get('settings');
-
-        // Only set defaults if no provider is already chosen
-        if (!existingSettings) {
-            // Set Hacker News Companion Server as default provider
-            await browser.storage.sync.set({
-                settings: {
-                    serverCacheEnabled: true,
-                    providerSelection: 'google',
-                    ollama: {
-                        model: ''
-                    },
-                    google: {
-                        apiKey: '',
-                        model: ''
-                    },
-                    anthropic: {
-                        apiKey: '',
-                        model: ''
-                    },
-                    openai: {
-                        apiKey: '',
-                        model: ''
-                    },
-                    openrouter: {
-                        apiKey: '',
-                        model: ''
-                    }
+        // Set Hacker News Companion Server as default provider
+        await browser.storage.sync.set({
+            settings: {
+                serverCacheEnabled: true,
+                providerSelection: 'google',
+                ollama: {
+                    model: ''
+                },
+                google: {
+                    apiKey: '',
+                    model: ''
+                },
+                anthropic: {
+                    apiKey: '',
+                    model: ''
+                },
+                openai: {
+                    apiKey: '',
+                    model: ''
+                },
+                openrouter: {
+                    apiKey: '',
+                    model: ''
                 }
-            });
-
-            console.log('Default provider set to HN Companion Server');
-        }
+            }
+        });
+        console.log('Default provider set to HN Companion Server');
     }
 
     browser.runtime.onInstalled.addListener(onInstalled);
@@ -48,6 +41,7 @@ export default defineBackground(() => {
     });
 
     async function onInstalled() {
+        console.log('Installed');
         await setDefaultSettings();
         try {
             browser.runtime.openOptionsPage();
