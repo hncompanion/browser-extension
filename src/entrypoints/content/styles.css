@@ -424,6 +424,11 @@
     text-decoration: underline;
 }
 
+.summary-text .primary-link {
+    color: #ff6600;
+    text-decoration: underline;
+}
+
 /* Loading animation */
 @keyframes spin {
     0% { transform: rotate(0deg); }
