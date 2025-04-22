@@ -1,7 +1,10 @@
 // Save settings to Browser storage
 
 async function saveSettings() {
-    const providerSelection = document.querySelector('input[name="provider-selection"]:checked').id;
+    let providerSelection;
+    if(document.querySelector('input[name="provider-selection"]:checked')?.id) {
+        providerSelection = document.querySelector('input[name="provider-selection"]:checked')?.id;
+    }
     const settings = {
         serverCacheEnabled: document.getElementById('hn-companion-server-enabled').checked,
         providerSelection,

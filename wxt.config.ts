@@ -15,7 +15,7 @@ export default defineConfig({
             host_permissions: [
                 "https://news.ycombinator.com/*",
                 "https://hn.algolia.com/*",
-                "https://app.hncompanion.com"
+                "https://app.hncompanion.com/*"
             ],
             optional_host_permissions: [
                 "https://api.openai.com/v1/chat/completions/*",
@@ -30,6 +30,7 @@ export default defineConfig({
                 128: '/icon/icon-128.png',
             },
             action: {},
+            page_action: {},
         };
         if(browser === 'firefox') {
             manifest["browser_specific_settings"] = {
