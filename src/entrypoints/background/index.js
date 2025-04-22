@@ -12,7 +12,8 @@ export default defineBackground(() => {
             // Set Hacker News Companion Server as default provider
             await browser.storage.sync.set({
                 settings: {
-                    providerSelection: 'hn-companion-server',
+                    serverCacheEnabled: true,
+                    providerSelection: '',
                     ollama: {
                         model: ''
                     },

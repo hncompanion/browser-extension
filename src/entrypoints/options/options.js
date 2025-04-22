@@ -3,6 +3,7 @@
 async function saveSettings() {
     const providerSelection = document.querySelector('input[name="provider-selection"]:checked').id;
     const settings = {
+        serverCacheEnabled: document.getElementById('hn-companion-server-enabled').checked,
         providerSelection,
         ollama: {
             model: document.getElementById('ollama-model').value
@@ -106,6 +107,10 @@ async function loadSettings() {
         const settings = data.settings;
 
         if (settings) {
+            // Set HN Companion Server enabled state
+            if(settings.serverCacheEnabled !== undefined) {
+                document.getElementById('hn-companion-server-enabled').checked = settings.serverCacheEnabled;
+            }
             // Set provider selection
             const providerRadio = document.getElementById(settings.providerSelection);
             if (providerRadio) providerRadio.checked = true;
@@ -151,6 +156,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Load saved settings
     await loadSettings();
+
+    // Add event listener for the server cache checkbox
+    const serverCacheCheckbox = document.getElementById('hn-companion-server-enabled');
+    serverCacheCheckbox.addEventListener('change', async (e) => {
+        // Get the current state of the checkbox
+        const isEnabled = e.target.checked;
+
+        const currentSettings = await browser.storage.sync.get('settings');
+        if (currentSettings && currentSettings.settings) {
+            currentSettings.settings.serverCacheEnabled = isEnabled;
+            await browser.storage.sync.set({settings: currentSettings.settings});
+        }
+    });
 
     // Add save button event listener
     const form = document.querySelector('form');
