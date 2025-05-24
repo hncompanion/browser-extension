@@ -1055,15 +1055,34 @@ class HNEnhancer {
                     this.popup.style.left = `${rect.left}px`;
                     this.popup.style.top = `${rect.bottom + window.scrollY + 5}px`;
                     this.popup.style.display = 'block';
+
+                    // Track whether mouse is over user element or popup
+                    this.isMouseOverUserOrPopup = true;
                 }
             });
 
             authorElement.addEventListener('mouseleave', () => {
-                this.popup.style.display = 'none';
+                // Don't hide immediately - wait to check if mouse moved to popup
+                setTimeout(() => {
+                    if (!this.isMouseOverUserOrPopup) {
+                        this.popup.style.display = 'none';
+                    }
+                }, 100);
+                this.isMouseOverUserOrPopup = false;
             });
         });
 
-        // Add global event listeners to close the user popup on Esc key or clock outside the user element
+        // Add mouse enter/leave events for the popup itself
+        this.popup.addEventListener('mouseenter', () => {
+            this.isMouseOverUserOrPopup = true;
+        });
+
+        this.popup.addEventListener('mouseleave', () => {
+            this.isMouseOverUserOrPopup = false;
+            this.popup.style.display = 'none';
+        });
+
+        // Add global event listeners to close the user popup on Esc key or click outside the user element or popup
 
         // Add event listener for Esc key
         document.addEventListener('keydown', (e) => {
