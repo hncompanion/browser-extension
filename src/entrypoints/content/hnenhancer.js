@@ -396,9 +396,30 @@ class HNEnhancer {
                 }
             );
 
+            // Process the about text to make links clickable
+            let about = data.about || 'No about information';
+
+            // First decode HTML entities
+            about = this.decodeHtmlEntities(about);
+
+            // If the about info contains HTML links, preserve them
+            if (about.includes('<a href=')) {
+                // No need to modify existing links
+            } else {
+                // Look for URLs in plain text and convert them to links
+                about = about.replace(
+                    /((https?:\/\/|www\.)[^\s<]+)/g,
+                    (match, url) => {
+                        // If URL starts with www., add https:// protocol
+                        const href = url.startsWith('www.') ? `https://${url}` : url;
+                        return `<a href="${href}" target="_blank" rel="noopener noreferrer">${url}</a>`;
+                    }
+                );
+            }
+
             return {
                 karma: data.karma || 'Not found',
-                about: data.about || 'No about information'
+                about: about
             };
         } catch (error) {
             return {
@@ -779,6 +800,24 @@ class HNEnhancer {
         }
 
         return html.trim();
+    }
+
+    decodeHtmlEntities(text) {
+        // Decode common HTML entities manually for browser environment
+        const entityMap = {
+            '&#x27;': "'",
+            '&#x2F;': '/',
+            '&lt;': '<',
+            '&gt;': '>',
+            '&amp;': '&',
+            '&quot;': '"',
+            '&#39;': "'",
+            '&#47;': '/'
+        };
+        
+        return text.replace(/&#x[0-9A-Fa-f]+;|&[a-zA-Z0-9]+;/g, (match) => {
+            return entityMap[match] || match;
+        });
     }
 
     createHelpModal() {
