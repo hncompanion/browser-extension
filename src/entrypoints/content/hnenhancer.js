@@ -717,8 +717,7 @@ class HNEnhancer {
             const hyperLink = Array.from(hyperLinks).find(a => a.textContent.trim() === elementName);
             if (hyperLink) {
                 const commentId = hyperLink.hash.split('#')[1];
-                const element = document.getElementById(commentId);
-                return element;
+                return document.getElementById(commentId);
             }
         }
     }
@@ -1440,14 +1439,13 @@ class HNEnhancer {
     }
 
     async fetchHNCommentsFromAPI(itemId) {
-        const commentsJson = await this.sendBackgroundMessage(
+        return await this.sendBackgroundMessage(
             'FETCH_API_REQUEST',
             {
                 url: `https://hn.algolia.com/api/v1/items/${itemId}`,
                 method: 'GET'
             }
         );
-        return commentsJson;
     }
 
     async getHNThread(itemId) {
@@ -1542,9 +1540,7 @@ class HNEnhancer {
                 }
 
                 // Remove unnecessary new lines and decode HTML entities
-                const sanitizedText = decodeHTML(tempDiv.innerHTML).replace(/\n+/g, ' ');
-
-                return sanitizedText;
+                return decodeHTML(tempDiv.innerHTML).replace(/\n+/g, ' ');
             }
             const commentText = sanitizeCommentText();
 
@@ -1718,8 +1714,7 @@ class HNEnhancer {
             const penaltyPerDownvote = defaultScore / MAX_DOWNVOTES;
             const penalty = penaltyPerDownvote * downvotes;
 
-            const score = Math.floor(Math.max(defaultScore - penalty, 0));
-            return score;
+            return Math.floor(Math.max(defaultScore - penalty, 0));
         }
 
         // Final step: Add the path and score for each comment as calculated above
@@ -2280,7 +2275,7 @@ ${text}
         const allComments = document.querySelectorAll('.comment');
 
         allComments.forEach(comment => {
-            comment.addEventListener('click', (e) => {
+            comment.addEventListener('click', () => {
 
                 // Save current position to history before changing focus
                 this.saveNavigationState(this.currentComment);
