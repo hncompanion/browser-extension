@@ -8,7 +8,7 @@ export default defineConfig({
     manifest: ({browser}) => {
         let manifest = {
             name: "Hacker News Companion",
-            description: "Enhance Hacker News with smart navigation and AI summaries using local or cloud LLMs. Navigate easily with Vim-style shortcuts.",
+            description: "Enhance Hacker News with AI-powered discussion summaries, and enhanced keyboard navigation with Vim-style shortcuts",
             homepage_url: "https://github.com/hncompanion/browser-extension",
             version: "1.5.0",
             permissions: ['storage'],
