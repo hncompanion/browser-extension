@@ -877,7 +877,8 @@ class HNEnhancer {
                     {key: 'r', description: 'Go to root comment'},
                     {key: 'gg', description: 'First comment'},
                     {key: 'z', description: 'Scroll to current'},
-                    {key: 'c', description: 'Collapse/expand comment'}
+                    {key: 'c', description: 'Collapse/expand comment'},
+                    {key: 'u', description: 'Undo navigation (go back)'}
                 ]
             }
         };
