@@ -856,7 +856,8 @@ class HNEnhancer {
                 title: 'Global',
                 shortcuts: [
                     {key: 'o', description: 'Open post in new window'},
-                    {key: '? /', description: 'Toggle this help panel'}
+                    {key: '? /', description: 'Toggle this help panel'},
+                    {key: 'gg', description: 'First Story/comment'}
                 ]
             },
             "home": {
@@ -872,12 +873,11 @@ class HNEnhancer {
                     {key: 'j k', description: 'Next/previous comment'},
                     {key: 'l h', description: 'Next child/parent comment'},
                     {key: '[ ]', description: 'Prev/next comment by author'},
+                    {key: 'u', description: 'Undo navigation (go back)'},
                     {key: 's', description: 'Toggle summary panel'},
                     {key: 'r', description: 'Go to root comment'},
-                    {key: 'gg', description: 'First comment'},
                     {key: 'z', description: 'Scroll to current'},
-                    {key: 'c', description: 'Collapse/expand comment'},
-                    {key: 'u', description: 'Undo navigation (go back)'}
+                    {key: 'c', description: 'Collapse/expand comment'}
                 ]
             }
         };
