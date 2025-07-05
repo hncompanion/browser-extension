@@ -38,6 +38,10 @@ class HNEnhancer {
 
         this.currentComment = null;         // Track currently focused comment
 
+        // Navigation history for undo functionality
+        this.navigationHistory = [];
+        this.maxHistorySize = 10;
+
         this.helpModal = this.createHelpModal();
 
         this.createHelpIcon();
@@ -53,6 +57,9 @@ class HNEnhancer {
         } else if (this.isCommentsPage) {
             // Initialize custom navigation in Comments page - author comments, comment navigation and summary panel,
             this.initCommentsPageNavigation();
+
+            // Set up click handlers for comment focus
+            this.setupCommentClickHandlers();
 
             // Navigate to first comment, but don't scroll to it (to avoid jarring effect when you first come to the page)
             this.navigateToFirstComment(false);
@@ -512,7 +519,7 @@ class HNEnhancer {
                 ...(doubleKeyShortcuts['comments'] || {})
             } : {};
 
-            this.logDebug('Selected page shortcuts:', Object.keys(pageShortcuts));
+            // this.logDebug('Selected page shortcuts:', Object.keys(pageShortcuts));
 
             const shortcutHandler = pageShortcuts[shortcutKey] || globalKeyboardShortcuts[shortcutKey];
 
@@ -650,6 +657,10 @@ class HNEnhancer {
                 this.summaryPanel.toggle();
 
             },
+            'u': () => {
+                // Undo navigation - go back to previous comment focus position
+                this.undoNavigation();
+            },
         }
     }
 
@@ -712,8 +723,13 @@ class HNEnhancer {
         }
     }
 
-    setCurrentComment(comment, scrollIntoView = true) {
+    setCurrentComment(comment, scrollIntoView = true, saveNavigationState = true) {
         if (!comment) return;
+
+        // Save current position to history before changing focus (only if requested)
+        if (this.currentComment && saveNavigationState) {
+            this.saveNavigationState(this.currentComment);
+        }
 
         // Un-highlight the current comment's author before updating the current comment.
         //  Note: when this method is called the first time, this.currentComment will be null and it is ok.
@@ -2060,7 +2076,6 @@ ${title}
 Comments:
 ${text}
 ---`;
-
     }
 
     // Show the summary in the summary panel - format the summary for two steps:
@@ -2257,6 +2272,78 @@ ${text}
 
     getHNPostTitle() {
         return document.title;
+    }
+
+    setupCommentClickHandlers() {
+        // Add click listeners to all comment elements for focus functionality
+        const allComments = document.querySelectorAll('.comment');
+
+        allComments.forEach(comment => {
+            comment.addEventListener('click', (e) => {
+
+                // Save current position to history before changing focus
+                this.saveNavigationState(this.currentComment);
+
+                // Find the parent DOM element with class="athing comtr"
+                const commentElement = comment.closest('.athing.comtr');
+                // Set this comment as the current focus
+                this.setCurrentComment(commentElement, false);
+
+                this.logDebug('Comment focused via click:', commentElement.id);
+            });
+        });
+
+        this.logDebug(`Set up click handlers for ${allComments.length} comments`);
+    }
+
+    saveNavigationState(comment) {
+        // Only save to history if we have a current comment, and it's different from the new one
+        if (!comment) return;
+
+        // Don't save if it's the same comment
+        if (this.navigationHistory.length > 0 &&
+            this.navigationHistory[this.navigationHistory.length - 1].comment === comment) {
+            return;
+        }
+
+        // Add to history
+        this.navigationHistory.push({
+            comment: comment,
+            timestamp: Date.now()
+        });
+
+        // Maintain history size limit
+        if (this.navigationHistory.length > this.maxHistorySize) {
+            this.navigationHistory.shift(); // Remove oldest entry
+        }
+
+        this.logDebug(`Navigation state saved. History length: ${this.navigationHistory.length}`);
+    }
+
+    undoNavigation() {
+        // Need at least one item in history to undo to
+        if (this.navigationHistory.length === 0) {
+            this.logDebug('No navigation history available for undo');
+            return;
+        }
+
+        // Get the last navigation state (but don't remove it yet)
+        const lastState = this.navigationHistory[this.navigationHistory.length - 1];
+
+        // If the last state is the current comment, we need to go back further
+        if (lastState.comment === this.currentComment && this.navigationHistory.length > 1) {
+            // Remove the current state and get the previous one
+            this.navigationHistory.pop();
+            const previousState = this.navigationHistory[this.navigationHistory.length - 1];
+            this.setCurrentComment(previousState.comment, true, false); // Don't save to history
+            this.logDebug('Undid navigation to comment:', previousState.comment.id);
+        } else if (lastState.comment !== this.currentComment) {
+            // Go back to the last state
+            this.setCurrentComment(lastState.comment, true, false); // Don't save to history
+            this.logDebug('Undid navigation to comment:', lastState.comment.id);
+        } else {
+            this.logDebug('No previous navigation state to undo to');
+        }
     }
 }
 
