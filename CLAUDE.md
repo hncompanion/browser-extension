@@ -1,5 +1,19 @@
 # HN Enhancer - Developer Guide
 
+# Overview
+Hacker News Browser extension that enables keyboard navigation and AI summaries. 
+This extension is build using [wxt](https://wxt.dev/guide/installation.html). 
+
+# Key Features
+- Keyboard Navigation - Vim-inspired shortcuts (`h`, `j`, `k`, `l`)
+  - Quick-jump between comments by the same author (`[`,`]`)
+- Discussion thread Summarization using AI
+  - Multiple AI provider options (OpenAI, Anthropic, OpenRouter, Ollama)
+- User profile previews on hover
+
+## Package Manager
+- Use `pnpm` for package management.
+
 ## Build Commands
 - Development build: `pnpm run dev-build`
 - Watch mode: `pnpm run dev`
