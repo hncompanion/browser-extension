@@ -1030,13 +1030,6 @@ class HNEnhancer {
             return { status: SummarizeCheckStatus.OK };
         }
 
-        // Chrome Built-in AI cannot handle deep threads, so limit the summarization to a certain depth
-        if (aiProvider === 'chrome-ai') {
-            return commentDepth <= 5
-                ? { status: SummarizeCheckStatus.OK }
-                : { status: SummarizeCheckStatus.THREAD_TOO_DEEP };
-        }
-
         // OpenAI and Claude can handle larger data, but they are expensive, so there should be a minimum length and depth
         const minSentenceLength = 8;
         const minCommentDepth = 3;
@@ -1154,85 +1147,6 @@ class HNEnhancer {
         });
     }
 
-    initChromeBuiltinAI() {
-
-        // Inject the origin trial token to enable Summarization API for origin 'news.ycombinator.com'
-        const otMeta = document.createElement('meta');
-        otMeta.httpEquiv = 'origin-trial';
-        otMeta.content = 'Ah+d1HFcvvHgG3aB5OfzNzifUv02EpQfyQBlED1zXGCt8oA+XStg86q5zAwr7Y/UFDCmJEnPi019IoJIoeTPugsAAABgeyJvcmlnaW4iOiJodHRwczovL25ld3MueWNvbWJpbmF0b3IuY29tOjQ0MyIsImZlYXR1cmUiOiJBSVN1bW1hcml6YXRpb25BUEkiLCJleHBpcnkiOjE3NTMxNDI0MDB9';
-        document.head.prepend(otMeta);
-
-        this.isChomeAiAvailable = HNEnhancer.CHROME_AI_AVAILABLE.NO;
-
-        function parseAvailable(available) {
-            switch (available) {
-                case 'readily':
-                    return HNEnhancer.CHROME_AI_AVAILABLE.YES;
-                case 'no':
-                    return HNEnhancer.CHROME_AI_AVAILABLE.NO;
-                case 'after-download':
-                    return HNEnhancer.CHROME_AI_AVAILABLE.AFTER_DOWNLOAD;
-            }
-            return HNEnhancer.CHROME_AI_AVAILABLE.NO;
-        }
-
-
-        // 1. Inject the script into the webpage's context
-        const pageScript = document.createElement('script');
-        pageScript.src = chrome.runtime.getURL('page-script.js');
-        (document.head || document.documentElement).appendChild(pageScript);
-
-        pageScript.onload = () => {
-            window.postMessage({
-                type: 'HN_CHECK_AI_AVAILABLE',
-                data: {}
-            });
-        }
-
-        // 2. Listen for messages from the webpage
-        window.addEventListener('message', (event) => {
-
-            // reject all messages from other domains
-            if (event.origin !== window.location.origin) {
-                return;
-            }
-
-            // this.logDebug('content.js - Received message:', event.type, JSON.stringify(event.data));
-
-            // Handle different message types
-            switch (event.data.type) {
-                case 'HN_CHECK_AI_AVAILABLE_RESPONSE':
-                    const available = event.data.data.available;
-
-                    this.isChomeAiAvailable = parseAvailable(available);
-                    this.logDebug('Message from page script Chrome Built-in AI. HN_CHECK_AI_AVAILABLE_RESPONSE: ', this.isChomeAiAvailable);
-                    break;
-
-                case 'HN_AI_SUMMARIZE_RESPONSE':
-                    const responseData = event.data.data;
-                    if(responseData.error) {
-                        this.summaryPanel.updateContent({
-                            title: 'Summarization Error',
-                            text: responseData.error
-                        });
-                        return;
-                    }
-
-                    // Summarization success. Show the summary in the panel
-                    const summary = responseData.summary;
-                    const commentPathToIdMap = responseData.commentPathToIdMap;
-                    this.showSummaryInPanel(summary, false, 0, commentPathToIdMap).catch(error => {
-                        console.error('Error showing summary:', error);
-                    });
-
-                    break;
-
-                default:
-                    break;
-            }
-        });
-    }
-
     injectSummarizePostLink() {
         const navLinks = document.querySelector('.subtext .subline');
         if (!navLinks) return;
@@ -1314,26 +1228,6 @@ class HNEnhancer {
                 return;
             }
 
-            // If the AI provider is Chrome Built-in AI, do not summarize because it does not handle long text.
-            if(aiProvider === 'chrome-ai') {
-
-                this.summaryPanel.updateContent({
-                    title: `Summarization not recommended`,
-                    metadata: `Content too long for the selected AI <strong>${aiProvider}</strong>`,
-                    text: `This post is too long to be handled by Chrome Built-in AI. The underlying model Gemini Nano may struggle and hallucinate with large content and deep nested threads due to model size limitations. This model works best with individual comments or brief discussion threads. 
-                    <br/><br/>However, if you still want to summarize this thread, you can <a href="#" id="options-page-link">configure another AI provider</a> like local <a href="https://ollama.com/" target="_blank">Ollama</a> or cloud AI services like OpenAI or Claude.`
-                });
-
-                // Once the error message is rendered in the summary panel, add the click handler for the Options page link
-                const optionsLink = this.summaryPanel.panel.querySelector('#options-page-link');
-                if (optionsLink) {
-                    optionsLink.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        this.openOptionsPage();
-                    });
-                }
-                return;
-            }
             // Show a meaningful in-progress message before starting the summarization
             const modelInfo = aiProvider ? ` using <strong>${aiProvider}/${model || ''}</strong>` : '';
             this.summaryPanel.updateContent({
@@ -1779,9 +1673,6 @@ class HNEnhancer {
                     this.showSummaryInPanel(formattedComment, true, 0, commentPathToIdMap).catch(error => {
                         console.error('Error showing summary:', error);
                     });
-                    break;
-                case 'chrome-ai':
-                    this.summarizeUsingChromeBuiltInAI(formattedComment, commentPathToIdMap);
                     break;
                 case 'ollama':
                     this.summarizeUsingOllama(formattedComment, model, commentPathToIdMap);
@@ -2231,38 +2122,6 @@ ${text}
                 title: 'Error',
                 text: errorMessage
             });
-        });
-    }
-
-    summarizeUsingChromeBuiltInAI(formattedComment, commentPathToIdMap) {
-        if(this.isChomeAiAvailable === HNEnhancer.CHROME_AI_AVAILABLE.NO) {
-            this.summaryPanel.updateContent({
-                title: 'AI Not Available',
-                metadata: 'Chrome Built-in AI is disabled or unavailable',
-                text: `Unable to generate summary: Chrome's AI features are not enabled on your device. 
-                       <br><br>
-                       To enable and test Chrome AI:
-                       <br>
-                       1. Visit the <a class="underline" href="https://chrome.dev/web-ai-demos/summarization-api-playground/" target="_blank">Chrome AI Playground</a>
-                       <br>
-                       2. Try running a test summarization
-                       <br>
-                       3. If issues persist, check your Chrome settings and ensure you're using a compatible version`
-            });
-            return;
-        }
-
-        if(this.isChomeAiAvailable === HNEnhancer.CHROME_AI_AVAILABLE.AFTER_DOWNLOAD) {
-            this.summaryPanel.updateContent({
-                metadata: 'Downloading model for Chrome Built-in AI',
-                text: `Chrome built-in AI model will be available after download. This may take a few moments.`
-            });
-        }
-
-        // Summarize the text by passing in the text to page script which in turn will call the Chrome AI API
-        window.postMessage({
-            type: 'HN_AI_SUMMARIZE',
-            data: {text: formattedComment, commentPathToIdMap: commentPathToIdMap}
         });
     }
 
