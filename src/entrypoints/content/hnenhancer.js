@@ -701,6 +701,11 @@ class HNEnhancer {
         while (next) {
             // Look for the element with the style classes of comment. If found, return. If not, continue to the next sibling.
             if (next.classList.contains('athing') && next.classList.contains('comtr')) {
+                // Check if this comment is hidden, if so, skip it
+                if(next.classList.contains('noshow')) {
+                    next = next.nextElementSibling;
+                    continue;
+                }
                 this.setCurrentComment(next);
                 return; // Found the next child
             }
