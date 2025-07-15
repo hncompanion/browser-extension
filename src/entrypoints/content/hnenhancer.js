@@ -594,19 +594,17 @@ class HNEnhancer {
                 const prevComment = this.getNavElementByName(this.currentComment, 'prev');
                 if (prevComment) {
                     this.setCurrentComment(prevComment);
+                } else {
+                    this.navigateToChildComment(false);
                 }
             },
             'l': () => {
-                // Next child. If you are at the last child, it will go to the next sibling comment
+                // Navigate to next comment without hierarchy
                 this.navigateToChildComment();
             },
             'h': () => {
-                // Parent comment (same as 'parent' hyperlink)
-                // Find the 'parent' hyperlink in the HN nav panel and set that as the current comment.
-                const parentComment = this.getNavElementByName(this.currentComment, 'parent');
-                if (parentComment) {
-                    this.setCurrentComment(parentComment);
-                }
+                // Navigate to previous comment without hierarchy
+                this.navigateToChildComment(false);
             },
             'r': () => {
                 // Find the 'root' hyperlink in the HN nav panel and set that as the current comment.
@@ -691,25 +689,25 @@ class HNEnhancer {
         }
     }
 
-    navigateToChildComment() {
+    navigateToChildComment(forward = true) {
         if (!this.currentComment) return;
 
         // The comments are arranged as a flat array of table rows where the hierarchy is represented by the depth of the element.
-        //  So the next child is the next comment element in the array.
-        let next = this.currentComment.nextElementSibling;
+        // Direction determines whether to look for the next or previous comment.
+        let sibling = forward ? this.currentComment.nextElementSibling : this.currentComment.previousElementSibling;
 
-        while (next) {
-            // Look for the element with the style classes of comment. If found, return. If not, continue to the next sibling.
-            if (next.classList.contains('athing') && next.classList.contains('comtr')) {
+        while (sibling) {
+            // Look for the element with the style classes of comment. If found, return. If not, continue to the next/previous sibling.
+            if (sibling.classList.contains('athing') && sibling.classList.contains('comtr')) {
                 // Check if this comment is hidden, if so, skip it
-                if(next.classList.contains('noshow')) {
-                    next = next.nextElementSibling;
+                if (sibling.classList.contains('noshow')) {
+                    sibling = forward ? sibling.nextElementSibling : sibling.previousElementSibling;
                     continue;
                 }
-                this.setCurrentComment(next);
-                return; // Found the next child
+                this.setCurrentComment(sibling);
+                return; // Found the child comment
             }
-            next = next.nextElementSibling;
+            sibling = forward ? sibling.nextElementSibling : sibling.previousElementSibling;
         }
     }
 
@@ -876,8 +874,8 @@ class HNEnhancer {
             "comments": {
                 title: 'Post Details Page',
                 shortcuts: [
-                    {key: 'j k', description: 'Next/previous comment'},
-                    {key: 'l h', description: 'Next child/parent comment'},
+                    {key: 'j k', description: 'Next/previous comment at same depth'},
+                    {key: 'l h', description: 'Next/previous comment without hierarchy'},
                     {key: '[ ]', description: 'Prev/next comment by author'},
                     {key: 'u', description: 'Undo navigation (go back)'},
                     {key: 's', description: 'Toggle summary panel'},
