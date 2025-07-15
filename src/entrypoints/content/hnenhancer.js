@@ -562,6 +562,19 @@ class HNEnhancer {
                     window.open(postLink.href, '_blank');
                 }
             },
+            'Shift+C': () => {
+                // Open comments page in new tab
+                const currentPost = this.getCurrentPost();
+                if (!currentPost) return;
+
+                if (currentPost.nextElementSibling) {
+                    const subtext = currentPost.nextElementSibling;
+                    const commentsLink = subtext.querySelector('a[href^="item?id="]');
+                    if (commentsLink) {
+                        window.open(commentsLink.href, '_blank');
+                    }
+                }
+            },
             'c': () => {
                 // Open comments page
                 const currentPost = this.getCurrentPost();
