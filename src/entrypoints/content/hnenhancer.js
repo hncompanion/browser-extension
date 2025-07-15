@@ -881,7 +881,7 @@ class HNEnhancer {
                 title: 'Home Pages (Home, New, Past, Ask, Show)',
                 shortcuts: [
                     {key: 'j k', description: 'Next/previous post'},
-                    {key: 'c', description: 'Open comments page'}
+                    {key: 'c', description: 'Open comments page. Hold Shift to open in new tab'},
                 ]
             },
             "comments": {
