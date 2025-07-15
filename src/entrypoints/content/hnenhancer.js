@@ -940,7 +940,12 @@ class HNEnhancer {
 
         content.appendChild(closeBtn);
         content.appendChild(title);
-        content.appendChild(table);
+        
+        // Create scrollable body wrapper
+        const body = document.createElement('div');
+        body.className = 'keyboard-help-body';
+        body.appendChild(table);
+        content.appendChild(body);
 
         const footer = document.createElement('div');
         footer.className = 'keyboard-help-footer';

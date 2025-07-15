@@ -110,12 +110,23 @@
 
 .keyboard-help-content {
     background-color: white;
-    padding: 30px;
+    padding: 0;
     border-radius: 8px;
     max-width: 600px;
     width: 90%;
+    max-height: 90vh;
     position: relative;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.keyboard-help-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 30px;
+    padding-top: 10px;
 }
 
 .keyboard-help-content table {
@@ -141,7 +152,8 @@
 
 .keyboard-help-content h2 {
     margin-top: 0;
-    margin-bottom: 16px;
+    margin-bottom: 0;
+    padding: 30px 30px 16px 30px;
     color: #ff6600;
 }
 
@@ -170,15 +182,15 @@
 }
 
 .keyboard-help-footer {
-    margin-top: 16px;
-    padding-top: 12px;
+    margin-top: 0;
+    padding: 12px 30px 20px 30px;
     border-top: 1px solid #eee;
     color: #666;
     font-size: 13px;
 }
 
 .keyboard-help-footer a {
-    color: #ff6600;  /* HN orange */
+    color: #ff6600; /* HN orange */
     text-decoration: none;
 }
 
@@ -243,7 +255,7 @@
 }
 
 .panel-resizer {
-    flex: 0 0 8px;  /* grow :0, shrink: 0, basis: 8px */
+    flex: 0 0 8px; /* grow :0, shrink: 0, basis: 8px */
     padding: 0;
     border: none;
 
@@ -255,41 +267,41 @@
     cursor: col-resize;
 
     background-color: #f6f6ef;
-    transition: background-color 0.2s ease;  /* Smooth color transition */
+    transition: background-color 0.2s ease; /* Smooth color transition */
 }
 
 /* show a grip handle to indicate that this button can be used to resize the summary panel */
 .panel-resizer::after {
-    content: "";             /* Required - even if empty */
-    position: absolute;      /* Position relative to the handle */
-    left: 3px;              /* Position from left of handle */
-    top: 50vh;              /* Center vertically */
-    height: 30px;           /* Height of the grip line */
-    width: 2px;             /* Width of the grip line */
-    border-radius: 1px;     /* Slightly rounded corners */
+    content: ""; /* Required - even if empty */
+    position: absolute; /* Position relative to the handle */
+    left: 3px; /* Position from left of handle */
+    top: 50vh; /* Center vertically */
+    height: 30px; /* Height of the grip line */
+    width: 2px; /* Width of the grip line */
+    border-radius: 1px; /* Slightly rounded corners */
     transform: translateY(-50%); /* Perfect vertical centering */
 
-    background-color: #888;       /* Color of the grip line */
+    background-color: #888; /* Color of the grip line */
     opacity: 0.7;
-    transition: opacity 0.2s ease;  /* Smooth opacity transition */
+    transition: opacity 0.2s ease; /* Smooth opacity transition */
 }
 
 .panel-resizer:hover {
-    background-color: rgba(249, 218, 199, 0.8);  /* Slightly transparent peach */
+    background-color: rgba(249, 218, 199, 0.8); /* Slightly transparent peach */
 }
 
 .panel-resizer:hover::after {
-    opacity: 1;  /* Full opacity on hover */
+    opacity: 1; /* Full opacity on hover */
 }
 .panel-resizer:active {
-    background-color: rgba(249, 218, 199, 1);  /* Full opacity when dragging */
+    background-color: rgba(249, 218, 199, 1); /* Full opacity when dragging */
 }
 
 /* Summary panel */
 .summary-panel {
     flex: 0 1 400px; /* grow :0, shrink: 1, basis: 400px */
     position: sticky;
-    top:0;
+    top: 0;
     align-self: flex-start;
     background-color: #f6f6ef;
     padding: 16px;
@@ -322,7 +334,7 @@
     overflow-y: auto; /* Enable vertical scrolling within the content */
     max-height: 95%; /* Ensure it takes the full height of the panel */
     padding-bottom: 12px;
-    line-height: 1.5;  /* Add more breathing room */
+    line-height: 1.5; /* Add more breathing room */
 }
 
 .summary-author {
@@ -356,7 +368,7 @@
 
 .summary-metadata a,
 .summary-metadata a:visited,
-.summary-metadata a:active{
+.summary-metadata a:active {
     color: #ff6600 !important;
     text-decoration: underline !important;
 }
@@ -396,7 +408,8 @@
 
 .summary-text ul,
 .summary-text ol {
-    ul, ol {
+    ul,
+    ol {
         padding-left: 0;
         margin: 0;
         line-height: 1.5;
@@ -414,7 +427,10 @@
         list-style: decimal;
     }
 
-    ul ul, ol ol, ul ol, ol ul {
+    ul ul,
+    ol ol,
+    ul ol,
+    ol ul {
         margin: 0.25rem 0 0.25rem 1.25rem;
     }
 }
@@ -433,8 +449,12 @@
 
 /* Loading animation */
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 .loading-spinner {
