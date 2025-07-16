@@ -1097,15 +1097,21 @@ class HNEnhancer {
         const currentIndex = comments.indexOf(currentComment);
         if (currentIndex === -1) return;
 
-        let targetIndex;
-        if (direction === 'prev') {
-            targetIndex = currentIndex > 0 ? currentIndex - 1 : comments.length - 1;
-        } else {
-            targetIndex = currentIndex < comments.length - 1 ? currentIndex + 1 : 0;
-        }
+        let targetIndex = currentIndex;
+        const total = comments.length;
 
-        const targetComment = comments[targetIndex];
-        this.setCurrentComment(targetComment);
+        for (let i = 0; i < total; i++) {
+            if (direction === 'prev') {
+                targetIndex = targetIndex > 0 ? targetIndex - 1 : total - 1;
+            } else {
+                targetIndex = targetIndex < total - 1 ? targetIndex + 1 : 0;
+            }
+            const targetComment = comments[targetIndex];
+            if (!targetComment.classList.contains('noshow')) {
+                this.setCurrentComment(targetComment);
+                break;
+            }
+        }
     }
 
     setupUserHover() {
