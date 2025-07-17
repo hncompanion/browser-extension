@@ -10,7 +10,7 @@ export default defineConfig({
             name: "Hacker News Companion",
             description: "Enhance Hacker News with AI-powered discussion summaries, and enable keyboard navigation with Vim-style shortcuts",
             homepage_url: "https://github.com/hncompanion/browser-extension",
-            version: "1.5.4",
+            version: "1.5.5",
             permissions: ['storage'],
             host_permissions: [
                 "https://news.ycombinator.com/*",
