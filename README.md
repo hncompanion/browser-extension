@@ -1,6 +1,6 @@
 ### Hacker News Companion - Chrome Extension
 
-[![Basic features video](https://private-user-images.githubusercontent.com/124426/466285860-14e2e648-0899-49f7-ba63-ea24640b7112.png?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NTI1NDk4NTIsIm5iZiI6MTc1MjU0OTU1MiwicGF0aCI6Ii8xMjQ0MjYvNDY2Mjg1ODYwLTE0ZTJlNjQ4LTA4OTktNDlmNy1iYTYzLWVhMjQ2NDBiNzExMi5wbmc_WC1BbXotQWxnb3JpdGhtPUFXUzQtSE1BQy1TSEEyNTYmWC1BbXotQ3JlZGVudGlhbD1BS0lBVkNPRFlMU0E1M1BRSzRaQSUyRjIwMjUwNzE1JTJGdXMtZWFzdC0xJTJGczMlMkZhd3M0X3JlcXVlc3QmWC1BbXotRGF0ZT0yMDI1MDcxNVQwMzE5MTJaJlgtQW16LUV4cGlyZXM9MzAwJlgtQW16LVNpZ25hdHVyZT0xYWMyMmY0MzIwMTAyNTJkNWE3ZWE4NWY1MDhmNjFkMzQ2MDhiMGU4NjVjY2RlZWQ3ZThkNzE4ODcxMzJjZTVjJlgtQW16LVNpZ25lZEhlYWRlcnM9aG9zdCJ9.ac5TRGI2qpduiIeoblz0rLEvyZ0hV7BCR-ptuz1aTF0)](https://youtu.be/SJxsczfF9pI)
+[![Basic features video](http://img.youtube.com/vi/SJxsczfF9pI/maxresdefault.jpg)](https://youtu.be/SJxsczfF9pI)
 
 > [!TIP]
 > You can also find this extension on the [Chrome Web Store](https://chromewebstore.google.com/detail/hacker-news-companion/khfcainelcaedmmhjicphbkpigklejgf).
