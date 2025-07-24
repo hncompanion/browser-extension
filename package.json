@@ -2,23 +2,14 @@
   "type": "module",
   "devDependencies": {
     "@ai-sdk/anthropic": "^1.2.12",
+    "@ai-sdk/google": "^1.2.22",
     "@ai-sdk/openai": "^1.3.23",
     "@google/generative-ai": "^0.24.1",
-    "@libsql/client": "^0.15.9",
-    "@openrouter/ai-sdk-provider": "^0.7.2",
+    "@openrouter/ai-sdk-provider": "^0.7.3",
     "@tailwindcss/aspect-ratio": "^0.4.2",
     "@tailwindcss/forms": "^0.5.10",
-    "@tailwindcss/typography": "^0.5.16",
     "@tailwindcss/vite": "^4.1.11",
     "ai": "^4.3.19",
-    "archiver": "^7.0.1",
-    "bottleneck": "^2.19.5",
-    "dotenv": "^17.2.0",
-    "html-entities": "^2.6.0",
-    "jest": "^30.0.4",
-    "jsonlines": "^0.1.1",
-    "node-fetch": "^3.3.2",
-    "node-html-parser": "^7.0.1",
     "tailwindcss": "^4.1.11",
     "wxt": "^0.20.7"
   },
@@ -32,9 +23,5 @@
     "postinstall": "wxt prepare",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest"
   },
-  "packageManager": "pnpm@10.2.0+sha512.0d27364e0139c6aadeed65ada153135e0ca96c8da42123bd50047f961339dc7a758fc2e944b428f52be570d1bd3372455c1c65fa2e7aa0bfbf931190f9552001",
-  "dependencies": {
-    "@ai-sdk/google": "^1.2.22",
-    "inter-ui": "^4.1.1"
-  }
+  "packageManager": "pnpm@10.2.0+sha512.0d27364e0139c6aadeed65ada153135e0ca96c8da42123bd50047f961339dc7a758fc2e944b428f52be570d1bd3372455c1c65fa2e7aa0bfbf931190f9552001"
 }
