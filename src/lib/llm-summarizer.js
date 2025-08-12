@@ -56,7 +56,7 @@ export async function summarizeText(data) {
             system: systemPrompt,
             prompt: userPrompt,
             // Add optional parameters if provided
-            temperature: parameters.temperature || 0.7,
+            // temperature: parameters.temperature || 0.7,
             top_p: parameters.top_p || 1,
             frequency_penalty: parameters.frequency_penalty || 0,
             presence_penalty: parameters.presence_penalty || 0,
