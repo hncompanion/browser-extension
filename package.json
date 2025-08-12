@@ -1,15 +1,15 @@
 {
   "type": "module",
   "devDependencies": {
-    "@ai-sdk/anthropic": "^1.2.12",
-    "@ai-sdk/google": "^1.2.22",
-    "@ai-sdk/openai": "^1.3.23",
+    "@ai-sdk/anthropic": "^2.0.1",
+    "@ai-sdk/google": "^2.0.4",
+    "@ai-sdk/openai": "^2.0.10",
     "@google/generative-ai": "^0.24.1",
-    "@openrouter/ai-sdk-provider": "^0.7.3",
+    "@openrouter/ai-sdk-provider": "^1.1.2",
     "@tailwindcss/aspect-ratio": "^0.4.2",
     "@tailwindcss/forms": "^0.5.10",
     "@tailwindcss/vite": "^4.1.11",
-    "ai": "^4.3.19",
+    "ai": "^5.0.10",
     "tailwindcss": "^4.1.11",
     "wxt": "^0.20.7"
   },
