@@ -1,27 +1,20 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-gray-50">
+<html lang="en" class="h-full bg-gray-50 dark:bg-gray-900">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Hacker News Companion Options</title>
-
     <script src="options.js" type="module"></script>
-
     <meta name="manifest.open_in_tab" content="true"/>
-
 </head>
 <body class="h-full flex items-center justify-center" >
     <form class="w-full">
-        <div class="w-full h-full space-y-12 mx-auto my-auto max-w-3xl">
-            <div class="flex min-h-full flex-col justify-center py-12 m-6 p-6 rounded-lg shadow-md mx-auto my-auto border-b border-gray-200 dark:border-white/10"
+        <div class="w-full h-full space-y-12 mx-auto my-auto max-w-3xl p-6">
+            <div class="flex min-h-full flex-col justify-center p-12 m-6 rounded-lg shadow-xl mx-auto my-auto border border-b border-gray-200 dark:border-white/10"
                  style="min-width: 550px">
                 <fieldset>
-                    <legend class="text-base font-semibold text-gray-900 dark:text-white">Hacker News Companion
-                        Settings
-                    </legend>
-                    <p class="mt-1 text-sm/6 text-gray-600 dark:text-gray-400">Select the LLM provider for
-                        summarization.</p>
-
+                    <legend class="text-base font-semibold text-gray-900 dark:text-white">Hacker News Companion Settings</legend>
+                    <p class="mt-1 text-sm/6 text-gray-600 dark:text-gray-400">Select the LLM provider for summarization.</p>
                     <div class="mt-6 space-y-6">
 
                         <!--HN Companion Backend id="hn-companion-server-enabled" -->
@@ -46,9 +39,8 @@
                                             </svg>
                                         </div>
                                     </div>
-                                    <div class="text-sm/6">
-                                        <label for="hn-companion-server-enabled" class="font-medium text-gray-900">Load
-                                            summary from Hacker News Companion Server</label>
+                                    <div class="text-sm/6 text-gray-900 dark:text-white">
+                                        <label for="hn-companion-server-enabled" class="font-medium">Load summary from Hacker News Companion Server</label>
                                     </div>
                                     <details class=" inline-block relative" id="hn-companion-server-description">
                                         <summary class="list-none text-gray-400 hover:text-gray-500 cursor-pointer">
@@ -62,18 +54,13 @@
                                         <div class="absolute left-0 -translate-x-32  mt-2 w-80 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-10 p-4 text-sm text-gray-600">
                                             <p class="font-medium mb-2">How this works:</p>
                                             <p>💡 The HN Companion server periodically fetches stories from the Hacker
-                                                News
-                                                homepage and creates LLM summaries which are cached on our servers.</p>
+                                                News homepage and creates LLM summaries which are cached on our servers.</p>
                                             <p class="pt-2">When this option is enabled, and you request a summary for a
-                                                story that's already cached,
-                                                the extension will display it immediately without needing to use your
-                                                own
-                                                API keys.</p>
+                                                story that's already cached, the extension will display it immediately without needing to use your
+                                                own API keys.</p>
                                             <p class="pt-2">If you want a different summary than the cached one, you can
-                                                generate a fresh summary at any time.
-                                                Just use the link in the header of the summary panel - this will use
-                                                your
-                                                selected AI provider and your own API key.</p>
+                                                generate a fresh summary at any time. Just use the link in the header of the summary panel - this will use
+                                                your selected AI provider and your own API key.</p>
                                         </div>
                                     </details>
 
@@ -81,21 +68,20 @@
                             </div>
                         </fieldset>
 
-                        <div class="relative">
-                            <div class="absolute inset-0 flex items-center" aria-hidden="true">
-                                <div class="w-full border-t border-gray-300"></div>
-                            </div>
+                        <div class="flex items-center">
+                            <div aria-hidden="true" class="w-full border-t border-gray-300 dark:border-white/15"></div>
                             <div class="relative flex justify-center">
-                                <span class="bg-white px-2 text-sm text-gray-500">Free Options</span>
+                                <span class="bg-white px-2 text-sm text-gray-500 dark:bg-gray-900 dark:text-gray-400 whitespace-nowrap">Free Options</span>
                             </div>
+                            <div aria-hidden="true" class="w-full border-t border-gray-300 dark:border-white/15"></div>
                         </div>
 
                         <!-- Ollama id="ollama" -->
                         <div class="space-y-3">
                             <div class="flex items-center">
                                 <input id="ollama" name="provider-selection" type="radio"
-                                       class="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden [&:not(:checked)]:before:hidden">
-                                <label for="ollama" class="ml-3 block text-sm font-medium text-gray-900">Ollama</label>
+                                       class="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 dark:border-white/10 dark:bg-white/5 dark:checked:border-indigo-500 dark:checked:bg-indigo-500 dark:focus-visible:outline-indigo-500 dark:disabled:border-white/5 dark:disabled:bg-white/10 dark:disabled:before:bg-white/20 forced-colors:appearance-auto forced-colors:before:hidden [&:not(:checked)]:before:hidden">
+                                <label for="ollama" class="ml-3 block text-sm/6 font-medium text-gray-900 dark:text-white">Ollama</label>
 
                                 <details class="ml-2 inline-block relative">
                                     <summary class="list-none text-gray-400 hover:text-gray-500 cursor-pointer">
@@ -145,12 +131,10 @@
                             </div>
                             <div class="ml-7 space-y-3">
                                 <div>
-                                    <label for="ollama-model" class="block text-sm font-medium text-gray-900">Select
-                                        Ollama
-                                        Model
-                                        <span class="ml-2 inline-flex items-center rounded-md bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-800 ring-1 ring-inset ring-yellow-600/20">Make sure Ollama is running with CORS enabled</span>
+                                    <label for="ollama-model" class="block text-sm font-medium text-gray-900 dark:text-white">Select Ollama Model
+                                        <span class="ml-3 inline-flex items-center rounded-md bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-800 ring-1 ring-inset ring-yellow-600/20">Make sure Ollama is running with CORS enabled</span>
                                     </label>
-                                    <div class="mt-2 grid grid-cols-1">
+                                    <div class="mt-3 grid grid-cols-1">
                                         <select id="ollama-model"
                                                 name="ollama-model"
                                                 class="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white py-1.5 pl-3 pr-8 text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 text-sm">
@@ -168,23 +152,22 @@
                             </div>
                         </div>
 
-                        <div class="relative">
-                            <div class="absolute inset-0 flex items-center" aria-hidden="true">
-                                <div class="w-full border-t border-gray-300"></div>
-                            </div>
+                        <div class="flex items-center">
+                            <div aria-hidden="true" class="w-full border-t border-gray-300 dark:border-white/15"></div>
                             <div class="relative flex justify-center">
-                                <span class="bg-white px-2 text-sm text-gray-500">Cloud based LLMs (API key required)</span>
+                                <span class="bg-white px-2 text-sm text-gray-500 dark:bg-gray-900 dark:text-gray-400 whitespace-nowrap">Cloud based LLMs (API key required)</span>
                             </div>
+                            <div aria-hidden="true" class="w-full border-t border-gray-300 dark:border-white/15"></div>
                         </div>
 
                         <!-- Google AI id="google" -->
                         <div class="space-y-3">
                             <div class="flex items-center">
                                 <input id="google" name="provider-selection" type="radio"
-                                       class="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden [&:not(:checked)]:before:hidden">
-                                <label for="google" class="ml-3 block text-sm font-medium text-gray-900">Google
-                                    AI</label>
-                                <span class="inline-flex items-center rounded-md ml-3 bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20"
+                                       class="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 dark:border-white/10 dark:bg-white/5 dark:checked:border-indigo-500 dark:checked:bg-indigo-500 dark:focus-visible:outline-indigo-500 dark:disabled:border-white/5 dark:disabled:bg-white/10 dark:disabled:before:bg-white/20 forced-colors:appearance-auto forced-colors:before:hidden [&:not(:checked)]:before:hidden">
+                                <label for="google" class="ml-3 block text-sm/6 font-medium text-gray-900 dark:text-white">Google AI</label>
+
+                                <span class="ml-3 inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20"
                                       title="Supports larger context">🌟 Best performance and Cost effective 🌟</span>
                             </div>
                             <div class="ml-7 space-y-3">
@@ -207,13 +190,9 @@
                                         </summary>
                                         <div class="absolute right-0 mt-2 w-72 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-10 p-4 text-sm text-gray-600">
                                             🔑 Get your API key from <a href="https://aistudio.google.com/apikey"
-                                                                       target="_blank" class="underline">here</a>.<p
-                                                class="pt-3"> API key is securely stored in your browser's local storage
-                                            and
-                                            can sync across
-                                            your devices with browser sync. The key is transmitted only to the selected
-                                            LLM
-                                            provider when making requests.</p>
+                                                                       target="_blank" class="underline">here</a>.
+                                            <p class="pt-3"> API key is securely stored in your browser's local storage and can sync across
+                                            your devices with browser sync. The key is transmitted only to the selected LLM provider when making requests.</p>
                                         </div>
                                     </details>
                                 </div>
@@ -225,10 +204,10 @@
                                         <select id="google-model"
                                                 name="google-model"
                                                 class="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white py-1.5 pl-3 pr-8 text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 text-sm">
-                                            <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+                                            <option value="gemini-2.5-pro selected">Gemini 2.5 Pro</option>
                                             <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
                                             <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash-Lite</option>
-                                            <option value="gemini-2.0-flash" selected>Gemini 2.0 Flash</option>
+                                            <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
                                             <option value="gemini-2.0-flash-lite">Gemini 2.0 Flash Lite</option>
                                         </select>
                                         <svg class="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-gray-500 sm:size-4"
@@ -247,9 +226,9 @@
                         <div class="space-y-3">
                             <div class="flex items-center">
                                 <input id="anthropic" name="provider-selection" type="radio"
-                                       class="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden [&:not(:checked)]:before:hidden">
+                                       class="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 dark:border-white/10 dark:bg-white/5 dark:checked:border-indigo-500 dark:checked:bg-indigo-500 dark:focus-visible:outline-indigo-500 dark:disabled:border-white/5 dark:disabled:bg-white/10 dark:disabled:before:bg-white/20 forced-colors:appearance-auto forced-colors:before:hidden [&:not(:checked)]:before:hidden">
                                 <label for="anthropic"
-                                       class="ml-3 block text-sm font-medium text-gray-900">Anthropic</label>
+                                       class="ml-3 block text-sm/6 font-medium text-gray-900 dark:text-white">Anthropic</label>
                             </div>
                             <div class="ml-7 space-y-3">
                                 <div class="mt-2 grid grid-cols-1">
@@ -272,13 +251,10 @@
                                         <div class="absolute right-0 mt-2 w-72 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-10 p-4 text-sm text-gray-600">
                                             🔑 Get your API key from <a
                                                 href="https://console.anthropic.com/settings/keys"
-                                                target="_blank" class="underline">here</a>.<p
-                                                class="pt-3"> API key is securely stored in your browser's local storage
-                                            and
-                                            can sync across
-                                            your devices with browser sync. The key is transmitted only to the selected
-                                            LLM
-                                            provider when making requests.</p>
+                                                target="_blank" class="underline">here</a>.
+                                            <p class="pt-3"> API key is securely stored in your browser's local storage
+                                            and can sync across your devices with browser sync. The key is transmitted only to the selected
+                                            LLM provider when making requests.</p>
                                         </div>
                                     </details>
                                 </div>
@@ -289,7 +265,7 @@
                                         <select id="anthropic-model"
                                                 name="anthropic-model"
                                                 class="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white py-1.5 pl-3 pr-8 text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 text-sm">
-                                            <option value="claude-opus-4-1">Claude Opus 4.1</option>
+                                            <option value="claude-opus-4-1" selected>Claude Opus 4.1</option>
                                             <option value="claude-sonnet-4-0">Claude Sonnet 4</option>
                                             <option value="claude-3-7-sonnet-latest">Claude 3.7 Sonnet</option>
                                             <option value="claude-3-5-sonnet-latest">Claude 3.5 Sonnet</option>
@@ -312,8 +288,8 @@
                         <div class="space-y-3">
                             <div class="flex items-center ">
                                 <input id="openai" name="provider-selection" type="radio"
-                                       class="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden [&:not(:checked)]:before:hidden">
-                                <label for="openai" class="ml-3 block text-sm font-medium text-gray-900">OpenAI</label>
+                                       class="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 dark:border-white/10 dark:bg-white/5 dark:checked:border-indigo-500 dark:checked:bg-indigo-500 dark:focus-visible:outline-indigo-500 dark:disabled:border-white/5 dark:disabled:bg-white/10 dark:disabled:before:bg-white/20 forced-colors:appearance-auto forced-colors:before:hidden [&:not(:checked)]:before:hidden">
+                                <label for="openai" class="ml-3 block text-sm/6 font-medium text-gray-900 dark:text-white">OpenAI</label>
                             </div>
                             <div class="ml-7 space-y-3">
                                 <div class="mt-2 grid grid-cols-1">
@@ -335,13 +311,10 @@
                                         </summary>
                                         <div class="absolute right-0 mt-2 w-72 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-10 p-4 text-sm text-gray-600">
                                             🔑 Get your API key from <a href="https://platform.openai.com/api-keys"
-                                                                       target="_blank" class="underline">here</a>.<p
-                                                class="pt-3"> API key is securely stored in your browser's local storage
-                                            and
-                                            can sync across
-                                            your devices with browser sync. The key is transmitted only to the selected
-                                            LLM
-                                            provider when making requests.</p>
+                                                                       target="_blank" class="underline">here</a>.
+                                            <p class="pt-3"> API key is securely stored in your browser's local storage
+                                            and can sync across your devices with browser sync. The key is transmitted only to the selected
+                                            LLM provider when making requests.</p>
                                         </div>
                                     </details>
                                 </div>
@@ -353,7 +326,7 @@
                                         <select id="openai-model"
                                                 name="openai-model"
                                                 class="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white py-1.5 pl-3 pr-8 text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 text-sm">
-                                            <option value="gpt-5">GPT-5</option>
+                                            <option value="gpt-5" selected>GPT-5</option>
                                             <option value="gpt-5-mini">GPT-5 mini</option>
                                             <option value="gpt-5-nano">GPT-5 nano</option>
                                             <option value="gpt-4.1-nano">GPT-4.1 nano</option>
@@ -376,9 +349,9 @@
                         <div class="space-y-3">
                             <div class="flex items-center">
                                 <input id="openrouter" name="provider-selection" type="radio"
-                                       class="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden [&:not(:checked)]:before:hidden">
+                                       class="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 dark:border-white/10 dark:bg-white/5 dark:checked:border-indigo-500 dark:checked:bg-indigo-500 dark:focus-visible:outline-indigo-500 dark:disabled:border-white/5 dark:disabled:bg-white/10 dark:disabled:before:bg-white/20 forced-colors:appearance-auto forced-colors:before:hidden [&:not(:checked)]:before:hidden">
                                 <label for="openrouter"
-                                       class="ml-3 block text-sm font-medium text-gray-900">OpenRouter</label>
+                                       class="ml-3 block text-sm/6 font-medium text-gray-900 dark:text-white">OpenRouter</label>
                             </div>
                             <div class="ml-7 space-y-3">
                                 <div class="mt-2 grid grid-cols-1">
@@ -404,12 +377,8 @@
                                             and select a model <a href="https://openrouter.ai/models" class="underline"
                                                                   target="_blank">here</a>.
                                             <p class="pt-3"> API key is securely stored in your browser's local storage
-                                                and
-                                                can sync across
-                                                your devices with browser sync. The key is transmitted only to the
-                                                selected
-                                                LLM
-                                                provider when making requests.</p>
+                                                and can sync across your devices with browser sync. The key is transmitted only to the
+                                                selected LLM provider when making requests.</p>
                                         </div>
                                     </details>
                                 </div>
@@ -429,9 +398,9 @@
                         </div>
 
                         <div class="mt-6 flex items-center justify-end gap-x-6">
-                            <button type="button" class="text-sm font-semibold text-gray-900">Cancel</button>
+                            <button type="button" class="rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">Cancel</button>
                             <button type="submit"
-                                    class="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                                    class="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
                                 Save
                             </button>
                         </div>
