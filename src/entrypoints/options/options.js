@@ -1,5 +1,7 @@
-// Save settings to Browser storage
+import './options.css';
+import '@tailwindplus/elements';
 
+// Save settings to Browser storage
 async function saveSettings() {
     let providerSelection = 'google';
     if(document.querySelector('input[name="provider-selection"]:checked')?.id) {

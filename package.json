@@ -9,6 +9,7 @@
     "@tailwindcss/aspect-ratio": "^0.4.2",
     "@tailwindcss/forms": "^0.5.10",
     "@tailwindcss/vite": "^4.1.11",
+    "@tailwindplus/elements": "^1.0.7",
     "ai": "^5.0.10",
     "tailwindcss": "^4.1.11",
     "wxt": "^0.20.7"
