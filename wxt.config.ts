@@ -39,6 +39,9 @@ export default defineConfig({
                 }
             }
         }
+        else if(browser === 'chrome') {
+            manifest["key"] = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA33BeK36zhT3F5xqyEVply+YGOOwy8r3nvSmRW59wW3y6qjXFPrUtLMm2SlMt52qRbPOVJQm27KvcE385MJ3xrbgeGNryeAS2QTHDMeMW6hJS/Q3+aOX6SDJcLKC9mghHmho13WyczO9AHo2a1IhpvXVKnrEf9gHXcO7lOXlwPJLVUG8galL4OQyPApKbyR6481TTCj9sDvKS1fgsTNGW/le1zPVMrEa0Fqc5S9vz2zEaPdEW3G6SHHL+mRbKcd3iTA1WzjEIq0NaSvRxay5D3p77F83GpN0qM1nCDy2GNqN+nJDHM9ZSLm1Y7J5gtmDvJ0B4YY/uWXqBu+l0sjHzDwIDAQAB";
+        }
         return manifest;
     },
     vite: () => ({
