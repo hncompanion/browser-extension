@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-gray-50 dark:bg-gray-900">
+<html lang="en" class="h-full bg-gray-50 dark:bg-gray-800">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -9,8 +9,8 @@
 </head>
 <body class="flex items-center justify-center" >
     <form class="w-full h-full overflow-y-auto">
-        <div class="w-full h-full space-y-12 mx-auto my-auto max-w-3xl p-6">
-            <div class="flex min-h-full flex-col justify-center p-12 m-6 rounded-lg shadow-xl mx-auto my-auto border border-b border-gray-200 dark:border-white/10"
+        <div class="w-full h-full space-y-12 mx-auto my-auto max-w-3xl p-6  ">
+            <div class="flex min-h-full flex-col justify-center p-12 m-6 rounded-lg shadow-xl mx-auto my-auto border border-b border-gray-200 dark:border-white/10 bg-gray-200 dark:bg-gray-900"
                  style="min-width: 550px">
                 <fieldset>
                     <legend class="text-base font-semibold text-gray-900 dark:text-white ">Hacker News Companion Settings</legend>
@@ -19,7 +19,7 @@
 
                         <!--HN Companion Backend id="hn-companion-server-enabled" -->
                         <fieldset>
-                            <legend class="sr-only">Notifications</legend>
+                            <legend class="sr-only">Hacker News Companion Settings</legend>
                             <div class="space-y-5">
                                 <div class="flex gap-3 items-center">
                                     <div class="flex h-6 shrink-0 items-center">
@@ -366,6 +366,61 @@
                                                class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500 dark:focus:outline-indigo-500">
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+
+
+                        <div class="flex items-center">
+                            <div aria-hidden="true" class="w-full border-t border-gray-300 dark:border-white/15"></div>
+                            <div class="relative flex justify-center">
+                                <span class="bg-white px-2 text-sm text-gray-500 dark:bg-gray-900 dark:text-gray-400 whitespace-nowrap">Customize System and User prompt</span>
+                            </div>
+                            <div aria-hidden="true" class="w-full border-t border-gray-300 dark:border-white/15"></div>
+                        </div>
+
+                        <!-- User Prompt -->
+                        <div>
+                            <div class="flex items-center">
+
+                                <label for="user-prompt" class="block text-sm/6 font-medium text-gray-900 dark:text-white">User Prompt</label>
+                                <details class="ml-2 inline-block relative">
+                                    <summary class="list-none text-gray-400 hover:text-gray-500 cursor-pointer">
+                                        <svg class="size-5 sm:size-4" viewBox="0 0 16 16" fill="currentColor"
+                                             aria-hidden="true">
+                                            <path fill-rule="evenodd"
+                                                  d="M15 8A7 7 0 1 1 1 8a7 7 0 0 1 14 0Zm-6 3.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM7.293 5.293a1 1 0 1 1 .99 1.667c-.459.134-1.033.566-1.033 1.29v.25a.75.75 0 1 0 1.5 0v-.115a2.5 2.5 0 1 0-2.518-4.153.75.75 0 1 0 1.061 1.06Z"
+                                                  clip-rule="evenodd"/>
+                                        </svg>
+                                    </summary>
+                                    <div class="absolute left-0 -translate-x-32  mt-2 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-10 p-4 text-sm text-gray-600 dark:bg-gray-800 dark:text-white dark:outline-white/10 dark:focus:outline-indigo-500" style="min-width: 450px;">
+                                        <p class="font-medium mb-2">ℹ️ Important instructions for customizing User Prompt: ℹ️</p>
+                                        <p class="mb-3">The user prompt uses Javascript template literals for dynamic content. You SHOULD use the following variables in your prompt:<br>
+                                        <ol class="list-decimal ml-4 space-y-2">
+                                            <li>`${title}`: The title of the Hacker News post.</li>
+                                            <li>`${text}`: The formatted comment text.</li>
+                                        </ol>
+                                        <p class="mt-2 mb-2">
+                                            <span class="font-medium">Example</span>:<br>
+                                        <div class="mt-2 p-2 bg-gray-200 rounded font-mono text-xs dark:bg-gray-900 dark:text-white">
+                                            <code class="bg-gray-100 px-2 py-1 rounded block overflow-x-auto dark:bg-gray-800 dark:text-white">
+                                                Summarize the following Hacker News post titled "${title}":\n\n${text}</code>
+                                        </div>
+                                        <p class="mt-3 text-xs text-gray-500">Note: Make sure to include both `${title}` and `${text}` for best results.</p>
+                                    </div>
+                                </details>
+                            </div>
+
+                            <div class="mt-2">
+                                <textarea id="user-prompt" name="user-prompt" rows="4" class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500 dark:focus:outline-indigo-500"></textarea>
+                            </div>
+
+                        </div>
+
+                        <!-- System Prompt -->
+                        <div>
+                            <label for="system-prompt" class="block text-sm/6 font-medium text-gray-900 dark:text-white">System Prompt</label>
+                            <div class="mt-2">
+                                <textarea id="system-prompt" name="system-prompt" rows="4" class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500 dark:focus:outline-indigo-500"></textarea>
                             </div>
                         </div>
 
