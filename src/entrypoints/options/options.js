@@ -76,15 +76,7 @@ async function fetchOllamaModels() {
 
         const selectElement = document.getElementById('ollama-model');
         // Clear existing options
-        selectElement.innerHTML = '';
-
-        // Add models to select element
-        data.models.forEach(model => {
-            const option = document.createElement('option');
-            option.value = model.name;
-            option.textContent = model.name;
-            selectElement.appendChild(option);
-        });
+        selectElement.options.length = 0
 
         // If no models found, add a placeholder option
         if (data.models.length === 0) {
@@ -93,11 +85,21 @@ async function fetchOllamaModels() {
             option.textContent = 'No models available';
             selectElement.appendChild(option);
         }
+        else {
+            // Add models to select element
+            data.models.forEach(model => {
+                const option = document.createElement('option');
+                option.value = model.name;
+                option.textContent = model.name;
+                selectElement.appendChild(option);
+            });
+        }
     } catch (error) {
         console.log('Error fetching Ollama models:', error);
         // Handle error by adding an error option
         const selectElement = document.getElementById('ollama-model');
-        selectElement.innerHTML = '';
+        selectElement.options.length = 0
+
         const option = document.createElement('option');
         option.value = '';
         option.textContent = 'Error loading models';
@@ -118,29 +120,30 @@ async function loadSettings() {
             }
             // Set provider selection
             const providerRadio = document.getElementById(settings.providerSelection);
-            if (providerRadio) providerRadio.checked = true;
+            if (providerRadio)
+                providerRadio.checked = true;
 
             // Set Ollama settings
-            if (settings.ollama) {
-                document.getElementById('ollama-model').value = settings.ollama.model || 'llama3.1';
+            if (settings.ollama && settings.ollama.model) {
+                document.getElementById('ollama-model').value = settings.ollama.model;
             }
 
             // Set Google settings
             if (settings.google) {
                 document.getElementById('google-key').value = settings.google.apiKey || '';
-                document.getElementById('google-model').value = settings.google.model || 'gemini-2.0-flash';
+                document.getElementById('google-model').value = settings.google.model || 'gemini-2.5-pro';
             }
 
             // Set Anthropic settings
             if (settings.anthropic) {
                 document.getElementById('anthropic-key').value = settings.anthropic.apiKey || '';
-                document.getElementById('anthropic-model').value = settings.anthropic.model || 'claude-3-opus';
+                document.getElementById('anthropic-model').value = settings.anthropic.model || 'claude-opus-4-1';
             }
 
             // Set OpenAI settings
             if (settings.openai) {
                 document.getElementById('openai-key').value = settings.openai.apiKey || '';
-                document.getElementById('openai-model').value = settings.openai.model || 'gpt-4';
+                document.getElementById('openai-model').value = settings.openai.model || 'gpt-5';
             }
 
             // Set OpenRouter settings
