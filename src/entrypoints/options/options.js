@@ -1,5 +1,6 @@
 import './options.css';
 import '@tailwindplus/elements';
+import { AI_SYSTEM_PROMPT, AI_USER_PROMPT_TEMPLATE } from '../content/constants.js';
 
 // Save settings to Browser storage
 async function saveSettings() {
@@ -7,6 +8,10 @@ async function saveSettings() {
     if(document.querySelector('input[name="provider-selection"]:checked')?.id) {
         providerSelection = document.querySelector('input[name="provider-selection"]:checked').id;
     }
+    // Prompt customization
+    const promptCustomization = document.getElementById('prompt-customization').checked;
+    const systemPrompt = document.getElementById('system-prompt').value;
+    const userPrompt = document.getElementById('user-prompt').value;
     const settings = {
         serverCacheEnabled: document.getElementById('hn-companion-server-enabled').checked,
         providerSelection,
@@ -28,7 +33,10 @@ async function saveSettings() {
         openrouter: {
             apiKey: document.getElementById('openrouter-key').value,
             model: document.getElementById('openrouter-model').value
-        }
+        },
+        promptCustomization,
+        systemPrompt: promptCustomization ? systemPrompt : undefined,
+        userPrompt: promptCustomization ? userPrompt : undefined
     };
 
     try {
@@ -151,6 +159,29 @@ async function loadSettings() {
                 document.getElementById('openrouter-key').value = settings.openrouter.apiKey || '';
                 document.getElementById('openrouter-model').value = settings.openrouter.model || 'deepseek/deepseek-chat';
             }
+
+            // Prompt customization
+            const promptCustomization = settings?.promptCustomization || false;
+            document.getElementById('prompt-customization').checked = promptCustomization;
+            // System prompt
+            const systemPromptTextarea = document.getElementById('system-prompt');
+            // User prompt
+            const userPromptTextarea = document.getElementById('user-prompt');
+            if (promptCustomization) {
+                systemPromptTextarea.value = settings?.systemPrompt || AI_SYSTEM_PROMPT;
+                userPromptTextarea.value = settings?.userPrompt || AI_USER_PROMPT_TEMPLATE.toString().split('=>')[1].trim().replace(/^`|`$/g, '');
+                systemPromptTextarea.removeAttribute('disabled');
+                userPromptTextarea.removeAttribute('disabled');
+                systemPromptTextarea.removeAttribute('readonly');
+                userPromptTextarea.removeAttribute('readonly');
+            } else {
+                systemPromptTextarea.value = AI_SYSTEM_PROMPT;
+                userPromptTextarea.value = AI_USER_PROMPT_TEMPLATE.toString().split('=>')[1].trim().replace(/^`|`$/g, '');
+                systemPromptTextarea.setAttribute('disabled', 'true');
+                userPromptTextarea.setAttribute('disabled', 'true');
+                systemPromptTextarea.setAttribute('readonly', 'true');
+                userPromptTextarea.setAttribute('readonly', 'true');
+            }
         }
     } catch (error) {
         console.error('Error loading settings:', error);
@@ -208,6 +239,24 @@ document.addEventListener('DOMContentLoaded', async () => {
             ollamaInputs.forEach(input => input.disabled = radio.id !== 'ollama');
             openrouterInputs.forEach(input => input.disabled = radio.id !== 'openrouter');
         });
+    });
+
+    // Add event listener for prompt customization checkbox
+    const promptCustomizationCheckbox = document.getElementById('prompt-customization');
+    const systemPromptTextarea = document.getElementById('system-prompt');
+    const userPromptTextarea = document.getElementById('user-prompt');
+    promptCustomizationCheckbox.addEventListener('change', (e) => {
+        if (e.target.checked) {
+            systemPromptTextarea.removeAttribute('disabled');
+            userPromptTextarea.removeAttribute('disabled');
+            systemPromptTextarea.removeAttribute('readonly');
+            userPromptTextarea.removeAttribute('readonly');
+        } else {
+            systemPromptTextarea.setAttribute('disabled', 'true');
+            userPromptTextarea.setAttribute('disabled', 'true');
+            systemPromptTextarea.setAttribute('readonly', 'true');
+            userPromptTextarea.setAttribute('readonly', 'true');
+        }
     });
 
     // Initial trigger of radio button change event to set initial state

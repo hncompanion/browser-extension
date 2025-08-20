@@ -1857,8 +1857,22 @@ class HNEnhancer {
         });
     }
 
-    getSystemMessage() {
+    async getSystemMessage() {
+        const settingsData = await browser.storage.sync.get('settings');
+        const settings = settingsData.settings || {};
+        if (settings.promptCustomization && settings.systemPrompt) {
+            return settings.systemPrompt;
+        }
         return AI_SYSTEM_PROMPT;
+    }
+
+    async getUserMessage(title, text) {
+        const settingsData = await browser.storage.sync.get('settings');
+        const settings = settingsData.settings || {};
+        if (settings.promptCustomization && settings.userPrompt) {
+            return settings.userPrompt.replace(/\$\{title\}/g, title).replace(/\$\{text\}/g, text);
+        }
+        return AI_USER_PROMPT_TEMPLATE(title, text);
     }
 
     stripAnchors(text) {
@@ -1896,9 +1910,6 @@ class HNEnhancer {
         return outputText;
     }
 
-    getUserMessage(title, text) {
-        return AI_USER_PROMPT_TEMPLATE(title, text);
-    }
 
     // Show the summary in the summary panel - format the summary for two steps:
     // 1. Replace markdown with HTML
