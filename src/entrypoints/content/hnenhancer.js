@@ -1,8 +1,9 @@
 import HNState from './hnstate.js';
 import SummaryPanel from './summary-panel.js';
 import {browser} from "wxt/browser";
-import { storage } from '#imports';
-import { AI_SYSTEM_PROMPT, AI_USER_PROMPT_TEMPLATE } from './constants.js';
+import {storage} from '#imports';
+import {Logger} from "../../lib/utils.js";
+import {AI_SYSTEM_PROMPT, AI_USER_PROMPT_TEMPLATE} from './constants.js';
 
 // TODO: Remove or move inside
 const SummarizeCheckStatus = {
@@ -16,23 +17,11 @@ class HNEnhancer {
 
     static DEBUG = false;  // Set to true when debugging
 
-    logDebug(...args) {
-        if (HNEnhancer.DEBUG) {
-            console.log('[DEBUG] ', ...args);
-        }
-    }
-
-    logInfo(...args) {
-        console.log('[INFO] ', ...args);
-    }
-
-    static CHROME_AI_AVAILABLE = {
-        YES: 'readily',
-        NO: 'no',
-        AFTER_DOWNLOAD: 'after-download'
-    }
-
     constructor() {
+
+        if(HNEnhancer.DEBUG) {
+            Logger.enableLoggingSync();
+        }
 
         this.authorComments = this.createAuthorCommentsMap();    // Create a map of comment elements by author
         this.popup = this.createAuthorPopup();
@@ -92,7 +81,7 @@ class HNEnhancer {
 
             let lastSeenPostIndex = -1;
             if (lastSeenPostId) {
-                this.logDebug(`Got last seen post id from storage: ${lastSeenPostId}`);
+                Logger.debugSync(`Got last seen post id from storage: ${lastSeenPostId}`);
 
                 // Find the post with matching ID
                 const posts = Array.from(this.allPosts);
@@ -133,7 +122,7 @@ class HNEnhancer {
                 if(nextPostIndex < this.allPosts.length) {
                     this.setCurrentPostIndex(nextPostIndex);
                 } else {
-                    this.logDebug(`Currently at the last post, cannot navigate further to next post.`);
+                    Logger.debugSync(`Currently at the last post, cannot navigate further to next post.`);
                 }
                 break;
             case 'prev':
@@ -141,18 +130,18 @@ class HNEnhancer {
                 if(prevPostIndex >= 0) {
                     this.setCurrentPostIndex(prevPostIndex);
                 } else {
-                    this.logDebug(`Currently at the first post, cannot navigate further to previous post.`);
+                    Logger.debugSync(`Currently at the first post, cannot navigate further to previous post.`);
                 }
                 break;
             default:
-                console.error(`Cannot navigate to post. Unknown direction: ${direction}`);
+                Logger.infoSync(`Cannot navigate to post. Unknown direction: ${direction}`);
                 break;
         }
     }
 
     getCurrentPost() {
         if(this.currentPostIndex < 0 || this.currentPostIndex >= this.allPosts.length){
-            this.logInfo(`No current post to return, because current post index is outside the bounds of the posts array. 
+            Logger.infoSync(`No current post to return, because current post index is outside the bounds of the posts array. 
                             currentPostIndex: ${this.currentPostIndex}. allPosts.length: ${this.allPosts.length}`);
             return null;
         }
@@ -167,11 +156,11 @@ class HNEnhancer {
         if(!this.allPosts) return;
 
         if(this.allPosts.length === 0) {
-            this.logDebug(`No posts in this page, hence not setting the current post.`);
+            Logger.debugSync(`No posts in this page, hence not setting the current post.`);
             return;
         }
         if(postIndex < 0 || postIndex >= this.allPosts.length) {
-            console.error(`ERROR: cannot set current post because the given index is outside the bounds of the posts array. 
+            Logger.infoSync(`ERROR: cannot set current post because the given index is outside the bounds of the posts array. 
                             postIndex: ${postIndex}. allPosts.length: ${this.allPosts.length}`);
             return;
         }
@@ -185,18 +174,18 @@ class HNEnhancer {
         // update the post index if there is a valid post at that index
         const newPost = this.allPosts[postIndex];
         if(!newPost) {
-            console.error(`Post at the new index is null. postIndex: ${postIndex}`);
+            Logger.infoSync(`Post at the new index is null. postIndex: ${postIndex}`);
             return;
         }
 
         this.currentPostIndex = postIndex;
-        this.logDebug(`Updated current post index to ${postIndex}`);
+        Logger.debugSync(`Updated current post index to ${postIndex}`);
 
         // save the id of the new post as the last seen post id in the storage
         const newPostId = this.getPostId(newPost);
         if(newPostId) {
             HNState.saveLastSeenPostId(newPostId);
-            this.logDebug(`Saved current post id as last seen post id: ${newPostId}`);
+            Logger.debugSync(`Saved current post id as last seen post id: ${newPostId}`);
         }
 
         // highlight the new post and scroll to it
@@ -282,7 +271,7 @@ class HNEnhancer {
     injectSummarizeThreadLinks(comment) {
         const navsElement = comment.querySelector('.navs');
         if(!navsElement) {
-            console.error('Could not find the navs element to inject the summarize thread link');
+            Logger.infoSync('Could not find the navs element to inject the summarize thread link');
             return;
         }
 
@@ -358,7 +347,7 @@ class HNEnhancer {
     }
 
     async sendBackgroundMessage(type, data) {
-        this.logDebug(`Sending browser runtime message ${type}:`, data);
+        Logger.debugSync(`Sending browser runtime message ${type}:`, data);
 
         let response;
         const startTime = performance.now();
@@ -370,23 +359,23 @@ class HNEnhancer {
             const endTime = performance.now();
             duration = Math.round((endTime - startTime) / 1000);
 
-            this.logDebug(`Got response from background message '${type}' in ${duration}s. URL: ${data.url || 'N/A'}`);
+            Logger.debugSync(`Got response from background message '${type}' in ${duration}s. URL: ${data.url || 'N/A'}`);
 
         } catch (error) {
             const endTime = performance.now();
             duration = Math.round((endTime - startTime) / 1000);
 
             const errorMessage = `Error sending background message '${type}' URL: ${data?.url || 'N/A'}. Duration: ${duration}s. Error: ${error.message}`;
-            console.error(errorMessage);
+            await Logger.error(errorMessage);
             throw new Error(errorMessage);
         }
 
         if (!response) {
-            console.error(`No response from background message ${type}`);
+            await Logger.error(`No response from background message ${type}`);
             throw new Error(`No response from background message ${type}`);
         }
         if (!response.success) {
-            console.error(`Error response from background message ${type}:`, response.error);
+            await Logger.error(`Error response from background message ${type}:`, response.error);
             throw new Error(response.error);
         }
 
@@ -494,7 +483,7 @@ class HNEnhancer {
                 return;
             }
 
-            this.logDebug(`Pressed key: ${e.key}. Shift key: ${e.shiftKey}`);
+            Logger.debugSync(`Pressed key: ${e.key}. Shift key: ${e.shiftKey}`);
 
             const currentTime = Date.now();
             let shortcutKey = e.key;
@@ -525,7 +514,7 @@ class HNEnhancer {
 
             const shortcutHandler = pageShortcuts[shortcutKey] || globalKeyboardShortcuts[shortcutKey];
 
-            this.logDebug(`Shortcut key: ${shortcutKey}. Handler found? ${!!shortcutHandler}`);
+            Logger.debugSync(`Shortcut key: ${shortcutKey}. Handler found? ${!!shortcutHandler}`);
 
             // If we have a handler for this key or combination, invoke it
             if (shortcutHandler) {
@@ -972,7 +961,7 @@ class HNEnhancer {
         // Get the item id from the 'age' link that shows '10 hours ago' or similar
         const itemLinkElement = comment.querySelector('.age')?.getElementsByTagName('a')[0];
         if (!itemLinkElement) {
-            console.error('Could not find the item link element to get the item id for summarization');
+            await Logger.error('Could not find the item link element to get the item id for summarization');
             return;
         }
 
@@ -980,7 +969,7 @@ class HNEnhancer {
         const itemId = itemLinkElement.href.split('=')[1];
         const {formattedComment, commentPathToIdMap} = await this.getHNThread(itemId);
         if (!formattedComment) {
-            console.error(`Could not get the thread for summarization. item id: ${itemId}`);
+            await Logger.error(`Could not get the thread for summarization. item id: ${itemId}`);
             return;
         }
 
@@ -988,7 +977,7 @@ class HNEnhancer {
         const {aiProvider, model} = await this.getAIProviderModel();
 
         if (!aiProvider) {
-            console.log('AI provider not configured. Prompting user to complete setup.');
+            await Logger.info('AI provider not configured. Prompting user to complete setup.');
             this.showConfigureAIMessage();
             return;
         }
@@ -1208,7 +1197,7 @@ class HNEnhancer {
     async summarizeAllComments(skipCache = false) {
         const itemId = this.getCurrentHNItemId();
         if (!itemId) {
-            console.error(`Could not get item id of the current port to summarize all comments in it.`);
+            await Logger.error(`Could not get item id of the current port to summarize all comments in it.`);
             return;
         }
 
@@ -1230,7 +1219,7 @@ class HNEnhancer {
             const cacheResult = await this.getCachedSummary(itemId);
             const cachedSummary = cacheResult?.summary;
             if (cachedSummary && cachedSummary.length > 0) {
-                console.info(`Using cached summary from HNCompanion server for post ${itemId}`);
+                await Logger.info(`Using cached summary from HNCompanion server for post ${itemId}`);
 
                 // Calculate how long ago the summary was generated.
                 const timeAgo = this.getTimeAgo(cacheResult.created_at);
@@ -1244,7 +1233,7 @@ class HNEnhancer {
                 return;
             }
             // If the summary is not available in the cache, fetch the comments from the API and summarize them
-            console.info(`No cached summary found for post ID ${itemId}. Generating fresh summary using configured AI provider`);
+            await Logger.info(`No cached summary found for post ID ${itemId}. Generating fresh summary using configured AI provider`);
         }
         try {
 
@@ -1252,7 +1241,7 @@ class HNEnhancer {
 
             // Soon after installing the extension, the settings may not be available. Show a message to configure the AI provider.
             if(!aiProvider) {
-                console.log('AI provider not configured. Prompting user to complete setup.');
+                await Logger.info('AI provider not configured. Prompting user to complete setup.');
                 this.showConfigureAIMessage();
                 return;
             }
@@ -1269,7 +1258,7 @@ class HNEnhancer {
             await this.summarizeText(formattedComment, commentPathToIdMap);
 
         } catch (error) {
-            console.error('Error preparing for summarization:', error);
+            await Logger.error('Error preparing for summarization:', error);
             this.summaryPanel.updateContent({
                 title: 'Summarization Error',
                 metadata: '',
@@ -1301,7 +1290,7 @@ class HNEnhancer {
 
             // Check if the date is valid
             if (isNaN(localDate.getTime())) {
-                console.error(`Error parsing date. dateString: ${dateString}. localDate: ${localDate}`);
+                Logger.infoSync(`Error parsing date. dateString: ${dateString}. localDate: ${localDate}`);
                 return null;            }
 
             const now = new Date();
@@ -1321,7 +1310,7 @@ class HNEnhancer {
                 return `${diffDays} day${diffDays === 1 ? '' : 's'}`;
             }
         } catch (error) {
-            console.error(`Error parsing date. dateString: ${dateString}. Error: ${error}`);
+            Logger.infoSync(`Error parsing date. dateString: ${dateString}. Error: ${error}`);
             return null;
         }
     }
@@ -1343,20 +1332,20 @@ class HNEnhancer {
 
             // Handle the 404 error gracefully and return null
             if (data.status === 404) {
-                console.debug(`Cache miss: Post ${postId} not found in HNCompanion server. This is expected.`);
+                await Logger.debug(`Cache miss: Post ${postId} not found in HNCompanion server. This is expected.`);
                 return null;
             }
 
             if (!data || !data.summary) {
-                console.debug(`Cache miss: Post ${postId} returned invalid data from HNCompanion server. data is empty or summary is missing. data: ${JSON.stringify(data)}`);
+                await Logger.debug(`Cache miss: Post ${postId} returned invalid data from HNCompanion server. data is empty or summary is missing. data: ${JSON.stringify(data)}`);
                 return null;
             }
 
-            console.debug(`Cache hit: Found summary for post ${postId} in HNCompanion server. Cache created at ${data.created_at} (UTC time)`);
+            await Logger.debug(`Cache hit: Found summary for post ${postId} in HNCompanion server. Cache created at ${data.created_at} (UTC time)`);
             return data;
         } catch (error) {
             // Handle the error gracefully. Cache not available is not an error, just an info for the client to call LLM API
-            console.warn(`Failed to retrieve cache for post ${postId}: ${error.message}`);
+            await Logger.debug(`Failed to retrieve cache for post ${postId}: ${error.message}`);
             return null;
         }
     }
@@ -1404,7 +1393,7 @@ class HNEnhancer {
                 })
                 .join('');
 
-            this.logDebug('formattedComment...', formattedComment);
+            Logger.debugSync('formattedComment...', formattedComment);
             // this.logDebug('commentPathToIdMap...', JSON.stringify([...commentPathToIdMap.entries()]));
 
             return {
@@ -1412,7 +1401,7 @@ class HNEnhancer {
                 commentPathToIdMap
             };
         } catch (error) {
-            console.error(`Error: ${error.message}`);
+            await Logger.error(`Error: ${error.message}`);
         }
     }
 
@@ -1425,7 +1414,7 @@ class HNEnhancer {
 
         // Step 1: collect all comments and their metadata
         const commentRows = document.querySelectorAll('.comtr');
-        this.logDebug(`Found ${commentRows.length} DOM comments in post`);
+        Logger.debugSync(`Found ${commentRows.length} DOM comments in post`);
 
         let skippedComments = 0;
         commentRows.forEach((commentRow, index) => {
@@ -1510,7 +1499,7 @@ class HNEnhancer {
 
         });
 
-        this.logDebug(`...Comments from DOM:: Total: ${commentRows.length}. Skipped (flagged): ${skippedComments}. Remaining: ${commentsInDOM.size}`);
+        Logger.debugSync(`...Comments from DOM:: Total: ${commentRows.length}. Skipped (flagged): ${skippedComments}. Remaining: ${commentsInDOM.size}`);
 
         return commentsInDOM;
     }
@@ -1584,7 +1573,7 @@ class HNEnhancer {
         flattenCommentTree(commentsTree, null);
 
         // Log the comments so far, skip the top level comment (story) because it is not added to the map
-        this.logDebug(`...Comments from API:: Total: ${apiComments - 1}. Skipped: ${skippedComments}. Remaining: ${flatComments.size}`);
+        Logger.debugSync(`...Comments from API:: Total: ${apiComments - 1}. Skipped: ${skippedComments}. Remaining: ${flatComments.size}`);
 
         // Step 2: Start building the map of enriched comments, start with the flat comments and sorting them by position.
         //  We have to do this BEFORE calculating the path because the path is based on the position of the comments.
@@ -1654,7 +1643,7 @@ class HNEnhancer {
             type: 'HN_SHOW_OPTIONS',
             data: {}
         }).catch(error => {
-            console.error('Error sending message to show options:', error);
+            Logger.infoSync('Error sending message to show options:', error);
         });
     }
 
@@ -1685,12 +1674,12 @@ class HNEnhancer {
             const model = settings?.[aiProvider]?.model;
 
             if (!aiProvider) {
-                console.log('AI provider not configured. Prompting user to complete setup.');
+                await Logger.info('AI provider not configured. Prompting user to complete setup.');
                 this.showConfigureAIMessage();
                 return;
             }
 
-            this.logInfo(`Summarization - AI Provider: ${aiProvider}, Model: ${model || 'none'}`);
+            Logger.infoSync(`Summarization - AI Provider: ${aiProvider}, Model: ${model || 'none'}`);
             // this.logDebug('1. Formatted comment:', formattedComment);
 
             // Remove unnecessary anchor tags from the text
@@ -1701,7 +1690,7 @@ class HNEnhancer {
                 case 'none':
                     // For debugging purpose, show the formatted comment or any text as summary in the panel
                     this.showSummaryInPanel(formattedComment, true, 0, commentPathToIdMap).catch(error => {
-                        console.error('Error showing summary:', error);
+                        Logger.infoSync('Error showing summary:', error);
                     });
                     break;
                 case 'ollama':
@@ -1717,7 +1706,7 @@ class HNEnhancer {
                     break;
                 default:
                     const errorMessage = `Unsupported AI provider: ${aiProvider}, Model: ${model}`;
-                    console.error(errorMessage);
+                    await Logger.error(errorMessage);
                     this.handleSummaryError(errorMessage);
             }
         } catch (error) {
@@ -1728,12 +1717,12 @@ class HNEnhancer {
     async summarizeTextWithLLM(aiProvider, modelId, apiKey, text, commentPathToIdMap) {
         // Validate required parameters
         if (!text || !aiProvider || !modelId || !apiKey) {
-            console.error('Missing required parameters for AI summarization');
+            await Logger.error('Missing required parameters for AI summarization');
             this.showConfigureAIMessage();
             return;
         }
 
-        this.logDebug(`Summarizing with ${aiProvider} / ${modelId}`);
+        Logger.debugSync(`Summarizing with ${aiProvider} / ${modelId}`);
 
         // Get the configuration based on provider and model
         const modelConfig = this.getModelConfiguration(aiProvider, modelId);
@@ -1777,10 +1766,10 @@ class HNEnhancer {
             // Update the summary panel with the generated summary
             this.showSummaryInPanel(summary, false, data.duration, commentPathToIdMap)
                 .catch(error => {
-                    console.error('Failed to show summary in summary panel in summarizeTextWithLLM(). Error:', error.message);
+                    Logger.infoSync('Failed to show summary in summary panel in summarizeTextWithLLM(). Error:', error.message);
                 });
         }).catch(error => {
-            console.error('LLM summarization failed in summarizeTextWithLLM(). Error:', error.message);
+            Logger.infoSync('LLM summarization failed in summarizeTextWithLLM(). Error:', error.message);
             this.handleSummaryError(error);
         });
     }
@@ -1962,7 +1951,7 @@ class HNEnhancer {
                 if(comment) {
                     this.setCurrentComment(comment);
                 } else {
-                    console.error('Failed to find DOM element for comment id:', id);
+                    Logger.infoSync('Failed to find DOM element for comment id:', id);
                 }
             });
         });
@@ -2010,7 +1999,7 @@ class HNEnhancer {
     async summarizeUsingOllama(text, model, commentPathToIdMap) {
         // Validate required parameters
         if (!text || !model) {
-            console.error('Missing required parameters for Ollama summarization');
+            await Logger.error('Missing required parameters for Ollama summarization');
             this.showConfigureAIMessage();
             return;
         }
@@ -2055,11 +2044,11 @@ class HNEnhancer {
 
                 // Update the summary panel with the generated summary
                 this.showSummaryInPanel(summary, false, data.duration, commentPathToIdMap).catch(error => {
-                    console.error('Error showing summary:', error);
+                    Logger.infoSync('Error showing summary:', error);
                 });
 
             }).catch(error => {
-            console.error('Error in Ollama summarization:', error);
+            Logger.infoSync('Error in Ollama summarization:', error);
 
             // Update the summary panel with an error message
             let errorMessage = 'Error generating summary. ' + error.message;
@@ -2089,11 +2078,11 @@ class HNEnhancer {
                 // Set this comment as the current focus
                 this.setCurrentComment(commentElement, false);
 
-                this.logDebug('Comment focused via click:', commentElement.id);
+                Logger.debugSync('Comment focused via click:', commentElement.id);
             });
         });
 
-        this.logDebug(`Set up click handlers for ${allComments.length} comments`);
+        Logger.debugSync(`Set up click handlers for ${allComments.length} comments`);
     }
 
     saveNavigationState(comment) {
@@ -2117,13 +2106,13 @@ class HNEnhancer {
             this.navigationHistory.shift(); // Remove oldest entry
         }
 
-        this.logDebug(`Navigation state saved. History length: ${this.navigationHistory.length}`);
+        Logger.debugSync(`Navigation state saved. History length: ${this.navigationHistory.length}`);
     }
 
     undoNavigation() {
         // Need at least one item in history to undo to
         if (this.navigationHistory.length === 0) {
-            this.logDebug('No navigation history available for undo');
+            Logger.debugSync('No navigation history available for undo');
             return;
         }
 
@@ -2136,13 +2125,13 @@ class HNEnhancer {
             this.navigationHistory.pop();
             const previousState = this.navigationHistory[this.navigationHistory.length - 1];
             this.setCurrentComment(previousState.comment, true, false); // Don't save to history
-            this.logDebug('Undid navigation to comment:', previousState.comment.id);
+            Logger.debugSync('Undid navigation to comment:', previousState.comment.id);
         } else if (lastState.comment !== this.currentComment) {
             // Go back to the last state
             this.setCurrentComment(lastState.comment, true, false); // Don't save to history
-            this.logDebug('Undid navigation to comment:', lastState.comment.id);
+            Logger.debugSync('Undid navigation to comment:', lastState.comment.id);
         } else {
-            this.logDebug('No previous navigation state to undo to');
+            Logger.debugSync('No previous navigation state to undo to');
         }
     }
 }

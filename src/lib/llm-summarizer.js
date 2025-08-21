@@ -1,9 +1,10 @@
-import { generateText } from 'ai';
+import {generateText} from 'ai';
 
-import { createOpenAI } from '@ai-sdk/openai';
-import { createAnthropic } from '@ai-sdk/anthropic';
-import { createGoogleGenerativeAI } from '@ai-sdk/google';
-import { createOpenRouter } from '@openrouter/ai-sdk-provider';
+import {createOpenAI} from '@ai-sdk/openai';
+import {createAnthropic} from '@ai-sdk/anthropic';
+import {createGoogleGenerativeAI} from '@ai-sdk/google';
+import {createOpenRouter} from '@openrouter/ai-sdk-provider';
+import {Logger} from "./utils.js";
 
 export async function summarizeText(data) {
     try {
@@ -63,7 +64,7 @@ export async function summarizeText(data) {
             max_tokens: parameters.max_tokens
         });
 
-        // console.log('Summarized text success. Summary:', summary);
+        await Logger.debug('Summarized text success. Summary:', summary);
 
         return summary;
 
@@ -78,7 +79,7 @@ export async function summarizeText(data) {
             return  new Error(`${errorPrefix}. Message: ${String(error)}`);
         }
         const error = improveError(caughtError);
-        console.error(error);
+        await Logger.error(error);
         throw error;
     }
 }

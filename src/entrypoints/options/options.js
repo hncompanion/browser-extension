@@ -1,8 +1,9 @@
 import './options.css';
 import '@tailwindplus/elements';
-import { AI_SYSTEM_PROMPT, AI_USER_PROMPT_TEMPLATE } from '../content/constants.js';
+import {AI_SYSTEM_PROMPT, AI_USER_PROMPT_TEMPLATE} from '../content/constants.js';
 import {browser} from "wxt/browser";
-import { storage } from '#imports';
+import {storage} from '#imports';
+import {Logger} from "../../lib/utils.js";
 
 // Save settings to Browser storage
 async function saveSettings() {
@@ -51,7 +52,7 @@ async function saveSettings() {
             saveButton.textContent = originalText;
         }, 2000);
     } catch (error) {
-        console.error('Error saving settings:', error);
+        await Logger.error('Error saving settings:', error);
     }
 }
 
@@ -60,16 +61,16 @@ async function sendBackgroundMessage(type, data) {
     try {
         response = await browser.runtime.sendMessage({type, data});
     } catch (error) {
-        console.error(`Error sending browser runtime message ${type}:`, error);
+        await Logger.error(`Error sending browser runtime message ${type}:`, error);
         throw error;
     }
 
     if (!response) {
-        console.error(`No response from background message ${type}`);
+        await Logger.error(`No response from background message ${type}`);
         throw new Error(`No response from background message ${type}`);
     }
     if (!response.success) {
-        console.error(`Error response from background message ${type}:`, response.error);
+        await Logger.error(`Error response from background message ${type}:`, response.error);
         throw new Error(response.error);
     }
 
@@ -105,7 +106,7 @@ async function fetchOllamaModels() {
             });
         }
     } catch (error) {
-        console.log('Error fetching Ollama models:', error);
+        await Logger.info('Error fetching Ollama models:', error);
         // Handle error by adding an error option
         const selectElement = document.getElementById('ollama-model');
         selectElement.options.length = 0
@@ -185,7 +186,7 @@ async function loadSettings() {
             }
         }
     } catch (error) {
-        console.error('Error loading settings:', error);
+        await Logger.error('Error loading settings:', error);
     }
 }
 

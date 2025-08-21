@@ -1,6 +1,7 @@
 import {summarizeText} from '../../lib/llm-summarizer.js';
 import { storage } from '#imports';
 import {browser} from "wxt/browser";
+import {Logger} from "../../lib/utils.js";
 
 export default defineBackground(() => {
 
@@ -31,7 +32,7 @@ export default defineBackground(() => {
                 }
             }
         );
-        console.log('Default provider set to HN Companion Server');
+        await Logger.debug('Default provider set to HN Companion Server');
     }
 
     browser.runtime.onInstalled.addListener(onInstalled);
@@ -42,7 +43,8 @@ export default defineBackground(() => {
     });
 
     async function onInstalled() {
-        console.log('Installed');
+        await Logger.disableLogging();
+        await Logger.info('Installed');
         await setDefaultSettings();
 
         try {
@@ -56,13 +58,13 @@ export default defineBackground(() => {
                 await browser.runtime.openOptionsPage();
             }
         } catch (e) {
-            console.log('Error during options page handling:', e);
+            await Logger.error('Error during options page handling:', e);
         }
     }
 
     browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
-        console.log('Background script received message of type:', message.type);
+        Logger.infoSync('Background script received message of type:', message.type);
 
         // Handle the message
         switch (message.type) {
@@ -88,7 +90,7 @@ export default defineBackground(() => {
                 );
 
             default:
-                console.log('Unknown message type:', message.type);
+                Logger.infoSync('Unknown message type:', message.type);
         }
     });
 
@@ -99,7 +101,7 @@ export default defineBackground(() => {
                 const response = await asyncOperation();
                 sendResponse({success: true, data: response});
             } catch (error) {
-                console.error(`Background script handler for ${message.type} message failed. Error: ${error}`);
+                await Logger.error(`Background script handler for ${message.type} message failed. Error: ${error}`);
                 sendResponse({success: false, error: error.toString()});
             }
         })();
@@ -141,7 +143,7 @@ export default defineBackground(() => {
                 }
 
                 const errorText = `API Error: HTTP error code: ${response.status}, URL: ${url} \nBody: ${responseText}`;
-                console.error(errorText);
+                await Logger.error(errorText);
                 throw new Error(errorText);
             }
 

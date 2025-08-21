@@ -1,5 +1,6 @@
 import {browser} from "wxt/browser";
-import { storage } from '#imports';
+import {storage} from '#imports';
+import {Logger} from "../../lib/utils.js";
 
 class HNState {
     static saveLastSeenPostId(postId) {
@@ -9,7 +10,7 @@ class HNState {
                 timestamp: Date.now()
             }
         }).catch(_ => {
-            console.error('Error saving current post state:', _);
+            Logger.infoSync('Error saving current post state:', _);
         });
     }
 
@@ -23,14 +24,14 @@ class HNState {
             }
             return data.lastSeenPost.id;
         } catch (error) {
-            console.error('Error retrieving saved post state:', error);
+            await Logger.error('Error retrieving saved post state:', error);
             return null;
         }
     }
 
     static async clearLastSeenPost() {
         storage.removeItem('local:lastSeenPost').catch(_ => {
-            console.error('Error clearing lastSeenPost post state:', _);
+            Logger.infoSync('Error clearing lastSeenPost post state:', _);
         });
     }
 }
