@@ -1,6 +1,8 @@
 import './options.css';
 import '@tailwindplus/elements';
 import { AI_SYSTEM_PROMPT, AI_USER_PROMPT_TEMPLATE } from '../content/constants.js';
+import {browser} from "wxt/browser";
+import { storage } from '#imports';
 
 // Save settings to Browser storage
 async function saveSettings() {
@@ -40,7 +42,7 @@ async function saveSettings() {
     };
 
     try {
-        await browser.storage.sync.set({ settings });
+        await storage.setItem('sync:settings', settings);
 
         const saveButton = document.querySelector('button[type="submit"]');
         const originalText = saveButton.textContent;
@@ -118,8 +120,7 @@ async function fetchOllamaModels() {
 // Load settings from browser storage
 async function loadSettings() {
     try {
-        const data = await browser.storage.sync.get('settings');
-        const settings = data.settings;
+        const settings = await storage.getItem('sync:settings');
 
         if (settings) {
             // Set HN Companion Server enabled state
@@ -202,10 +203,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Get the current state of the checkbox
         const isEnabled = e.target.checked;
 
-        const currentSettings = await browser.storage.sync.get('settings');
-        if (currentSettings && currentSettings.settings) {
-            currentSettings.settings.serverCacheEnabled = isEnabled;
-            await browser.storage.sync.set({settings: currentSettings.settings});
+        const currentSettings = await storage.getItem('sync:settings');
+        if (currentSettings) {
+            currentSettings.serverCacheEnabled = isEnabled;
+            await storage.setItem('sync:settings', currentSettings);
         }
     });
 

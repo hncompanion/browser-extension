@@ -1,6 +1,7 @@
 import HNState from './hnstate.js';
 import SummaryPanel from './summary-panel.js';
 import {browser} from "wxt/browser";
+import { storage } from '#imports';
 import { AI_SYSTEM_PROMPT, AI_USER_PROMPT_TEMPLATE } from './constants.js';
 
 // TODO: Remove or move inside
@@ -364,7 +365,7 @@ class HNEnhancer {
         let duration = 0;
 
         try {
-            response = await chrome.runtime.sendMessage({type, data});
+            response = await browser.runtime.sendMessage({type, data});
 
             const endTime = performance.now();
             duration = Math.round((endTime - startTime) / 1000);
@@ -410,7 +411,7 @@ class HNEnhancer {
             // First decode HTML entities
             about = this.decodeHtmlEntities(about);
 
-            // If the about info contains HTML links, preserve them
+            // If the 'about info' contains HTML links, preserve them
             if (about.includes('<a href=')) {
                 // No need to modify existing links
             } else {
@@ -1043,7 +1044,7 @@ class HNEnhancer {
             text: `<div>Generating summary${modelInfo}... This may take a few moments.<span class="loading-spinner"></span></div>`
         });
 
-        this.summarizeText(formattedComment, commentPathToIdMap);
+        await this.summarizeText(formattedComment, commentPathToIdMap);
     }
 
     shouldSummarizeText(formattedText, commentDepth, aiProvider) {
@@ -1193,14 +1194,14 @@ class HNEnhancer {
     }
 
     async serverCacheConfigEnabled() {
-        const settingsData = await browser.storage.sync.get('settings');
-        return settingsData.settings?.serverCacheEnabled;
+        const settings = await storage.getItem('sync:settings');
+        return settings?.serverCacheEnabled;
     }
 
     async getAIProviderModel() {
-        const settingsData = await browser.storage.sync.get('settings');
-        const aiProvider = settingsData.settings?.providerSelection;
-        const model = settingsData.settings?.[aiProvider]?.model;
+        const settings = await storage.getItem('sync:settings')
+        const aiProvider = settings?.providerSelection;
+        const model = settings?.[aiProvider]?.model;
         return {aiProvider, model};
     }
 
@@ -1265,7 +1266,7 @@ class HNEnhancer {
             });
 
             const {formattedComment, commentPathToIdMap} = await this.getHNThread(itemId);
-            this.summarizeText(formattedComment, commentPathToIdMap);
+            await this.summarizeText(formattedComment, commentPathToIdMap);
 
         } catch (error) {
             console.error('Error preparing for summarization:', error);
@@ -1649,7 +1650,7 @@ class HNEnhancer {
     }
 
     openOptionsPage() {
-        chrome.runtime.sendMessage({
+        browser.runtime.sendMessage({
             type: 'HN_SHOW_OPTIONS',
             data: {}
         }).catch(error => {
@@ -1676,11 +1677,12 @@ class HNEnhancer {
         }
     }
 
-    summarizeText(formattedComment, commentPathToIdMap) {
-        browser.storage.sync.get('settings').then(data => {
+    async summarizeText(formattedComment, commentPathToIdMap) {
+        const settings = await storage.getItem('sync:settings');
+        try {
 
-            const aiProvider = data.settings?.providerSelection;
-            const model = data.settings?.[aiProvider]?.model;
+            const aiProvider = settings?.providerSelection;
+            const model = settings?.[aiProvider]?.model;
 
             if (!aiProvider) {
                 console.log('AI provider not configured. Prompting user to complete setup.');
@@ -1703,28 +1705,27 @@ class HNEnhancer {
                     });
                     break;
                 case 'ollama':
-                    this.summarizeUsingOllama(formattedComment, model, commentPathToIdMap);
+                    await this.summarizeUsingOllama(formattedComment, model, commentPathToIdMap);
                     break;
                 // AI providers supported by Vercel AI SDK. Use the common summarize method
                 case 'openai':
                 case 'anthropic':
                 case 'google':
                 case 'openrouter':
-                    const apiKey = data.settings?.[aiProvider]?.apiKey;
-                    this.summarizeTextWithLLM(aiProvider, model, apiKey, formattedComment, commentPathToIdMap);
+                    const apiKey = settings?.[aiProvider]?.apiKey;
+                    await this.summarizeTextWithLLM(aiProvider, model, apiKey, formattedComment, commentPathToIdMap);
                     break;
                 default:
                     const errorMessage = `Unsupported AI provider: ${aiProvider}, Model: ${model}`;
                     console.error(errorMessage);
                     this.handleSummaryError(errorMessage);
             }
-        }).catch(error => {
-            console.error('Error fetching settings:', error);
+        } catch (error) {
             this.handleSummaryError(error);
-        });
+        }
     }
 
-    summarizeTextWithLLM(aiProvider, modelId, apiKey, text, commentPathToIdMap) {
+    async summarizeTextWithLLM(aiProvider, modelId, apiKey, text, commentPathToIdMap) {
         // Validate required parameters
         if (!text || !aiProvider || !modelId || !apiKey) {
             console.error('Missing required parameters for AI summarization');
@@ -1741,9 +1742,9 @@ class HNEnhancer {
         const tokenLimitText = this.splitInputTextAtTokenLimit(text, modelConfig.inputTokenLimit);
 
         // Create the system and user prompts for better summarization
-        const systemPrompt = this.getSystemMessage();
+        const systemPrompt = await this.getSystemMessage();
         const postTitle = this.getHNPostTitle()
-        const userPrompt = this.getUserMessage(postTitle, tokenLimitText);
+        const userPrompt = await this.getUserMessage(postTitle, tokenLimitText);
 
         // this.logDebug('2. System prompt:', systemPrompt);
         // this.logDebug('3. User prompt:', userPrompt);
@@ -1858,8 +1859,7 @@ class HNEnhancer {
     }
 
     async getSystemMessage() {
-        const settingsData = await browser.storage.sync.get('settings');
-        const settings = settingsData.settings || {};
+        const settings = await storage.getItem('sync:settings') || {};
         if (settings.promptCustomization && settings.systemPrompt) {
             return settings.systemPrompt;
         }
@@ -1867,10 +1867,9 @@ class HNEnhancer {
     }
 
     async getUserMessage(title, text) {
-        const settingsData = await browser.storage.sync.get('settings');
-        const settings = settingsData.settings || {};
+        const settings = await storage.getItem('sync:settings') || {};
         if (settings.promptCustomization && settings.userPrompt) {
-            return settings.userPrompt.replace(/\$\{title\}/g, title).replace(/\$\{text\}/g, text);
+            return settings.userPrompt.replace(/\$\{title}/g, title).replace(/\$\{text}/g, text);
         }
         return AI_USER_PROMPT_TEMPLATE(title, text);
     }
@@ -2008,7 +2007,7 @@ class HNEnhancer {
         return formattedText;
     }
 
-    summarizeUsingOllama(text, model, commentPathToIdMap) {
+    async summarizeUsingOllama(text, model, commentPathToIdMap) {
         // Validate required parameters
         if (!text || !model) {
             console.error('Missing required parameters for Ollama summarization');
@@ -2020,11 +2019,11 @@ class HNEnhancer {
         const endpoint = 'http://localhost:11434/api/generate';
 
         // Create the system message for better summarization
-        const systemMessage = this.getSystemMessage();
+        const systemMessage = await this.getSystemMessage();
 
         // Create the user message with the text to summarize
         const title = this.getHNPostTitle();
-        const userMessage = this.getUserMessage(title, text);
+        const userMessage = await this.getUserMessage(title, text);
 
         // this.logDebug('2. System message:', systemMessage);
         // this.logDebug('3. User message:', userMessage);

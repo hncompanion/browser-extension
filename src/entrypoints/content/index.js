@@ -1,6 +1,7 @@
 import './styles.css';
 
 import HNEnhancer from './hnenhancer.js';
+import {defineContentScript} from "wxt/utils/define-content-script";
 
 export default defineContentScript({
     matches: ['https://news.ycombinator.com/*'],

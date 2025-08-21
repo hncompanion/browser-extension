@@ -1,12 +1,13 @@
 import {summarizeText} from '../../lib/llm-summarizer.js';
+import { storage } from '#imports';
+import {browser} from "wxt/browser";
 
 export default defineBackground(() => {
 
     // Function to set default settings
     async function setDefaultSettings() {
         // Set Hacker News Companion Server as default provider
-        await browser.storage.sync.set({
-            settings: {
+        await storage.setItem('sync:settings',{
                 serverCacheEnabled: true,
                 providerSelection: 'google',
                 ollama: {
@@ -29,7 +30,7 @@ export default defineBackground(() => {
                     model: ''
                 }
             }
-        });
+        );
         console.log('Default provider set to HN Companion Server');
     }
 
@@ -46,13 +47,13 @@ export default defineBackground(() => {
 
         try {
             // Check if we've already shown the options page before
-            const data = await browser.storage.local.get('hasShownOptionsPage');
+            const hasShownOptionsPage = storage.getItem('local:hasShownOptionsPage');
 
             // Only open options page if we haven't shown it before
-            if (!data.hasShownOptionsPage) {
+            if (!hasShownOptionsPage) {
                 // Set flag that we've shown the options page
-                await browser.storage.local.set({ hasShownOptionsPage: true });
-                browser.runtime.openOptionsPage();
+                await storage.setItem('local:hasShownOptionsPage', true);
+                await browser.runtime.openOptionsPage();
             }
         } catch (e) {
             console.log('Error during options page handling:', e);
@@ -130,7 +131,7 @@ export default defineBackground(() => {
             if (!response.ok) {
                 const responseText = await response.text();
 
-                // Handle 404 responses specially if they're expected, for eg. when checking cached summary of a post
+                // Handle 404 responses specially if they're expected, for e.g. when checking cached summary of a post
                 if (response.status === 404 && is404Expected) {
                     // This is an expected 404, not an error. So return as data instead of throwing an error
                     return {
