@@ -14,27 +14,27 @@ This is a review-backed list of potential improvements found while scanning the 
 - **Where:** `src/entrypoints/background/index.js:52`
 - **Suggestion:** `const hasShownOptionsPage = await storage.getItem('local:hasShownOptionsPage');`
 
-### IMP-003 — Fix logging gating (sync methods ignore enable flag)
+### IMP-003 — Fix logging gating (sync methods ignore enable flag)  [Completed]
 - **Problem:** `Logger.infoSync()` logs regardless of whether logging is enabled (it ignores the resolved boolean); `Logger.debugSync()` uses an in-memory flag that is never set by `enableLoggingSync()`.
 - **Where:** `src/lib/utils.js:18` and `src/lib/utils.js:30`
 - **Suggestion:** Make sync log methods consistent (either remove them, or store the resolved enabled flag, or expose a single “enabled” gate that both async/sync use).
 
-### IMP-004 — Errors may be silently dropped in production
+### IMP-004 — Errors may be silently dropped in production  [Completed]
 - **Problem:** `Logger.error()` is gated behind `Logger.isEnabled()`, so failures can be invisible unless logging is enabled.
 - **Where:** `src/lib/utils.js:36`
 - **Suggestion:** Always log errors (or at least critical errors) even when debug logging is disabled.
 
-### IMP-005 — AI SDK call settings use wrong parameter names (tuning likely ignored)
+### IMP-005 — AI SDK call settings use wrong parameter names (tuning likely ignored)  [Completed]
 - **Problem:** `generateText()` is passed snake_case settings (`top_p`, `max_tokens`, `frequency_penalty`, `presence_penalty`), but the AI SDK expects camelCase settings like `topP`, `maxOutputTokens`, `frequencyPenalty`, `presencePenalty`.
 - **Where:** `src/lib/llm-summarizer.js:55`
 - **Suggestion:** Rename settings to match the AI SDK API and pass `temperature`/`topP` consistently.
 
-### IMP-006 — Optional host permissions are declared but never requested
+### IMP-006 — Optional host permissions are declared but never requested  [Completed]
 - **Problem:** `optional_host_permissions` are set, but there is no runtime flow to request them (no `browser.permissions.request` usage), so provider fetch calls may fail without user-granted permission.
 - **Where:** `wxt.config.ts:20` and (absence of usage) `src/` (no permission request flow found)
 - **Suggestion:** Add a permission-request flow (ideally from options UI) before calling external LLM endpoints.
 
-### IMP-007 — Host permissions are incomplete / patterns look too narrow
+### IMP-007 — Host permissions are incomplete / patterns look too narrow  [Completed]
 - **Problem:** Google LLM host permission is missing; OpenAI/Anthropic patterns appear overly specific (may not match actual request URLs); OpenRouter/others may evolve.
 - **Where:** `wxt.config.ts:15`
 - **Suggestion:** Add missing provider hosts (e.g., Google) and use durable host patterns (e.g., `https://api.openai.com/*`, `https://api.anthropic.com/*`) as appropriate for your actual request paths.

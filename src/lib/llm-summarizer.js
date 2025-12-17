@@ -56,12 +56,11 @@ export async function summarizeText(data) {
             model: model,
             system: systemPrompt,
             prompt: userPrompt,
-            // Add optional parameters if provided
-            // temperature: parameters.temperature || 0.7,
-            top_p: parameters.top_p || 1,
-            frequency_penalty: parameters.frequency_penalty || 0,
-            presence_penalty: parameters.presence_penalty || 0,
-            max_tokens: parameters.max_tokens
+            temperature: parameters.temperature,
+            topP: parameters.topP,
+            frequencyPenalty: parameters.frequencyPenalty,
+            presencePenalty: parameters.presencePenalty,
+            maxOutputTokens: parameters.maxOutputTokens
         });
 
         await Logger.debug('Summarized text success. Summary:', summary);

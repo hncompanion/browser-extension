@@ -5,6 +5,48 @@ import {browser} from "wxt/browser";
 import {storage} from '#imports';
 import {Logger} from "../../lib/utils.js";
 
+const OPTIONAL_HOST_PERMISSIONS = {
+    openai: ['https://api.openai.com/*'],
+    anthropic: ['https://api.anthropic.com/*'],
+    openrouter: ['https://openrouter.ai/*'],
+    google: ['https://generativelanguage.googleapis.com/*'],
+    ollama: ['http://localhost:11434/*'],
+};
+
+async function hasOptionalHostPermissions(origins) {
+    if (!browser.permissions?.contains) {
+        return true;
+    }
+    try {
+        return await browser.permissions.contains({origins});
+    } catch (error) {
+        await Logger.error('Error checking optional host permissions:', error);
+        return false;
+    }
+}
+
+async function requestOptionalHostPermissions(origins) {
+    if (!browser.permissions?.request) {
+        return true;
+    }
+    try {
+        return await browser.permissions.request({origins});
+    } catch (error) {
+        await Logger.error('Error requesting optional host permissions:', error);
+        return false;
+    }
+}
+
+function setOllamaModelSelectStatus(text) {
+    const selectElement = document.getElementById('ollama-model');
+    if (!selectElement) return;
+    selectElement.options.length = 0;
+    const option = document.createElement('option');
+    option.value = '';
+    option.textContent = text;
+    selectElement.appendChild(option);
+}
+
 // Save settings to Browser storage
 async function saveSettings() {
     let providerSelection = 'google';
@@ -43,6 +85,17 @@ async function saveSettings() {
     };
 
     try {
+        const origins = OPTIONAL_HOST_PERMISSIONS[providerSelection] || [];
+        if (origins.length > 0) {
+            const alreadyGranted = await hasOptionalHostPermissions(origins);
+            if (!alreadyGranted) {
+                const granted = await requestOptionalHostPermissions(origins);
+                if (!granted) {
+                    window.alert('Permission was not granted. Requests to the selected AI provider may fail until you allow access.');
+                }
+            }
+        }
+
         await storage.setItem('sync:settings', settings);
 
         const saveButton = document.querySelector('button[type="submit"]');
@@ -192,11 +245,15 @@ async function loadSettings() {
 
 // Initialize event listeners and load settings
 document.addEventListener('DOMContentLoaded', async () => {
-    // Fetch Ollama models before loading other settings
-    await fetchOllamaModels();
-
     // Load saved settings
     await loadSettings();
+
+    // Only attempt to load Ollama models if permission is already granted
+    if (await hasOptionalHostPermissions(OPTIONAL_HOST_PERMISSIONS.ollama)) {
+        await fetchOllamaModels();
+    } else {
+        setOllamaModelSelectStatus('Select Ollama to load models');
+    }
 
     // Add event listener for the server cache checkbox
     const serverCacheCheckbox = document.getElementById('hn-companion-server-enabled');
@@ -227,7 +284,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Add radio button change listeners to enable/disable corresponding inputs
     const radioButtons = document.querySelectorAll('input[name="provider-selection"]');
     radioButtons.forEach(radio => {
-        radio.addEventListener('change', () => {
+        radio.addEventListener('change', async () => {
             // Enable/disable input fields based on selection
             const openaiInputs = document.querySelectorAll('#openai-key, #openai-model');
             const anthropicInputs = document.querySelectorAll('#anthropic-key, #anthropic-model');
@@ -240,6 +297,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             googleInputs.forEach(input => input.disabled = radio.id !== 'google');
             ollamaInputs.forEach(input => input.disabled = radio.id !== 'ollama');
             openrouterInputs.forEach(input => input.disabled = radio.id !== 'openrouter');
+
+            if (radio.id === 'ollama') {
+                const origins = OPTIONAL_HOST_PERMISSIONS.ollama;
+                let granted = await hasOptionalHostPermissions(origins);
+                if (!granted) {
+                    granted = await requestOptionalHostPermissions(origins);
+                }
+                if (!granted) {
+                    setOllamaModelSelectStatus('Permission required to load models');
+                    return;
+                }
+                await fetchOllamaModels();
+            }
         });
     });
 

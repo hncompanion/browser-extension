@@ -1740,11 +1740,11 @@ class HNEnhancer {
 
         // Prepare model parameters with defaults and overrides
         const parameters = {
-            temperature: modelConfig.temperature || 0.7,
-            top_p: modelConfig.top_p || 1,
-            frequency_penalty: modelConfig.frequency_penalty || 0,
-            presence_penalty: modelConfig.presence_penalty || 0,
-            max_tokens: modelConfig.outputTokenLimit || undefined
+            temperature: modelConfig.temperature ?? 0.7,
+            topP: modelConfig.topP,
+            frequencyPenalty: modelConfig.frequencyPenalty,
+            presencePenalty: modelConfig.presencePenalty,
+            maxOutputTokens: modelConfig.outputTokenLimit ?? undefined
         };
 
         const llmInput = {
@@ -1780,9 +1780,9 @@ class HNEnhancer {
             inputTokenLimit: 15000,  // Maximum tokens to include from input text
             outputTokenLimit: 4000,  // Maximum tokens allowed for generated summary
             temperature: 0.7,
-            top_p: 1,
-            frequency_penalty: 0,
-            presence_penalty: 0
+            topP: undefined,
+            frequencyPenalty: 0,
+            presencePenalty: 0
         };
 
         // Model-specific configurations

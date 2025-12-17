@@ -18,9 +18,11 @@ export default defineConfig({
                 "https://app.hncompanion.com/*"
             ],
             optional_host_permissions: [
-                "https://api.openai.com/v1/chat/completions/*",
-                "https://api.anthropic.com/v1/messages/*",
-                "https://openrouter.ai/api/v1/*"
+                "https://api.openai.com/*",
+                "https://api.anthropic.com/*",
+                "https://openrouter.ai/*",
+                "https://generativelanguage.googleapis.com/*",
+                "http://localhost:11434/*"
             ],
             icons: {
                 16: '/icon/icon-16.png',
