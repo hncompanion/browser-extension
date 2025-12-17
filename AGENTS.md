@@ -1,5 +1,11 @@
 # Repository Guidelines
 
+## Project Overview
+Hacker News Companion is a cross-browser (Chrome + Firefox) Manifest V3 extension built with WXT that enhances `news.ycombinator.com`.
+- Core features: Vim-style keyboard navigation, hover user previews (via `hn.algolia.com`), and an injected resizable summary panel.
+- Summaries: Load cached summaries from `app.hncompanion.com` or generate fresh AI summaries using local Ollama or cloud LLM providers (OpenAI, Anthropic, Google, OpenRouter).
+- Key codepaths: `src/entrypoints/content/hnenhancer.js` (page enhancer + UI), `src/entrypoints/background/index.js` (MV3 service worker: fetch + LLM calls), `src/entrypoints/options/` (settings UI), `src/lib/` (shared summarizer + utilities).
+
 ## Project Structure
 - `src/entrypoints/`: Extension entrypoints (WXT).
   - `background/`: MV3 service worker logic.
