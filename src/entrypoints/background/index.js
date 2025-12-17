@@ -53,7 +53,7 @@ export default defineBackground(() => {
 
         try {
             // Check if we've already shown the options page before
-            const hasShownOptionsPage = storage.getItem('local:hasShownOptionsPage');
+            const hasShownOptionsPage = await storage.getItem('local:hasShownOptionsPage');
 
             // Only open options page if we haven't shown it before
             if (!hasShownOptionsPage) {
