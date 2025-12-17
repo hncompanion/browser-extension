@@ -5,34 +5,35 @@ import {Logger} from "../../lib/utils.js";
 
 export default defineBackground(() => {
 
+    const DEFAULT_SETTINGS = {
+        serverCacheEnabled: true,
+        providerSelection: 'google',
+        ollama: {
+            model: ''
+        },
+        google: {
+            apiKey: '',
+            model: ''
+        },
+        anthropic: {
+            apiKey: '',
+            model: ''
+        },
+        openai: {
+            apiKey: '',
+            model: ''
+        },
+        openrouter: {
+            apiKey: '',
+            model: ''
+        }
+    };
+
     // Function to set default settings
     async function setDefaultSettings() {
         // Set Hacker News Companion Server as default provider
-        await storage.setItem('sync:settings',{
-                serverCacheEnabled: true,
-                providerSelection: 'google',
-                ollama: {
-                    model: ''
-                },
-                google: {
-                    apiKey: '',
-                    model: ''
-                },
-                anthropic: {
-                    apiKey: '',
-                    model: ''
-                },
-                openai: {
-                    apiKey: '',
-                    model: ''
-                },
-                openrouter: {
-                    apiKey: '',
-                    model: ''
-                }
-            }
-        );
-        await Logger.debug('Default provider set to HN Companion Server');
+        await storage.setItem('sync:settings', DEFAULT_SETTINGS);
+        await Logger.debug('Default settings initialized');
     }
 
     browser.runtime.onInstalled.addListener(onInstalled);
@@ -45,7 +46,10 @@ export default defineBackground(() => {
     async function onInstalled() {
         await Logger.disableLogging();
         await Logger.info('Installed');
-        await setDefaultSettings();
+        const existingSettings = await storage.getItem('sync:settings');
+        if (!existingSettings) {
+            await setDefaultSettings();
+        }
 
         try {
             // Check if we've already shown the options page before

@@ -20,7 +20,6 @@ export default defineConfig({
             optional_host_permissions: [
                 "https://api.openai.com/v1/chat/completions/*",
                 "https://api.anthropic.com/v1/messages/*",
-                "http://localhost:11434/*",
                 "https://openrouter.ai/api/v1/*"
             ],
             icons: {
