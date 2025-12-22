@@ -1740,11 +1740,11 @@ class HNEnhancer {
 
         // Prepare model parameters with defaults and overrides
         const parameters = {
-            temperature: modelConfig.temperature || 0.7,
-            top_p: modelConfig.top_p || 1,
-            frequency_penalty: modelConfig.frequency_penalty || 0,
-            presence_penalty: modelConfig.presence_penalty || 0,
-            max_tokens: modelConfig.outputTokenLimit || undefined
+            temperature: modelConfig.temperature ?? 0.7,
+            topP: modelConfig.topP,
+            frequencyPenalty: modelConfig.frequencyPenalty,
+            presencePenalty: modelConfig.presencePenalty,
+            maxOutputTokens: modelConfig.outputTokenLimit ?? undefined
         };
 
         const llmInput = {
@@ -1780,9 +1780,9 @@ class HNEnhancer {
             inputTokenLimit: 15000,  // Maximum tokens to include from input text
             outputTokenLimit: 4000,  // Maximum tokens allowed for generated summary
             temperature: 0.7,
-            top_p: 1,
-            frequency_penalty: 0,
-            presence_penalty: 0
+            topP: undefined,
+            frequencyPenalty: 0,
+            presencePenalty: 0
         };
 
         // Model-specific configurations
@@ -1797,7 +1797,13 @@ class HNEnhancer {
                 'claude-3-sonnet-20240229': { inputTokenLimit: 20000, outputTokenLimit: 3000, temperature: 0.7 },
             },
             'google': {
-                'gemini-2.0-flash': { inputTokenLimit: 15000, temperature: 0.7 }
+                'gemini-3-pro-preview': { inputTokenLimit: 15000, temperature: 0.7 },
+                'gemini-2.5-pro': { inputTokenLimit: 15000, temperature: 0.7 },
+                'gemini-flash-latest': { inputTokenLimit: 15000, temperature: 0.7 },
+                'gemini-2.5-flash': { inputTokenLimit: 15000, temperature: 0.7 },
+                'gemini-2.5-flash-lite': { inputTokenLimit: 15000, temperature: 0.7 },
+                'gemini-2.0-flash': { inputTokenLimit: 15000, temperature: 0.7 },
+                'gemini-2.0-flash-lite': { inputTokenLimit: 15000, temperature: 0.7 }
             },
             'openrouter': {
                 // These are placeholders - adjust based on actual models

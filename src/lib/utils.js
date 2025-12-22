@@ -1,12 +1,29 @@
 import { storage } from '#imports';
 
 class Logger {
-    static DEBUG_LOGGING_ENABLED = false;
+    static enabled = false;
+    static refreshInFlight = null;
+
+    static async refreshEnabled() {
+        if (Logger.refreshInFlight) {
+            return Logger.refreshInFlight;
+        }
+
+        Logger.refreshInFlight = (async () => {
+            try {
+                const enabled = await storage.getItem('local:loggerEnabled');
+                Logger.enabled = !!enabled;
+            } finally {
+                Logger.refreshInFlight = null;
+            }
+        })();
+
+        return Logger.refreshInFlight;
+    }
 
     static async isEnabled() {
-        // Use wxt storage to check if loggerEnabled is set to true
-        const enabled = await storage.getItem('local:loggerEnabled');
-        return !!enabled;
+        await Logger.refreshEnabled();
+        return Logger.enabled;
     }
 
     static async info(...args) {
@@ -16,9 +33,9 @@ class Logger {
     }
 
     static infoSync(...args) {
-        Logger.isEnabled().then(() => {
+        if (Logger.enabled) {
             console.info('[INFO]', ...args);
-        })
+        }
     }
 
     static async debug(...args) {
@@ -28,26 +45,28 @@ class Logger {
     }
 
     static debugSync(...args) {
-        if (Logger.DEBUG_LOGGING_ENABLED) {
+        if (Logger.enabled) {
             console.debug('[DEBUG]', ...args);
         }
     }
 
     static async error(...args) {
-        if (await Logger.isEnabled()) {
-            console.error('[ERROR]', ...args);
-        }
+        console.error('[ERROR]', ...args);
     }
 
     static enableLoggingSync() {
+        Logger.enabled = true;
         storage.setItem('local:loggerEnabled', true).then(() => {
             Logger.infoSync('Logging enabled');
         });
     }
 
     static async disableLogging() {
+        Logger.enabled = false;
         await storage.setItem('local:loggerEnabled', false);
     }
 }
+
+Logger.refreshEnabled().catch(() => {});
 
 export { Logger };
