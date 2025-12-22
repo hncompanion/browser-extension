@@ -4,6 +4,13 @@ import {browser} from "wxt/browser";
 import {storage} from '#imports';
 import {Logger} from "../../lib/utils.js";
 import {AI_SYSTEM_PROMPT, AI_USER_PROMPT_TEMPLATE} from './constants.js';
+import {marked} from 'marked';
+import {enforceSafeLinks, sanitizeHtmlToFragment} from '../../lib/sanitize.js';
+
+marked.setOptions({
+    headerIds: false,
+    mangle: false
+});
 
 // TODO: Remove or move inside
 const SummarizeCheckStatus = {
@@ -321,7 +328,7 @@ class HNEnhancer {
     createHelpIcon() {
         const icon = document.createElement('div');
         icon.className = 'help-icon';
-        icon.innerHTML = '?';
+        icon.textContent = '?';
         icon.title = 'Keyboard Shortcuts (Press ? or / to toggle)';
 
         icon.onclick = () => this.toggleHelpModal(true);
@@ -339,6 +346,80 @@ class HNEnhancer {
         popup.className = 'author-popup';
         document.body.appendChild(popup);
         return popup;
+    }
+
+    buildFragment(parts) {
+        const fragment = document.createDocumentFragment();
+        parts.forEach(part => {
+            if (part === null || part === undefined) {
+                return;
+            }
+            if (part instanceof Node) {
+                fragment.appendChild(part);
+            } else {
+                fragment.append(String(part));
+            }
+        });
+        return fragment;
+    }
+
+    createStrong(text) {
+        const strong = document.createElement('strong');
+        strong.textContent = text;
+        return strong;
+    }
+
+    createHighlightedAuthor(author) {
+        const span = document.createElement('span');
+        span.className = 'highlight-author';
+        span.textContent = author;
+        return span;
+    }
+
+    createExternalLink(url, label) {
+        const link = document.createElement('a');
+        link.href = url;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.textContent = label;
+        return link;
+    }
+
+    createInternalLink(id, label) {
+        const link = document.createElement('a');
+        link.href = '#';
+        link.id = id;
+        link.textContent = label;
+        return link;
+    }
+
+    createCommentLink(commentId) {
+        const link = document.createElement('a');
+        link.href = '#';
+        link.title = `Go to comment #${commentId}`;
+        link.dataset.commentLink = 'true';
+        link.dataset.commentId = commentId;
+        link.className = 'summary-comment-link';
+        link.textContent = `comment #${commentId}`;
+        return link;
+    }
+
+    createLoadingMessage(parts) {
+        const wrapper = document.createElement('div');
+        parts.forEach(part => {
+            if (part === null || part === undefined) {
+                return;
+            }
+            if (part instanceof Node) {
+                wrapper.appendChild(part);
+            } else {
+                wrapper.append(String(part));
+            }
+        });
+        const spinner = document.createElement('span');
+        spinner.className = 'loading-spinner';
+        wrapper.appendChild(spinner);
+        return wrapper;
     }
 
     getPostAuthor() {
@@ -762,66 +843,64 @@ class HNEnhancer {
         }
     }
 
-    convertMarkdownToHTML(markdown) {
-        // Helper function to wrap all lists as unordered lists
-        function wrapLists(html) {
-            // Wrap any sequence of list items in ul tags
-            return html.replace(/<li>(?:[^<]|<(?!\/li>))*<\/li>(?:\s*<li>(?:[^<]|<(?!\/li>))*<\/li>)*/g,
-                match => `<ul>${match}</ul>`);
+    createSummaryFragment(markdown, commentPathToIdMap) {
+        const html = marked.parse(markdown || '');
+        const fragment = sanitizeHtmlToFragment(html);
+        this.replaceCommentBacklinks(fragment, commentPathToIdMap);
+        enforceSafeLinks(fragment);
+        return fragment;
+    }
+
+    replaceCommentBacklinks(fragment, commentPathToIdMap) {
+        if (!fragment) return;
+
+        fragment.querySelectorAll('a[href]').forEach(link => {
+            const href = link.getAttribute('href');
+            if (!href) return;
+            const match = href.match(/^https?:\/\/news\.ycombinator\.com\/item\?id=\d+#(\d+)/);
+            if (!match) return;
+            const commentId = match[1];
+            link.replaceWith(this.createCommentLink(commentId));
+        });
+
+        const textNodes = [];
+        const walker = document.createTreeWalker(fragment, NodeFilter.SHOW_TEXT);
+        while (walker.nextNode()) {
+            textNodes.push(walker.currentNode);
         }
 
-        // First escape HTML special characters
-        let html = markdown
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;');
+        const pathRegex = /\[(\d+(?:\.\d+)*)]/g;
+        textNodes.forEach(node => {
+            const text = node.nodeValue;
+            if (!text) return;
 
-        // Convert markdown to HTML
-        // noinspection RegExpRedundantEscape,HtmlUnknownTarget
-        html = html
-            // Headers
-            .replace(/^##### (.*$)/gim, '<h5>$1</h5>')
-            .replace(/^#### (.*$)/gim, '<h4>$1</h4>')
-            .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-            .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-            .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+            if (!pathRegex.test(text)) {
+                pathRegex.lastIndex = 0;
+                return;
+            }
 
-            // Blockquotes
-            .replace(/^\> (.*$)/gim, '<blockquote>$1</blockquote>')
-
-            // Code blocks and inline code
-            .replace(/```([^`]+)```/g, '<pre><code>$1</code></pre>')
-            .replace(/`([^`]+)`/g, '<code>$1</code>')
-
-            //  both bullet points and numbered lists to li elements
-            .replace(/^\s*[\-\*]\s(.+)/gim, '<li>$1</li>')
-            .replace(/^\s*(\d+)\.\s(.+)/gim, '<li>$2</li>')
-
-            // Bold and Italic
-            .replace(/\*\*(?=\S)([^\*]+?\S)\*\*/g, '<strong>$1</strong>')
-            .replace(/\*(?=\S)([^\*]+?\S)\*/g, '<em>$1</em>')
-            .replace(/_(?=\S)([^\*]+?\S)_/g, '<em>$1</em>')
-
-            // Images and links
-            .replace(/!\[(.*?)\]\((.*?)\)/gim, "<img alt='$1' src='$2' />")
-            .replace(/\[(.*?)\]\((.*?)\)/gim, "<a href='$2'>$1</a>")
-
-            // Horizontal rules
-            .replace(/^\s*[\*\-_]{3,}\s*$/gm, '<hr>')
-
-            // Paragraphs and line breaks
-            .replace(/\n\s*\n/g, '</p><p>')
-        // .replace(/\n/g, '<br />');
-
-        // Wrap all lists as unordered lists
-        html = wrapLists(html);
-
-        // Wrap everything in paragraphs if not already wrapped
-        if (!html.startsWith('<')) {
-            html = `<p>${html}</p>`;
-        }
-
-        return html.trim();
+            pathRegex.lastIndex = 0;
+            const replacement = document.createDocumentFragment();
+            let lastIndex = 0;
+            let match;
+            while ((match = pathRegex.exec(text)) !== null) {
+                if (match.index > lastIndex) {
+                    replacement.append(text.slice(lastIndex, match.index));
+                }
+                const path = match[1];
+                const commentId = commentPathToIdMap?.get(path);
+                if (commentId) {
+                    replacement.appendChild(this.createCommentLink(commentId));
+                } else {
+                    replacement.append(match[0]);
+                }
+                lastIndex = match.index + match[0].length;
+            }
+            if (lastIndex < text.length) {
+                replacement.append(text.slice(lastIndex));
+            }
+            node.replaceWith(replacement);
+        });
     }
 
     decodeHtmlEntities(text) {
@@ -939,7 +1018,14 @@ class HNEnhancer {
 
         const footer = document.createElement('div');
         footer.className = 'keyboard-help-footer';
-        footer.innerHTML = 'Learn more about features and updates on our <a href="https://github.com/hncompanion/browser-extension/" target="_blank" rel="noopener">GitHub page</a> ↗️';
+        footer.append('Learn more about features and updates on our ');
+        const footerLink = document.createElement('a');
+        footerLink.href = 'https://github.com/hncompanion/browser-extension/';
+        footerLink.target = '_blank';
+        footerLink.rel = 'noopener noreferrer';
+        footerLink.textContent = 'GitHub page';
+        footer.appendChild(footerLink);
+        footer.append(' ↗️');
         content.appendChild(footer);
 
         modal.appendChild(content);
@@ -984,32 +1070,59 @@ class HNEnhancer {
 
         const authorElement = comment.querySelector('.hnuser');
         const author = authorElement.textContent || '';
-        const highlightedAuthor = `<span class="highlight-author">${author}</span>`;
 
         const summarizeCheckResult = this.shouldSummarizeText(formattedComment, commentDepth, aiProvider);
 
         if (summarizeCheckResult.status !== SummarizeCheckStatus.OK) {
-            const messageTemplates = {
-                title: 'Summarization not recommended',
-                metadata: {
-                    [SummarizeCheckStatus.TEXT_TOO_SHORT]: `Thread too brief to use the selected cloud AI <strong>${aiProvider}</strong>`,
-                    [SummarizeCheckStatus.THREAD_TOO_SHALLOW]: `Thread not deep enough to use the selected cloud AI <strong>${aiProvider}</strong>`,
-                    [SummarizeCheckStatus.THREAD_TOO_DEEP]: `Thread too deep for the selected AI <strong>${aiProvider}</strong>`
-                },
-                text: (status, highlightedAuthor) => {
-                    return status === SummarizeCheckStatus.THREAD_TOO_DEEP
-                        ? `This ${highlightedAuthor} thread is too long or deeply nested to be handled by Chrome Built-in AI. The underlying model Gemini Nano may struggle and hallucinate with large content and deep nested threads due to model size limitations. This model works best with individual comments or brief discussion threads. 
-                        <br/><br/>However, if you still want to summarize this thread, you can <a href="#" id="options-page-link">configure another AI provider</a> like local <a href="https://ollama.com/" target="_blank">Ollama</a> or cloud AI services like OpenAI or Claude.`
-
-                        : `This ${highlightedAuthor} thread is concise enough to read directly. Summarizing short threads with a cloud AI service would be inefficient. 
-                        <br/><br/> However, if you still want to summarize this thread, you can <a href="#" id="options-page-link">configure a local AI provider</a> like <a href="https://developer.chrome.com/docs/ai/built-in" target="_blank">Chrome Built-in AI</a> or <a href="https://ollama.com/" target="_blank">Ollama</a> for more efficient processing of shorter threads.`;
-                }
+            const metadataTemplates = {
+                [SummarizeCheckStatus.TEXT_TOO_SHORT]: this.buildFragment([
+                    'Thread too brief to use the selected cloud AI ',
+                    this.createStrong(aiProvider)
+                ]),
+                [SummarizeCheckStatus.THREAD_TOO_SHALLOW]: this.buildFragment([
+                    'Thread not deep enough to use the selected cloud AI ',
+                    this.createStrong(aiProvider)
+                ]),
+                [SummarizeCheckStatus.THREAD_TOO_DEEP]: this.buildFragment([
+                    'Thread too deep for the selected AI ',
+                    this.createStrong(aiProvider)
+                ])
             };
 
+            const createThreadTooDeepMessage = () => this.buildFragment([
+                'This ',
+                this.createHighlightedAuthor(author),
+                ' thread is too long or deeply nested to be handled by Chrome Built-in AI. The underlying model Gemini Nano may struggle and hallucinate with large content and deep nested threads due to model size limitations. This model works best with individual comments or brief discussion threads.',
+                document.createElement('br'),
+                document.createElement('br'),
+                'However, if you still want to summarize this thread, you can ',
+                this.createInternalLink('options-page-link', 'configure another AI provider'),
+                ' like local ',
+                this.createExternalLink('https://ollama.com/', 'Ollama'),
+                ' or cloud AI services like OpenAI or Claude.'
+            ]);
+
+            const createThreadTooShortMessage = () => this.buildFragment([
+                'This ',
+                this.createHighlightedAuthor(author),
+                ' thread is concise enough to read directly. Summarizing short threads with a cloud AI service would be inefficient.',
+                document.createElement('br'),
+                document.createElement('br'),
+                'However, if you still want to summarize this thread, you can ',
+                this.createInternalLink('options-page-link', 'configure a local AI provider'),
+                ' like ',
+                this.createExternalLink('https://developer.chrome.com/docs/ai/built-in', 'Chrome Built-in AI'),
+                ' or ',
+                this.createExternalLink('https://ollama.com/', 'Ollama'),
+                ' for more efficient processing of shorter threads.'
+            ]);
+
             this.summaryPanel.updateContent({
-                title: messageTemplates.title,
-                metadata: messageTemplates.metadata[summarizeCheckResult.status],
-                text: messageTemplates.text(summarizeCheckResult.status, highlightedAuthor)
+                title: 'Summarization not recommended',
+                metadata: metadataTemplates[summarizeCheckResult.status],
+                text: summarizeCheckResult.status === SummarizeCheckStatus.THREAD_TOO_DEEP
+                    ? createThreadTooDeepMessage()
+                    : createThreadTooShortMessage()
             });
 
             // Once the error message is rendered in the summary panel, add the click handler for the Options page link
@@ -1024,13 +1137,21 @@ class HNEnhancer {
         }
 
         // Show an in-progress text in the summary panel
-        const metadata = `Analyzing discussion in ${highlightedAuthor} thread`;
-        const modelInfo = aiProvider ? ` using <strong>${aiProvider}/${model || ''}</strong>` : '';
+        const metadata = this.buildFragment([
+            'Analyzing discussion in ',
+            this.createHighlightedAuthor(author),
+            ' thread'
+        ]);
+        const loadingParts = ['Generating summary'];
+        if (aiProvider) {
+            loadingParts.push(' using ', this.createStrong(`${aiProvider}/${model || ''}`));
+        }
+        loadingParts.push('... This may take a few moments.');
 
         this.summaryPanel.updateContent({
             title: 'Thread Summary',
             metadata: metadata,
-            text: `<div>Generating summary${modelInfo}... This may take a few moments.<span class="loading-spinner"></span></div>`
+            text: this.createLoadingMessage(loadingParts)
         });
 
         await this.summarizeText(formattedComment, commentPathToIdMap);
@@ -1111,11 +1232,25 @@ class HNEnhancer {
                 const userInfo = await this.fetchUserInfo(username);
 
                 if (userInfo) {
-                    this.popup.innerHTML = `
-                        <strong>${username}</strong><br>
-                        Karma: ${userInfo.karma}<br>
-                        About: ${userInfo.about}
-                      `;
+                    this.popup.replaceChildren();
+
+                    const name = document.createElement('strong');
+                    name.textContent = username;
+                    this.popup.appendChild(name);
+                    this.popup.appendChild(document.createElement('br'));
+
+                    this.popup.append(`Karma: ${userInfo.karma}`);
+                    this.popup.appendChild(document.createElement('br'));
+
+                    const aboutLabel = document.createElement('div');
+                    aboutLabel.textContent = 'About:';
+                    this.popup.appendChild(aboutLabel);
+
+                    const aboutContent = document.createElement('div');
+                    const aboutFragment = sanitizeHtmlToFragment(userInfo.about || '');
+                    enforceSafeLinks(aboutFragment);
+                    aboutContent.appendChild(aboutFragment);
+                    this.popup.appendChild(aboutContent);
 
                     const rect = e.target.getBoundingClientRect();
                     this.popup.style.left = `${rect.left}px`;
@@ -1211,8 +1346,10 @@ class HNEnhancer {
         if(cacheConfigEnabled && !skipCache) {
             this.summaryPanel.updateContent({
                 title: 'Post Summary',
-                metadata: `Analyzing all threads in this post...`,
-                text: `<div>Looking for cached summary on HNCompanion server...<span class="loading-spinner"></span></div>`
+                metadata: 'Analyzing all threads in this post...',
+                text: this.createLoadingMessage([
+                    'Looking for cached summary on HNCompanion server...'
+                ])
             });
 
             // Check if the summary is available in the cache and load it
@@ -1247,11 +1384,15 @@ class HNEnhancer {
             }
 
             // Show a meaningful in-progress message before starting the summarization
-            const modelInfo = aiProvider ? ` using <strong>${aiProvider}/${model || ''}</strong>` : '';
+            const loadingParts = ['Generating summary'];
+            if (aiProvider) {
+                loadingParts.push(' using ', this.createStrong(`${aiProvider}/${model || ''}`));
+            }
+            loadingParts.push('... This may take a few moments. ');
             this.summaryPanel.updateContent({
                 title: 'Post Summary',
                 metadata: `Analyzing all threads in this post...`,
-                text: `<div>Generating summary${modelInfo}... This may take a few moments. <span class="loading-spinner"></span></div>`
+                text: this.createLoadingMessage(loadingParts)
             });
 
             const {formattedComment, commentPathToIdMap} = await this.getHNThread(itemId);
@@ -1444,15 +1585,8 @@ class HNEnhancer {
                     p.replaceWith(text);
                 });
 
-                // decode the HTML entities (to remove url encoding and new lines)
-                function decodeHTML(html) {
-                    const txt = document.createElement('textarea');
-                    txt.innerHTML = html;
-                    return txt.value;
-                }
-
-                // Remove unnecessary new lines and decode HTML entities
-                return decodeHTML(tempDiv.innerHTML).replace(/\n+/g, ' ');
+                // Remove unnecessary new lines after extracting text content
+                return (tempDiv.textContent || '').replace(/\n+/g, ' ');
             }
             const commentText = sanitizeCommentText();
 
@@ -1648,11 +1782,17 @@ class HNEnhancer {
     }
 
     showConfigureAIMessage() {
-        const message = 'To use the summarization feature, you need to configure an AI provider. <br/><br/>' +
-            '<a href="#" id="options-page-link">Open settings page</a> to select your preferred LLM provider and configure your API key.';
+        const message = this.buildFragment([
+            'To use the summarization feature, you need to configure an AI provider.',
+            document.createElement('br'),
+            document.createElement('br'),
+            this.createInternalLink('options-page-link', 'Open settings page'),
+            ' to select your preferred LLM provider and configure your API key.'
+        ]);
 
         this.summaryPanel.updateContent({
             title: 'LLM Provider Setup Required',
+            metadata: '',
             text: message
         });
 
@@ -1849,7 +1989,8 @@ class HNEnhancer {
         // Update the summary panel with the error message
         this.summaryPanel.updateContent({
             title: 'Error',
-            text: `<div>${errorMessage}</div>`
+            metadata: '',
+            text: errorMessage
         });
     }
 
@@ -1910,20 +2051,33 @@ class HNEnhancer {
     // 2. Replace path identifiers with comment IDs
     async showSummaryInPanel(summary, fromCache, duration, commentPathToIdMap = null) {
 
-        // Format the summary to replace markdown with HTML
-        let formattedSummary = this.convertMarkdownToHTML(summary);
-
-        // Parse this output to find 'path' identifiers or absolute URL href's and replace them with the actual comment IDs links
-        formattedSummary = this.resolveCommentBacklinks(formattedSummary, commentPathToIdMap);
+        const formattedSummary = this.createSummaryFragment(summary, commentPathToIdMap);
 
         const {aiProvider, model} = await this.getAIProviderModel();
-        const subtitle = fromCache
-            ? `Summary generated by <strong>HNCompanion</strong> and cached <strong>${duration || 'some time'}</strong> ago.` +
-                `<br/><a href="#" id="llm-summarize-link">Generate fresh summary</a> using ` +
-                `LLM <a href="#" id="options-page-link" target="blank">configured in settings</a>.`
-            : (aiProvider
-                ? `Summarized using <strong>${aiProvider}/${model || ''}</strong> in <strong>${duration || '0'} secs</strong>.`
-                : '');
+        let subtitle = null;
+        if (fromCache) {
+            const durationText = duration || 'some time';
+            subtitle = this.buildFragment([
+                'Summary generated by ',
+                this.createStrong('HNCompanion'),
+                ' and cached ',
+                this.createStrong(durationText),
+                ' ago.',
+                document.createElement('br'),
+                this.createInternalLink('llm-summarize-link', 'Generate fresh summary'),
+                ' using LLM ',
+                this.createInternalLink('options-page-link', 'configured in settings'),
+                '.'
+            ]);
+        } else if (aiProvider) {
+            subtitle = this.buildFragment([
+                'Summarized using ',
+                this.createStrong(`${aiProvider}/${model || ''}`),
+                ' in ',
+                this.createStrong(`${duration || '0'} secs`),
+                '.'
+            ]);
+        }
 
         this.summaryPanel.updateContent({
             metadata: subtitle,
@@ -1961,45 +2115,6 @@ class HNEnhancer {
                 }
             });
         });
-    }
-
-    resolveCommentBacklinks(text, commentPathToIdMap) {
-
-        // The text could contain two types of links:
-        //   1. HN comment paths in the format [1], [1.1], etc.
-        //      These paths are generated by the LLM when the client call the LLM API
-        //   2. URLs as absolute path in the format https://news.ycombinator.com/item?id=12345#12345.
-        //      These are also generated by LLM, but the server replaces the links with the absolute path to the comment.
-        // We will replace both types with HTML links with the appropriate attributes
-
-        let formattedText;
-
-        // First check if the text contains bracketed paths like [1.1]
-        const pathRegex = /\[(\d+(?:\.\d+)*)]/g;
-        formattedText = text.replace(pathRegex, (match, path) => {
-            const id = commentPathToIdMap?.get(path);
-            if (!id) {
-                return match; // If no ID found, return original text
-            }
-            return ` <a href="#"
-               title="Go to comment #${id}"
-               data-comment-link="true" data-comment-id="${id}"
-               style="color: rgb(130, 130, 130); text-decoration: underline;"
-            >comment #${id}</a>`;
-        });
-
-        // Then check if the text contains absolute path URLs
-        const hrefRegex = /<a href=['"]https:\/\/news\.ycombinator\.com\/item\?id=\d+#(\d+)['"]>.*?<\/a>/g;
-        formattedText = formattedText.replace(hrefRegex, (match, commentId) => {
-            return ` <a href="#"
-               title="Go to comment #${commentId}"
-               data-comment-link="true" data-comment-id="${commentId}"
-               style="color: rgb(130, 130, 130); text-decoration: underline;"
-            >comment #${commentId}</a>`;
-        });
-
-        // return the formatted text
-        return formattedText;
     }
 
     async summarizeUsingOllama(text, model, commentPathToIdMap) {
@@ -2060,6 +2175,7 @@ class HNEnhancer {
             let errorMessage = 'Error generating summary. ' + error.message;
             this.summaryPanel.updateContent({
                 title: 'Error',
+                metadata: '',
                 text: errorMessage
             });
         });

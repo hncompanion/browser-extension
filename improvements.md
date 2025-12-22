@@ -39,10 +39,17 @@ This is a review-backed list of potential improvements found while scanning the 
 - **Where:** `wxt.config.ts:15`
 - **Suggestion:** Add missing provider hosts (e.g., Google) and use durable host patterns (e.g., `https://api.openai.com/*`, `https://api.anthropic.com/*`) as appropriate for your actual request paths.
 
-### IMP-008 — XSS risk: untrusted content inserted via `innerHTML`
+### IMP-008 — XSS risk: untrusted content inserted via `innerHTML` [Completed]
 - **Problem:** Several places inject untrusted strings using `innerHTML` (LLM output, user "about" field, and other HTML snippets). This risks DOM XSS inside the extension-injected UI.
-- **Where:** `src/entrypoints/content/summary-panel.js:59`, `src/entrypoints/content/summary-panel.js:188`, `src/entrypoints/content/hnenhancer.js:1114`, `src/entrypoints/content/hnenhancer.js:765`
-- **Suggestion:** Use a proper markdown renderer + sanitizer (e.g., DOMPurify) and prefer `textContent` for plain text. Enforce safe link protocols and add `rel="noopener noreferrer"` for external links.
+- **Where:** `src/entrypoints/content/summary-panel.js`, `src/entrypoints/content/hnenhancer.js`
+- **Solution implemented:**
+  1) **Added centralized sanitizer helper** (`src/lib/sanitize.js`): DOMPurify wrapper with `sanitizeHtml()`, `sanitizeHtmlToFragment()`, and `enforceSafeLinks()`. Uses strict allowlist for tags (`p`, `br`, `strong`, `em`, `a`, `code`, `pre`, `ul`, `ol`, `li`, `h1`-`h5`, `blockquote`, `hr`, `img`) and attributes (`href`, `src`, `alt`, `title`, `target`, `rel`, `data-comment-*`).
+  2) **Replaced regex markdown parsing**: removed `convertMarkdownToHTML()` and now use `marked` library + `sanitizeHtmlToFragment()` in `createSummaryFragment()`.
+  3) **Eliminated all `innerHTML` usage**: `summary-panel.js` now uses `createElement`, `appendChild`, `textContent`, and `replaceChildren()`. Added `setElementContent()` helper that accepts strings or DOM nodes.
+  4) **Safer link handling**: `enforceSafeLinks()` validates protocols (only `http:`, `https:`, `mailto:` allowed), removes unsafe hrefs, and enforces `rel="noopener noreferrer"` for `target="_blank"` links.
+  5) **DOM-based comment backlink replacement**: `replaceCommentBacklinks()` uses TreeWalker to find text nodes with `[1.1]` patterns and HN URLs, replacing them with safe `<a>` elements built via `createCommentLink()`.
+  6) **Error strings use textContent**: `handleSummaryError()` and other error paths pass plain strings to `summaryPanel.updateContent()`, which uses `textContent` for non-Node content.
+  7) **Added dependencies**: `dompurify@^3.3.1` and `marked@^17.0.1` to `package.json`.
 
 ### IMP-017 — Missing Google AI host permission
 - **Problem:** Google AI SDK uses `generativelanguage.googleapis.com` but this host is not included in `optional_host_permissions`. Google AI requests may fail silently without the proper permission.
@@ -106,7 +113,7 @@ This is a review-backed list of potential improvements found while scanning the 
 - **Where:** `src/entrypoints/content/hnenhancer.js:1109`
 - **Suggestion:** Add a debounce (e.g., 200-300ms delay) before fetching user info to avoid unnecessary API calls during quick mouse movements.
 
-### IMP-024 — Markdown converter uses fragile regex parsing
+### IMP-024 — Markdown converter uses fragile regex parsing [Completed]
 - **Problem:** `convertMarkdownToHTML()` uses regex-based parsing that may break on edge cases like nested markdown, escaped characters, or malformed input. Could also contribute to XSS if not careful.
 - **Where:** `src/entrypoints/content/hnenhancer.js:765-825`
 - **Suggestion:** Consider using a lightweight markdown library (e.g., marked, markdown-it) combined with DOMPurify for sanitization. This would be more robust and address part of IMP-008.
@@ -127,4 +134,3 @@ This is a review-backed list of potential improvements found while scanning the 
 - **Problem:** `PRIVACY.md` says the extension does not transmit any user data, but summaries send thread text to third-party LLMs and API keys are stored (and potentially synced).
 - **Where:** `PRIVACY.md:4`
 - **Suggestion:** Update wording to clearly describe what is sent to LLM providers, what is stored locally/synced, and when the cache server is used.
-

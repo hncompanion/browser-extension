@@ -11,16 +11,18 @@
     "@tailwindcss/vite": "^4.1.18",
     "@tailwindplus/elements": "^1.0.21",
     "ai": "^5.0.116",
+    "dompurify": "^3.3.1",
+    "marked": "^17.0.1",
     "tailwindcss": "^4.1.18",
     "wxt": "^0.20.13"
   },
   "scripts": {
-    "dev": "wxt",
-    "dev:firefox": "wxt -b firefox",
-    "build": "wxt build",
-    "build:firefox": "wxt build -b firefox --mv3",
-    "zip": "wxt zip",
-    "zip:firefox": "wxt zip -b firefox --mv3"
+    "dev": "NODE_OPTIONS=\"--localstorage-file=$(pwd)/.wxt/node-localstorage\" wxt",
+    "dev:firefox": "NODE_OPTIONS=\"--localstorage-file=$(pwd)/.wxt/node-localstorage\" wxt -b firefox",
+    "build": "NODE_OPTIONS=\"--localstorage-file=$(pwd)/.wxt/node-localstorage\" wxt build",
+    "build:firefox": "NODE_OPTIONS=\"--localstorage-file=$(pwd)/.wxt/node-localstorage\" wxt build -b firefox --mv3",
+    "zip": "NODE_OPTIONS=\"--localstorage-file=$(pwd)/.wxt/node-localstorage\" wxt zip",
+    "zip:firefox": "NODE_OPTIONS=\"--localstorage-file=$(pwd)/.wxt/node-localstorage\" wxt zip -b firefox --mv3"
   },
   "packageManager": "pnpm@10.2.0+sha512.0d27364e0139c6aadeed65ada153135e0ca96c8da42123bd50047f961339dc7a758fc2e944b428f52be570d1bd3372455c1c65fa2e7aa0bfbf931190f9552001"
 }

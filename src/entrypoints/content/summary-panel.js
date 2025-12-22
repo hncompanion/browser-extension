@@ -56,10 +56,23 @@ class SummaryPanel {
 
         const content = document.createElement('div');
         content.className = 'summary-panel-content';
-        content.innerHTML = `
-            <div class="summary-metadata"></div>
-            <div class="summary-text">Select a thread to summarize. More details <a class="navs" href="https://github.com/hncompanion/browser-extension" target="_blank">here</a>.</div>
-        `;
+        const metadata = document.createElement('div');
+        metadata.className = 'summary-metadata';
+
+        const text = document.createElement('div');
+        text.className = 'summary-text';
+        text.append('Select a thread to summarize. More details ');
+        const link = document.createElement('a');
+        link.className = 'navs';
+        link.href = 'https://github.com/hncompanion/browser-extension';
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.textContent = 'here';
+        text.appendChild(link);
+        text.append('.');
+
+        content.appendChild(metadata);
+        content.appendChild(text);
 
         panel.appendChild(header);
         panel.appendChild(content);
@@ -175,6 +188,17 @@ class SummaryPanel {
         }
     }
 
+    setElementContent(element, content) {
+        if (!element) return;
+        element.replaceChildren();
+        if (content === null || content === undefined) return;
+        if (content instanceof Node) {
+            element.appendChild(content);
+            return;
+        }
+        element.textContent = String(content);
+    }
+
     updateContent({ title, metadata, text }) {
         if (!this.panel) return;
 
@@ -183,13 +207,19 @@ class SummaryPanel {
         }
 
         const titleElement = this.panel.querySelector('.summary-panel-title');
-        if (title && titleElement) titleElement.textContent = title;
+        if (titleElement && title !== undefined) {
+            titleElement.textContent = title ?? '';
+        }
 
         const metadataElement = this.panel.querySelector('.summary-metadata');
-        if (metadata && metadataElement) metadataElement.innerHTML = metadata;
+        if (metadataElement && metadata !== undefined) {
+            this.setElementContent(metadataElement, metadata);
+        }
 
         const textElement = this.panel.querySelector('.summary-text');
-        if (text && textElement) textElement.innerHTML = text;
+        if (textElement && text !== undefined) {
+            this.setElementContent(textElement, text);
+        }
     }
 }
 
