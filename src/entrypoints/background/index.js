@@ -13,7 +13,7 @@ export default defineBackground(() => {
         },
         google: {
             apiKey: '',
-            model: ''
+            model: 'gemini-2.5-pro'
         },
         anthropic: {
             apiKey: '',

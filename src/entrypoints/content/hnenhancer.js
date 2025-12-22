@@ -1797,7 +1797,13 @@ class HNEnhancer {
                 'claude-3-sonnet-20240229': { inputTokenLimit: 20000, outputTokenLimit: 3000, temperature: 0.7 },
             },
             'google': {
-                'gemini-2.0-flash': { inputTokenLimit: 15000, temperature: 0.7 }
+                'gemini-3-pro-preview': { inputTokenLimit: 15000, temperature: 0.7 },
+                'gemini-2.5-pro': { inputTokenLimit: 15000, temperature: 0.7 },
+                'gemini-flash-latest': { inputTokenLimit: 15000, temperature: 0.7 },
+                'gemini-2.5-flash': { inputTokenLimit: 15000, temperature: 0.7 },
+                'gemini-2.5-flash-lite': { inputTokenLimit: 15000, temperature: 0.7 },
+                'gemini-2.0-flash': { inputTokenLimit: 15000, temperature: 0.7 },
+                'gemini-2.0-flash-lite': { inputTokenLimit: 15000, temperature: 0.7 }
             },
             'openrouter': {
                 // These are placeholders - adjust based on actual models
