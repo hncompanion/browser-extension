@@ -13,6 +13,14 @@ const OPTIONAL_HOST_PERMISSIONS = {
     ollama: ['http://localhost:11434/*'],
 };
 
+const PROVIDER_INPUT_SELECTORS = {
+    google: ['#google-key', '#google-model'],
+    anthropic: ['#anthropic-key', '#anthropic-model'],
+    openai: ['#openai-key', '#openai-model'],
+    openrouter: ['#openrouter-key', '#openrouter-model'],
+    ollama: ['#ollama-model'],
+};
+
 async function hasOptionalHostPermissions(origins) {
     if (!browser.permissions?.contains) {
         return true;
@@ -45,6 +53,100 @@ function setOllamaModelSelectStatus(text) {
     option.value = '';
     option.textContent = text;
     selectElement.appendChild(option);
+}
+
+function setPromptCustomizationState(isEnabled) {
+    const systemPromptTextarea = document.getElementById('system-prompt');
+    const userPromptTextarea = document.getElementById('user-prompt');
+    const promptCustomizationFields = document.getElementById('prompt-customization-fields');
+
+    if (promptCustomizationFields) {
+        promptCustomizationFields.classList.toggle('hidden', !isEnabled);
+    }
+
+    if (isEnabled) {
+        systemPromptTextarea.removeAttribute('disabled');
+        userPromptTextarea.removeAttribute('disabled');
+        systemPromptTextarea.removeAttribute('readonly');
+        userPromptTextarea.removeAttribute('readonly');
+    } else {
+        systemPromptTextarea.setAttribute('disabled', 'true');
+        userPromptTextarea.setAttribute('disabled', 'true');
+        systemPromptTextarea.setAttribute('readonly', 'true');
+        userPromptTextarea.setAttribute('readonly', 'true');
+    }
+}
+
+async function updateProviderSelection(providerId) {
+    const activeProvider = PROVIDER_INPUT_SELECTORS[providerId] ? providerId : 'google';
+
+    Object.entries(PROVIDER_INPUT_SELECTORS).forEach(([provider, selectors]) => {
+        const isActive = provider === activeProvider;
+        selectors.forEach((selector) => {
+            const input = document.querySelector(selector);
+            if (input) {
+                input.disabled = !isActive;
+            }
+        });
+
+        const card = document.querySelector(`[data-provider-card="${provider}"]`);
+        const body = document.querySelector(`[data-provider-body="${provider}"]`);
+        const chip = document.querySelector(`[data-provider-chip="${provider}"]`);
+        const toggle = document.querySelector(`[data-provider-toggle="${provider}"]`);
+        const chevron = document.querySelector(`[data-provider-chevron="${provider}"]`);
+
+        if (card) {
+            card.classList.toggle('ring-2', isActive);
+            card.classList.toggle('ring-indigo-500/40', isActive);
+            card.classList.toggle('bg-white/90', isActive);
+            card.classList.toggle('dark:bg-gray-900/90', isActive);
+        }
+
+        if (body) {
+            body.classList.toggle('hidden', !isActive);
+        }
+
+        if (chip) {
+            chip.classList.toggle('hidden', !isActive);
+        }
+
+        if (toggle) {
+            toggle.setAttribute('aria-expanded', isActive ? 'true' : 'false');
+        }
+
+        if (chevron) {
+            chevron.classList.toggle('rotate-180', isActive);
+        }
+    });
+
+    if (activeProvider === 'ollama') {
+        const origins = OPTIONAL_HOST_PERMISSIONS.ollama;
+        let granted = await hasOptionalHostPermissions(origins);
+        if (!granted) {
+            granted = await requestOptionalHostPermissions(origins);
+        }
+        if (!granted) {
+            setOllamaModelSelectStatus('Permission required to load models');
+            return;
+        }
+        await fetchOllamaModels();
+    }
+}
+
+function setupKeyVisibilityToggles() {
+    const toggles = document.querySelectorAll('[data-toggle-visibility]');
+    toggles.forEach((toggle) => {
+        toggle.addEventListener('click', () => {
+            const inputId = toggle.getAttribute('data-toggle-visibility');
+            const input = document.getElementById(inputId);
+            if (!input) return;
+
+            const isPassword = input.type === 'password';
+            input.type = isPassword ? 'text' : 'password';
+            toggle.textContent = isPassword ? 'Hide' : 'Show';
+            toggle.setAttribute('aria-pressed', isPassword ? 'true' : 'false');
+        });
+    });
 }
 
 // Save settings to Browser storage
@@ -175,6 +277,9 @@ async function fetchOllamaModels() {
 async function loadSettings() {
     try {
         const settings = await storage.getItem('sync:settings');
+        const systemPromptTextarea = document.getElementById('system-prompt');
+        const userPromptTextarea = document.getElementById('user-prompt');
+        const promptCustomizationCheckbox = document.getElementById('prompt-customization');
 
         if (settings) {
             // Set HN Companion Server enabled state
@@ -217,26 +322,20 @@ async function loadSettings() {
 
             // Prompt customization
             const promptCustomization = settings?.promptCustomization || false;
-            document.getElementById('prompt-customization').checked = promptCustomization;
-            // System prompt
-            const systemPromptTextarea = document.getElementById('system-prompt');
-            // User prompt
-            const userPromptTextarea = document.getElementById('user-prompt');
+            promptCustomizationCheckbox.checked = promptCustomization;
             if (promptCustomization) {
                 systemPromptTextarea.value = settings?.systemPrompt || AI_SYSTEM_PROMPT;
                 userPromptTextarea.value = settings?.userPrompt || AI_USER_PROMPT_TEMPLATE.toString().split('=>')[1].trim().replace(/^`|`$/g, '');
-                systemPromptTextarea.removeAttribute('disabled');
-                userPromptTextarea.removeAttribute('disabled');
-                systemPromptTextarea.removeAttribute('readonly');
-                userPromptTextarea.removeAttribute('readonly');
             } else {
                 systemPromptTextarea.value = AI_SYSTEM_PROMPT;
                 userPromptTextarea.value = AI_USER_PROMPT_TEMPLATE.toString().split('=>')[1].trim().replace(/^`|`$/g, '');
-                systemPromptTextarea.setAttribute('disabled', 'true');
-                userPromptTextarea.setAttribute('disabled', 'true');
-                systemPromptTextarea.setAttribute('readonly', 'true');
-                userPromptTextarea.setAttribute('readonly', 'true');
             }
+            setPromptCustomizationState(promptCustomization);
+        } else {
+            systemPromptTextarea.value = AI_SYSTEM_PROMPT;
+            userPromptTextarea.value = AI_USER_PROMPT_TEMPLATE.toString().split('=>')[1].trim().replace(/^`|`$/g, '');
+            promptCustomizationCheckbox.checked = false;
+            setPromptCustomizationState(false);
         }
     } catch (error) {
         await Logger.error('Error loading settings:', error);
@@ -276,64 +375,45 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     // Add cancel button event listener
-    const cancelButton = document.querySelector('button[type="button"]');
-    cancelButton.addEventListener('click', () => {
-        window.close();
-    });
+    const cancelButton = document.getElementById('cancel-button');
+    if (cancelButton) {
+        cancelButton.addEventListener('click', () => {
+            window.close();
+        });
+    }
 
     // Add radio button change listeners to enable/disable corresponding inputs
     const radioButtons = document.querySelectorAll('input[name="provider-selection"]');
     radioButtons.forEach(radio => {
         radio.addEventListener('change', async () => {
-            // Enable/disable input fields based on selection
-            const openaiInputs = document.querySelectorAll('#openai-key, #openai-model');
-            const anthropicInputs = document.querySelectorAll('#anthropic-key, #anthropic-model');
-            const googleInputs = document.querySelectorAll('#google-key, #google-model');
-            const ollamaInputs = document.querySelectorAll('#ollama-model');
-            const openrouterInputs = document.querySelectorAll('#openrouter-key, #openrouter-model');
+            await updateProviderSelection(radio.id);
+        });
+    });
 
-            openaiInputs.forEach(input => input.disabled = radio.id !== 'openai');
-            anthropicInputs.forEach(input => input.disabled = radio.id !== 'anthropic');
-            googleInputs.forEach(input => input.disabled = radio.id !== 'google');
-            ollamaInputs.forEach(input => input.disabled = radio.id !== 'ollama');
-            openrouterInputs.forEach(input => input.disabled = radio.id !== 'openrouter');
-
-            if (radio.id === 'ollama') {
-                const origins = OPTIONAL_HOST_PERMISSIONS.ollama;
-                let granted = await hasOptionalHostPermissions(origins);
-                if (!granted) {
-                    granted = await requestOptionalHostPermissions(origins);
-                }
-                if (!granted) {
-                    setOllamaModelSelectStatus('Permission required to load models');
-                    return;
-                }
-                await fetchOllamaModels();
+    // Add provider toggle buttons to select and expand providers
+    const providerToggles = document.querySelectorAll('[data-provider-toggle]');
+    providerToggles.forEach((toggle) => {
+        toggle.addEventListener('click', async () => {
+            const providerId = toggle.getAttribute('data-provider-toggle');
+            const radio = document.getElementById(providerId);
+            if (radio) {
+                radio.checked = true;
+                await updateProviderSelection(providerId);
             }
         });
     });
 
     // Add event listener for prompt customization checkbox
     const promptCustomizationCheckbox = document.getElementById('prompt-customization');
-    const systemPromptTextarea = document.getElementById('system-prompt');
-    const userPromptTextarea = document.getElementById('user-prompt');
     promptCustomizationCheckbox.addEventListener('change', (e) => {
-        if (e.target.checked) {
-            systemPromptTextarea.removeAttribute('disabled');
-            userPromptTextarea.removeAttribute('disabled');
-            systemPromptTextarea.removeAttribute('readonly');
-            userPromptTextarea.removeAttribute('readonly');
-        } else {
-            systemPromptTextarea.setAttribute('disabled', 'true');
-            userPromptTextarea.setAttribute('disabled', 'true');
-            systemPromptTextarea.setAttribute('readonly', 'true');
-            userPromptTextarea.setAttribute('readonly', 'true');
-        }
+        setPromptCustomizationState(e.target.checked);
     });
+
+    setupKeyVisibilityToggles();
 
     // Initial trigger of radio button change event to set initial state
     const checkedRadio = document.querySelector('input[name="provider-selection"]:checked');
     if (checkedRadio) {
-        checkedRadio.dispatchEvent(new Event('change'));
+        await updateProviderSelection(checkedRadio.id);
     }
 });
