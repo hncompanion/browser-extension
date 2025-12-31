@@ -1,4 +1,18 @@
-// AI user prompt
+// AI user prompt - plain string version for display in options UI
+// Uses ${title} and ${text} as placeholders that will be replaced at runtime
+export const AI_USER_PROMPT_STRING = `Provide a concise and insightful summary of the following Hacker News discussion, as per the guidelines you've been given.
+The goal is to help someone quickly grasp the main discussion points and key perspectives without reading all comments.
+Please focus on extracting the main themes, significant viewpoints, and high-quality contributions.
+The post title and comments are separated by three dashed lines:
+---
+Post Title:
+\${title}
+---
+Comments:
+\${text}
+---`;
+
+// AI user prompt - function version for runtime use
 export const AI_USER_PROMPT_TEMPLATE = (title, text) => `Provide a concise and insightful summary of the following Hacker News discussion, as per the guidelines you've been given.
 The goal is to help someone quickly grasp the main discussion points and key perspectives without reading all comments.
 Please focus on extracting the main themes, significant viewpoints, and high-quality contributions.
