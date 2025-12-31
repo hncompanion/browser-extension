@@ -403,6 +403,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     });
 
+    // Add click listeners to provider cards to select that provider
+    const providerCards = document.querySelectorAll('[data-provider-card]');
+    providerCards.forEach((card) => {
+        card.addEventListener('click', async (e) => {
+            // Prevent triggering if clicking on inputs, buttons, links, or details
+            if (e.target.closest('input, button, a, details, summary')) {
+                return;
+            }
+            const providerId = card.getAttribute('data-provider-card');
+            const radio = document.getElementById(providerId);
+            if (radio) {
+                radio.checked = true;
+                await updateProviderSelection(providerId);
+            }
+        });
+    });
+
     // Add event listener for prompt customization checkbox
     const promptCustomizationCheckbox = document.getElementById('prompt-customization');
     promptCustomizationCheckbox.addEventListener('change', (e) => {
