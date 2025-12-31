@@ -1,6 +1,6 @@
 import './options.css';
 import '@tailwindplus/elements';
-import {AI_SYSTEM_PROMPT, AI_USER_PROMPT_TEMPLATE} from '../content/constants.js';
+import {AI_SYSTEM_PROMPT, AI_USER_PROMPT_STRING} from '../content/constants.js';
 import {browser} from "wxt/browser";
 import {storage} from '#imports';
 import {Logger} from "../../lib/utils.js";
@@ -327,15 +327,15 @@ async function loadSettings() {
             promptCustomizationCheckbox.checked = promptCustomization;
             if (promptCustomization) {
                 systemPromptTextarea.value = settings?.systemPrompt || AI_SYSTEM_PROMPT;
-                userPromptTextarea.value = settings?.userPrompt || AI_USER_PROMPT_TEMPLATE.toString().split('=>')[1].trim().replace(/^`|`$/g, '');
+                userPromptTextarea.value = settings?.userPrompt || AI_USER_PROMPT_STRING;
             } else {
                 systemPromptTextarea.value = AI_SYSTEM_PROMPT;
-                userPromptTextarea.value = AI_USER_PROMPT_TEMPLATE.toString().split('=>')[1].trim().replace(/^`|`$/g, '');
+                userPromptTextarea.value = AI_USER_PROMPT_STRING;
             }
             setPromptCustomizationState(promptCustomization);
         } else {
             systemPromptTextarea.value = AI_SYSTEM_PROMPT;
-            userPromptTextarea.value = AI_USER_PROMPT_TEMPLATE.toString().split('=>')[1].trim().replace(/^`|`$/g, '');
+            userPromptTextarea.value = AI_USER_PROMPT_STRING;
             promptCustomizationCheckbox.checked = false;
             setPromptCustomizationState(false);
         }
@@ -355,19 +355,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     } else {
         setOllamaModelSelectStatus('Select Ollama to load models');
     }
-
-    // Add event listener for the server cache checkbox
-    const serverCacheCheckbox = document.getElementById('hn-companion-server-enabled');
-    serverCacheCheckbox.addEventListener('change', async (e) => {
-        // Get the current state of the checkbox
-        const isEnabled = e.target.checked;
-
-        const currentSettings = await storage.getItem('sync:settings');
-        if (currentSettings) {
-            currentSettings.serverCacheEnabled = isEnabled;
-            await storage.setItem('sync:settings', currentSettings);
-        }
-    });
 
     // Add save button event listener
     const form = document.querySelector('form');
