@@ -28,12 +28,12 @@
                                                    aria-describedby="hn-companion-server-description" name="comments"
                                                    type="checkbox" checked
                                                    class="col-start-1 row-start-1 appearance-none rounded border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto">
-                                            <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25"
+                                            <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-[:disabled]:stroke-gray-950/25"
                                                  viewBox="0 0 14 14" fill="none">
-                                                <path class="opacity-0 group-has-checked:opacity-100"
+                                                <path class="opacity-0 group-has-[:checked]:opacity-100"
                                                       d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round"
                                                       stroke-linejoin="round"/>
-                                                <path class="opacity-0 group-has-indeterminate:opacity-100"
+                                                <path class="opacity-0 group-has-[:indeterminate]:opacity-100"
                                                       d="M3 7H11"
                                                       stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                             </svg>
@@ -444,7 +444,7 @@
                                 <span id="prompt-customization-description" class="text-sm text-gray-500 dark:text-gray-400">When disabled, the extension will use the default System and User prompt</span>
                             </span>
                             <div class="group relative inline-flex w-11 shrink-0 rounded-full bg-gray-200 p-0.5 inset-ring inset-ring-gray-900/15 outline-offset-2 outline-indigo-600 transition-colors duration-200 ease-in-out has-checked:bg-indigo-600 has-focus-visible:outline-2 dark:bg-white/5 dark:inset-ring-white/10 dark:outline-indigo-500 dark:has-checked:bg-indigo-500">
-                                <span class="size-5 rounded-full bg-white shadow-xs ring-1 ring-gray-900/5 transition-transform duration-200 ease-in-out group-has-checked:translate-x-5"></span>
+                                <span class="size-5 rounded-full bg-white shadow-xs ring-1 ring-gray-900/5 transition-transform duration-200 ease-in-out group-has-[:checked]:translate-x-5"></span>
                                 <input id="prompt-customization" type="checkbox" name="prompt-customization"
                                                                                  aria-labelledby="prompt-customization-label" aria-describedby="prompt-customization-description"
                                                                                  class="absolute inset-0 appearance-none focus:outline-hidden"/>
