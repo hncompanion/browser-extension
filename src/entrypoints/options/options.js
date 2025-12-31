@@ -64,6 +64,8 @@ function setPromptCustomizationState(isEnabled) {
         promptCustomizationFields.classList.toggle('hidden', !isEnabled);
     }
 
+    if (!systemPromptTextarea || !userPromptTextarea) return;
+
     if (isEnabled) {
         systemPromptTextarea.removeAttribute('disabled');
         userPromptTextarea.removeAttribute('disabled');
