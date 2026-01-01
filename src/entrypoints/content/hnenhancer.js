@@ -2190,58 +2190,32 @@ class HNEnhancer {
             Logger.errorSync('Error in Ollama summarization:', error);
 
             // Provide user-friendly error messages for common issues
-            let errorContent;
+            let errorMarkdown;
             if (error.message?.includes('403')) {
-                // Create a formatted DOM fragment for the CORS error
-                const fragment = document.createDocumentFragment();
-                
-                const intro = document.createElement('p');
-                intro.textContent = 'Ollama blocked the request (likely a CORS or server configuration issue).';
-                fragment.appendChild(intro);
-                
-                const fixHeader = document.createElement('p');
-                fixHeader.innerHTML = '<strong>To fix:</strong>';
-                fragment.appendChild(fixHeader);
-                
-                const list = document.createElement('ol');
-                
-                const li1 = document.createElement('li');
-                li1.textContent = 'Restart Ollama with CORS enabled:';
-                const code = document.createElement('code');
-                code.textContent = 'OLLAMA_ORIGINS="https://news.ycombinator.com,chrome-extension://*,moz-extension://*" ollama serve';
-                code.style.display = 'block';
-                code.style.marginTop = '0.5em';
-                code.style.padding = '0.5em';
-                code.style.backgroundColor = 'rgba(0,0,0,0.1)';
-                code.style.borderRadius = '4px';
-                li1.appendChild(code);
-                list.appendChild(li1);
-                
-                const li2 = document.createElement('li');
-                li2.textContent = 'Verify the Ollama URL in the extension settings and ensure Ollama is running.';
-                list.appendChild(li2);
-                
-                fragment.appendChild(list);
-                
-                const footer = document.createElement('p');
-                footer.textContent = 'If the problem continues, check Ollama logs or the extension settings for more details.';
-                footer.style.marginTop = '1em';
-                footer.style.fontSize = '0.9em';
-                footer.style.opacity = '0.8';
-                fragment.appendChild(footer);
-                
-                errorContent = fragment;
+                errorMarkdown = `Ollama blocked the request (likely a CORS or server configuration issue).
+
+**To fix:**
+
+1. Restart Ollama with CORS enabled:
+   \`\`\`
+   OLLAMA_ORIGINS="chrome-extension://*" ollama serve
+   \`\`\`
+
+2. Verify the Ollama URL in the extension settings and ensure Ollama is running.
+
+*If the problem continues, check Ollama logs or the extension settings for more details.*`;
             } else if (error.message?.includes('Failed to fetch') || error.message?.includes('NetworkError')) {
-                errorContent = 'Could not connect to Ollama. Please ensure Ollama is running.';
+                errorMarkdown = 'Could not connect to Ollama. Please ensure Ollama is running.';
             } else {
-                errorContent = 'Error generating summary. ' + error.message;
+                errorMarkdown = 'Error generating summary. ' + error.message;
             }
 
-            // Update the summary panel with an error message
+            // Update the summary panel with formatted error message
+            const errorFragment = this.createSummaryFragment(errorMarkdown, {});
             this.summaryPanel.updateContent({
                 title: 'Error',
                 metadata: '',
-                text: errorContent
+                text: errorFragment
             });
         });
     }
