@@ -98,7 +98,7 @@ This is a review-backed list of potential improvements found while scanning the 
 - **Where:** `wxt.config.ts:33`
 - **Suggestion:** Remove `page_action` unless there is a specific cross-browser requirement.
 
-### IMP-021 — No error boundary in content script initialization
+### IMP-021 — No error boundary in content script initialization [Completed]
 - **Problem:** If the `HNEnhancer` constructor throws an exception, the entire content script fails with no graceful degradation. Users see a broken page with no feedback.
 - **Where:** `src/entrypoints/content/index.js`
 - **Suggestion:** Wrap `HNEnhancer` instantiation in a try-catch block and log errors. Consider showing a minimal error indicator to users.

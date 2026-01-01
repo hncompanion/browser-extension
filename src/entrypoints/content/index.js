@@ -2,6 +2,7 @@ import './styles.css';
 
 import HNEnhancer from './hnenhancer.js';
 import {defineContentScript} from "wxt/utils/define-content-script";
+import {Logger} from "../../lib/utils.js";
 
 export default defineContentScript({
     matches: ['https://news.ycombinator.com/*'],
@@ -13,6 +14,10 @@ export default defineContentScript({
         // Initialize the HNEnhancer. Note that we are loading this content script with the default run_at of 'document_idle'.
         // So this script is injected only after the DOM is loaded and all other scripts have finished executing.
         // This guarantees that the DOM of the main HN page is loaded by the time this script runs.
-        document.hnEnhancer = new HNEnhancer();
+        try {
+            document.hnEnhancer = new HNEnhancer();
+        } catch (error) {
+            Logger.error('Failed to initialize HN Companion:', error);
+        }
     }
 });
