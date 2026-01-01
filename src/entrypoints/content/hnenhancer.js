@@ -1843,7 +1843,8 @@ class HNEnhancer {
                     });
                     break;
                 case 'ollama':
-                    await this.summarizeUsingOllama(formattedComment, model, commentPathToIdMap);
+                    const ollamaUrl = settings?.ollama?.url || 'http://localhost:11434';
+                    await this.summarizeUsingOllama(formattedComment, model, ollamaUrl, commentPathToIdMap);
                     break;
                 // AI providers supported by Vercel AI SDK. Use the common summarize method
                 case 'openai':
@@ -2134,7 +2135,7 @@ class HNEnhancer {
         });
     }
 
-    async summarizeUsingOllama(text, model, commentPathToIdMap) {
+    async summarizeUsingOllama(text, model, ollamaUrl, commentPathToIdMap) {
         // Validate required parameters
         if (!text || !model) {
             await Logger.error('Missing required parameters for Ollama summarization');
@@ -2143,7 +2144,7 @@ class HNEnhancer {
         }
 
         // Set up the API request
-        const endpoint = 'http://localhost:11434/api/generate';
+        const endpoint = `${ollamaUrl}/api/generate`;
 
         // Create the system message for better summarization
         const systemMessage = await this.getSystemMessage();

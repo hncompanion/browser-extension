@@ -6,6 +6,8 @@ import {storage} from '#imports';
 import {Logger} from "../../lib/utils.js";
 import {sendBackgroundMessage} from "../../lib/messaging.js";
 
+const DEFAULT_OLLAMA_URL = 'http://localhost:11434';
+
 const OPTIONAL_HOST_PERMISSIONS = {
     openai: ['https://api.openai.com/*'],
     anthropic: ['https://api.anthropic.com/*'],
@@ -19,7 +21,7 @@ const PROVIDER_INPUT_SELECTORS = {
     anthropic: ['#anthropic-key', '#anthropic-model'],
     openai: ['#openai-key', '#openai-model'],
     openrouter: ['#openrouter-key', '#openrouter-model'],
-    ollama: ['#ollama-model'],
+    ollama: ['#ollama-url', '#ollama-model'],
 };
 
 async function hasOptionalHostPermissions(origins) {
@@ -166,6 +168,7 @@ async function saveSettings() {
         serverCacheEnabled: document.getElementById('hn-companion-server-enabled').checked,
         providerSelection,
         ollama: {
+            url: document.getElementById('ollama-url').value.replace(/\/+$/, '') || DEFAULT_OLLAMA_URL,
             model: document.getElementById('ollama-model').value
         },
         google: {
@@ -217,13 +220,18 @@ async function saveSettings() {
 // Fetch Ollama models from API
 async function fetchOllamaModels() {
     try {
+        const ollamaUrl = document.getElementById('ollama-url').value.replace(/\/+$/, '') || DEFAULT_OLLAMA_URL;
+        const selectElement = document.getElementById('ollama-model');
+        
+        // Remember current selection before clearing
+        const currentSelection = selectElement.value;
+        
         const data = await sendBackgroundMessage('FETCH_API_REQUEST', {
-            url: 'http://localhost:11434/api/tags',
+            url: `${ollamaUrl}/api/tags`,
             method: 'GET',
             isErrorExpected: true  // Ollama not running is expected, suppress error logs
         });
 
-        const selectElement = document.getElementById('ollama-model');
         // Clear existing options
         selectElement.options.length = 0
 
@@ -242,6 +250,19 @@ async function fetchOllamaModels() {
                 option.textContent = model.name;
                 selectElement.appendChild(option);
             });
+
+            // Restore selection: prefer current selection, fall back to saved settings
+            const settings = await storage.getItem('sync:settings');
+            const savedModel = settings?.ollama?.model;
+            const modelToSelect = currentSelection || savedModel;
+            
+            if (modelToSelect) {
+                // Check if the model exists in the options
+                const optionExists = Array.from(selectElement.options).some(opt => opt.value === modelToSelect);
+                if (optionExists) {
+                    selectElement.value = modelToSelect;
+                }
+            }
         }
     } catch (error) {
         // Ollama not running is expected - user may not have started it yet
@@ -277,8 +298,11 @@ async function loadSettings() {
                 providerRadio.checked = true;
 
             // Set Ollama settings
-            if (settings.ollama && settings.ollama.model) {
-                document.getElementById('ollama-model').value = settings.ollama.model;
+            if (settings.ollama) {
+                document.getElementById('ollama-url').value = settings.ollama.url || DEFAULT_OLLAMA_URL;
+                if (settings.ollama.model) {
+                    document.getElementById('ollama-model').value = settings.ollama.model;
+                }
             }
 
             // Set Google settings

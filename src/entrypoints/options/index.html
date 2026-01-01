@@ -132,6 +132,14 @@
                                 <p class="mt-2 ml-7 text-xs text-gray-500 dark:text-gray-400">Local models running on your machine. No API key required.</p>
                                 <div class="mt-4 ml-7 space-y-4 hidden" id="ollama-body" data-provider-body="ollama">
                                     <div>
+                                        <label for="ollama-url" class="block text-sm/6 font-medium text-gray-900 dark:text-white">Ollama Server URL</label>
+                                        <div class="mt-2">
+                                            <input type="url" name="ollama-url" id="ollama-url" value="http://localhost:11434" placeholder="http://localhost:11434"
+                                                   class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500 dark:focus-visible:outline-indigo-500">
+                                        </div>
+                                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">The base URL of your Ollama server (default: http://localhost:11434)</p>
+                                    </div>
+                                    <div>
                                         <label for="ollama-model" class="block text-sm/6 font-medium text-gray-900 dark:text-white">Select Ollama Model
                                             <span class="ml-3 inline-flex items-center rounded-md bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-800 ring-1 ring-inset ring-yellow-600/20">Make sure Ollama is running with CORS enabled</span>
                                         </label>
