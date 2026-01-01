@@ -206,10 +206,11 @@ This is a review-backed list of potential improvements found while scanning the 
   2. Updated `summarizeThread()` to check for null before destructuring.
   3. Updated `summarizeAllComments()` to check for null and display user-friendly error message.
 
-### IMP-037 — SummaryPanel document-level event listeners are never removed
+### IMP-037 — SummaryPanel document-level event listeners are never removed [Ignored]
 - **Problem:** `setupResizeHandlers()` attaches `mousemove` and `mouseup` listeners to `document` that are never cleaned up. While the panel persists for the page lifetime, this pattern could cause issues if the panel is ever re-instantiated.
 - **Where:** `src/entrypoints/content/summary-panel.js:108-126`
 - **Suggestion:** Store listener references and provide a `destroy()` method that removes them, or use `AbortController` for event listener management.
+- **Reason ignored:** The `SummaryPanel` is a singleton instantiated once per page and persists for the page lifetime. HN is not a SPA, so listeners are naturally cleaned up on navigation. Adding cleanup would add complexity without solving a real current problem.
 
 ### IMP-038 — `enrichPostComments()` silently swallows missing parent comments [Completed]
 - **Problem:** When calculating paths in `enrichPostComments()`, if a parent comment was skipped (flagged/collapsed), `enrichedComments.get(comment.parentId)` returns undefined, and accessing `.path` on it throws an error.
