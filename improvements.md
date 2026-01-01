@@ -61,7 +61,7 @@ This is a review-backed list of potential improvements found while scanning the 
 - **Where:** `src/entrypoints/options/options.js:59-78` and `src/entrypoints/content/hnenhancer.js:349-385`
 - **Suggestion:** Extract to a shared utility module in `src/lib/` and import where needed.
 
-### IMP-019 — No timeout on user info fetch
+### IMP-019 — No timeout on user info fetch [Completed]
 - **Problem:** `fetchUserInfo()` makes an API call to `hn.algolia.com` without a timeout. If the API is slow or unresponsive, the request could hang indefinitely.
 - **Where:** `src/entrypoints/content/hnenhancer.js:387-427`
 - **Suggestion:** Add a reasonable timeout (e.g., 5-10 seconds) to the user info fetch request.

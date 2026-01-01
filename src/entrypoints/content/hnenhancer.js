@@ -434,7 +434,8 @@ class HNEnhancer {
                 'FETCH_API_REQUEST',
                 {
                     url: `https://hn.algolia.com/api/v1/users/${username}`,
-                    method: 'GET'
+                    method: 'GET',
+                    timeout: 10000
                 }
             );
 
