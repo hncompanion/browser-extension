@@ -140,7 +140,7 @@ This is a review-backed list of potential improvements found while scanning the 
 - **Where:** `src/entrypoints/content/summary-panel.js`, `src/entrypoints/content/hnenhancer.js`
 - **Suggestion:** Create unit tests using a framework like Jest to cover various input cases, ensuring that malicious content is properly sanitized and safe HTML is preserved.
 
-### IMP-025 — `adjustMainContentWidth` lacks null guard for `#hnmain`
+### IMP-025 — `adjustMainContentWidth` lacks null guard for `#hnmain` [Completed]
 - **Problem:** `adjustMainContentWidth()` in `SummaryPanel` calls `document.querySelector('#hnmain')` without checking if the element exists, which could throw if the DOM structure changes.
 - **Where:** `src/entrypoints/content/summary-panel.js:169`
 - **Suggestion:** Add a null check before accessing `hnTable.style`.

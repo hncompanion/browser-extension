@@ -167,6 +167,8 @@ class SummaryPanel {
 
     adjustMainContentWidth(panelWidth, clientX) {
         const hnTable = document.querySelector('#hnmain');
+        if (!hnTable) return;
+
         const viewportWidth = window.innerWidth;
         const availableWidth = viewportWidth - panelWidth - this.resizerWidth;
         const movePercent = (viewportWidth - clientX) / availableWidth;
