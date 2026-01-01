@@ -183,7 +183,7 @@ This is a review-backed list of potential improvements found while scanning the 
 - **Where:** `src/entrypoints/content/hnenhancer.js:2119`, `src/entrypoints/options/options.js:221`
 - **Suggestion:** Add an Ollama URL configuration field to the options page and store it in settings. Use this configured URL instead of the hardcoded value.
 
-### IMP-033 — Missing error handling for `marked.parse()` in `createSummaryFragment()`
+### IMP-033 — Missing error handling for `marked.parse()` in `createSummaryFragment()` [Completed]
 - **Problem:** `marked.parse()` can throw an error for malformed markdown input, but the call is not wrapped in a try-catch block. A malformed LLM response could crash the summary display.
 - **Where:** `src/entrypoints/content/hnenhancer.js:821`
 - **Suggestion:** Wrap `marked.parse()` in a try-catch and fall back to displaying the raw text if parsing fails.

@@ -818,7 +818,17 @@ class HNEnhancer {
     }
 
     createSummaryFragment(markdown, commentPathToIdMap) {
-        const html = marked.parse(markdown || '');
+        let html;
+        try {
+            html = marked.parse(markdown || '');
+        } catch (e) {
+            Logger.error('Failed to parse markdown, displaying raw text:', e);
+            const fragment = document.createDocumentFragment();
+            const pre = document.createElement('pre');
+            pre.textContent = markdown || '';
+            fragment.appendChild(pre);
+            return fragment;
+        }
         const fragment = sanitizeHtmlToFragment(html);
         this.replaceCommentBacklinks(fragment, commentPathToIdMap);
         enforceSafeLinks(fragment);
