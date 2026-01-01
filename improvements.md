@@ -149,21 +149,23 @@ This is a review-backed list of potential improvements found while scanning the 
 - **Problem:** When fetching Ollama models fails, the error is logged with `Logger.info()` instead of `Logger.error()`, inconsistent with IMP-022 standardization.
 - **Where:** `src/entrypoints/options/options.js:246`
 - **Suggestion:** Change `Logger.info()` to `Logger.error()` for error conditions.
+- **Solution:** Changed to `Logger.debug()` since Ollama not running is expected, not an error. Also added `isErrorExpected` flag to suppress error logs in background script and messaging module.
 
-### IMP-027 — No validation of user-provided prompts before sending to LLM
+### IMP-027 — No validation of user-provided prompts before sending to LLM [Ignored]
 - **Problem:** Custom system/user prompts from settings are sent directly to LLM APIs without validation. Extremely long or malformed prompts could cause API errors or unexpected behavior.
 - **Where:** `src/entrypoints/content/hnenhancer.js:2000-2012`
 - **Suggestion:** Add basic validation (e.g., max length, non-empty) for custom prompts before sending to LLM.
 
-### IMP-028 — `decodeHtmlEntities` uses incomplete entity map
+### IMP-028 — `decodeHtmlEntities` uses incomplete entity map [Completed]
 - **Problem:** `decodeHtmlEntities()` only handles a small set of common HTML entities. Other valid entities (e.g., `&nbsp;`, `&mdash;`, numeric entities like `&#8212;`) will pass through unprocessed.
 - **Where:** `src/entrypoints/content/hnenhancer.js:880-896`
 - **Suggestion:** Use a more complete solution like creating a temporary textarea element to decode entities, or expand the entity map.
 
-### IMP-029 — Keyboard shortcut handler doesn't clear stale key combination state
+### IMP-029 — Keyboard shortcut handler doesn't clear stale key combination state [Ignored]
 - **Problem:** The `lastKey` and `lastKeyPressTime` variables are only cleared on successful combination. If a user starts a combination but doesn't complete it within timeout, the stale state persists until another key is pressed.
 - **Where:** `src/entrypoints/content/hnenhancer.js:528-586`
 - **Suggestion:** Add a timeout to automatically clear stale key combination state after `KEY_COMBO_TIMEOUT`.
+- **Reason ignored:** The existing code already checks `(currentTime - lastKeyPressTime) < KEY_COMBO_TIMEOUT` before using `lastKey`, so stale state is effectively ignored. No functional issue exists.
 
 ### IMP-030 — Background script `summarizeText` return value missing duration
 - **Problem:** The `HN_SUMMARIZE` handler in background script returns `{ summary }` but doesn't include the duration like `FETCH_API_REQUEST` does. The content script expects `data.duration` which will be undefined.

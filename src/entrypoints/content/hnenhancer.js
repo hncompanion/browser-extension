@@ -878,21 +878,10 @@ class HNEnhancer {
     }
 
     decodeHtmlEntities(text) {
-        // Decode common HTML entities manually for browser environment
-        const entityMap = {
-            '&#x27;': "'",
-            '&#x2F;': '/',
-            '&lt;': '<',
-            '&gt;': '>',
-            '&amp;': '&',
-            '&quot;': '"',
-            '&#39;': "'",
-            '&#47;': '/'
-        };
-        
-        return text.replace(/&#x[0-9A-Fa-f]+;|&[a-zA-Z0-9]+;/g, (match) => {
-            return entityMap[match] || match;
-        });
+        // Use browser's built-in HTML parsing to decode all entities
+        const textarea = document.createElement('textarea');
+        textarea.innerHTML = text;
+        return textarea.value;
     }
 
     createHelpModal() {
