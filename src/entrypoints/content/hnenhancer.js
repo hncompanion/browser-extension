@@ -1410,8 +1410,7 @@ class HNEnhancer {
     }
 
     getCurrentHNItemId() {
-        const itemIdMatch = window.location.search.match(/id=(\d+)/);
-        return itemIdMatch ? itemIdMatch[1] : null;
+        return new URLSearchParams(window.location.search).get('id');
     }
 
     getTimeAgo(dateString) {

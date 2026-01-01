@@ -216,7 +216,7 @@ This is a review-backed list of potential improvements found while scanning the 
 - **Where:** `src/entrypoints/content/hnenhancer.js:1713`
 - **Suggestion:** Add a null check for the parent comment before accessing its path, and handle orphaned comments gracefully (e.g., treat them as top-level or skip them).
 
-### IMP-039 — `window.location.search` parsing is fragile for item IDs
+### IMP-039 — `window.location.search` parsing is fragile for item IDs [Completed]
 - **Problem:** `getCurrentHNItemId()` uses a simple regex match on the search string. This could fail if the URL has additional parameters before `id=` or uses different encoding.
 - **Where:** `src/entrypoints/content/hnenhancer.js:1393`
 - **Suggestion:** Use `URLSearchParams` for more robust URL parameter parsing: `new URLSearchParams(window.location.search).get('id')`.
