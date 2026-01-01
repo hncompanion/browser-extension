@@ -9,8 +9,8 @@ class HNState {
                 id: postId,
                 timestamp: Date.now()
             }
-        }).catch(_ => {
-            Logger.infoSync('Error saving current post state:', _);
+        }).catch(error => {
+            Logger.errorSync('Error saving current post state:', error);
         });
     }
 
@@ -30,8 +30,8 @@ class HNState {
     }
 
     static async clearLastSeenPost() {
-        storage.removeItem('local:lastSeenPost').catch(_ => {
-            Logger.infoSync('Error clearing lastSeenPost post state:', _);
+        storage.removeItem('local:lastSeenPost').catch(error => {
+            Logger.errorSync('Error clearing lastSeenPost post state:', error);
         });
     }
 }

@@ -103,12 +103,12 @@ This is a review-backed list of potential improvements found while scanning the 
 - **Where:** `src/entrypoints/content/index.js`
 - **Suggestion:** Wrap `HNEnhancer` instantiation in a try-catch block and log errors. Consider showing a minimal error indicator to users.
 
-### IMP-022 — Inconsistent error logging patterns
+### IMP-022 — Inconsistent error logging patterns [Completed]
 - **Problem:** Error handling uses a mix of `await Logger.error()`, `Logger.infoSync()`, and direct `console.error()` calls. This makes debugging difficult and error tracking inconsistent.
 - **Where:** Throughout codebase (e.g., `hnenhancer.js`, `options.js`, `llm-summarizer.js`)
 - **Suggestion:** Standardize on a single error logging approach. Consider always using `Logger.error()` for errors and ensuring it logs regardless of debug flag (see IMP-004).
 
-### IMP-023 — No debounce on user hover fetch
+### IMP-023 — No debounce on user hover fetch [Completed]
 - **Problem:** Rapid mouse movements over user elements trigger multiple API calls in quick succession. Each hover immediately fires a fetch request.
 - **Where:** `src/entrypoints/content/hnenhancer.js:1109`
 - **Suggestion:** Add a debounce (e.g., 200-300ms delay) before fetching user info to avoid unnecessary API calls during quick mouse movements.
@@ -120,12 +120,12 @@ This is a review-backed list of potential improvements found while scanning the 
 
 ## Low Priority / Hygiene
 
-### IMP-014 — Production builds are configured without minification
+### IMP-014 — Production builds are configured without minification [Ignored]
 - **Problem:** Vite `minify: false` is hard-coded, which increases bundle size and may slow load.
 - **Where:** `wxt.config.ts:51`
 - **Suggestion:** Enable minification for production builds (keep readable output only for dev if needed).
 
-### IMP-015 — IDE config is tracked in git (`.idea/`)
+### IMP-015 — IDE config is tracked in git (`.idea/`) [Ignored]
 - **Problem:** `.idea/` files are committed; these are usually developer-specific.
 - **Where:** `.idea/*` (tracked)
 - **Suggestion:** Remove from git and add to `.gitignore` (unless your team standardizes on committing these).

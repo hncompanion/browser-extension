@@ -17,7 +17,7 @@ export default defineContentScript({
         try {
             document.hnEnhancer = new HNEnhancer();
         } catch (error) {
-            Logger.error('Failed to initialize HN Companion:', error);
+            Logger.errorSync('Failed to initialize HN Companion:', error);
         }
     }
 });

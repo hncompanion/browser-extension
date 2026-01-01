@@ -54,6 +54,10 @@ class Logger {
         console.error('[ERROR]', ...args);
     }
 
+    static errorSync(...args) {
+        console.error('[ERROR]', ...args);
+    }
+
     static enableLoggingSync() {
         Logger.enabled = true;
         storage.setItem('local:loggerEnabled', true).then(() => {

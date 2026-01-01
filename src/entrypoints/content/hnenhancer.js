@@ -1423,8 +1423,9 @@ class HNEnhancer {
 
             // Check if the date is valid
             if (isNaN(localDate.getTime())) {
-                Logger.infoSync(`Error parsing date. dateString: ${dateString}. localDate: ${localDate}`);
-                return null;            }
+                Logger.errorSync(`Error parsing date. dateString: ${dateString}. localDate: ${localDate}`);
+                return null;
+            }
 
             const now = new Date();
 
@@ -1443,7 +1444,7 @@ class HNEnhancer {
                 return `${diffDays} day${diffDays === 1 ? '' : 's'}`;
             }
         } catch (error) {
-            Logger.infoSync(`Error parsing date. dateString: ${dateString}. Error: ${error}`);
+            Logger.errorSync(`Error parsing date. dateString: ${dateString}. Error: ${error}`);
             return null;
         }
     }
@@ -1769,7 +1770,7 @@ class HNEnhancer {
             type: 'HN_SHOW_OPTIONS',
             data: {}
         }).catch(error => {
-            Logger.infoSync('Error sending message to show options:', error);
+            Logger.errorSync('Error sending message to show options:', error);
         });
     }
 
@@ -1822,7 +1823,7 @@ class HNEnhancer {
                 case 'none':
                     // For debugging purpose, show the formatted comment or any text as summary in the panel
                     this.showSummaryInPanel(formattedComment, true, 0, commentPathToIdMap).catch(error => {
-                        Logger.infoSync('Error showing summary:', error);
+                        Logger.errorSync('Error showing summary:', error);
                     });
                     break;
                 case 'ollama':
@@ -1898,10 +1899,10 @@ class HNEnhancer {
             // Update the summary panel with the generated summary
             this.showSummaryInPanel(summary, false, data.duration, commentPathToIdMap)
                 .catch(error => {
-                    Logger.infoSync('Failed to show summary in summary panel in summarizeTextWithLLM(). Error:', error.message);
+                    Logger.errorSync('Failed to show summary in summary panel in summarizeTextWithLLM(). Error:', error.message);
                 });
         }).catch(error => {
-            Logger.infoSync('LLM summarization failed in summarizeTextWithLLM(). Error:', error.message);
+            Logger.errorSync('LLM summarization failed in summarizeTextWithLLM(). Error:', error.message);
             this.handleSummaryError(error);
         });
     }
@@ -2165,11 +2166,11 @@ class HNEnhancer {
 
                 // Update the summary panel with the generated summary
                 this.showSummaryInPanel(summary, false, data.duration, commentPathToIdMap).catch(error => {
-                    Logger.infoSync('Error showing summary:', error);
+                    Logger.errorSync('Error showing summary:', error);
                 });
 
             }).catch(error => {
-            Logger.infoSync('Error in Ollama summarization:', error);
+            Logger.errorSync('Error in Ollama summarization:', error);
 
             // Update the summary panel with an error message
             let errorMessage = 'Error generating summary. ' + error.message;
