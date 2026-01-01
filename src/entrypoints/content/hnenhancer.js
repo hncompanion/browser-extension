@@ -1730,18 +1730,25 @@ class HNEnhancer {
             } else {
                 // Child comment at any level.
                 //  The path is the parent's path + the position of the comment in the parent's children list.
-                const parentPath = enrichedComments.get(comment.parentId).path;
+                const parent = enrichedComments.get(comment.parentId);
 
-                // get all the children of this comment's parents - this is the list of siblings
-                const siblings = [...enrichedComments.values()]
-                    .filter(c => c.parentId === comment.parentId);
+                // If parent was skipped (flagged/collapsed), treat this comment as top-level
+                if (!parent || !parent.path) {
+                    path = String(topLevelCounter++);
+                } else {
+                    const parentPath = parent.path;
 
-                // Find the position of this comment in the siblings list - this is the sequence number in the path
-                const positionInParent = siblings
-                    .findIndex(c => c.id === comment.id) + 1;
+                    // get all the children of this comment's parents - this is the list of siblings
+                    const siblings = [...enrichedComments.values()]
+                        .filter(c => c.parentId === comment.parentId);
 
-                // Set the path as the parent's path + the position in the parent's children list
-                path = `${parentPath}.${positionInParent}`;
+                    // Find the position of this comment in the siblings list - this is the sequence number in the path
+                    const positionInParent = siblings
+                        .findIndex(c => c.id === comment.id) + 1;
+
+                    // Set the path as the parent's path + the position in the parent's children list
+                    path = `${parentPath}.${positionInParent}`;
+                }
             }
             return path;
         }

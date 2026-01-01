@@ -211,7 +211,7 @@ This is a review-backed list of potential improvements found while scanning the 
 - **Where:** `src/entrypoints/content/summary-panel.js:108-126`
 - **Suggestion:** Store listener references and provide a `destroy()` method that removes them, or use `AbortController` for event listener management.
 
-### IMP-038 — `enrichPostComments()` silently swallows missing parent comments
+### IMP-038 — `enrichPostComments()` silently swallows missing parent comments [Completed]
 - **Problem:** When calculating paths in `enrichPostComments()`, if a parent comment was skipped (flagged/collapsed), `enrichedComments.get(comment.parentId)` returns undefined, and accessing `.path` on it throws an error.
 - **Where:** `src/entrypoints/content/hnenhancer.js:1713`
 - **Suggestion:** Add a null check for the parent comment before accessing its path, and handle orphaned comments gracefully (e.g., treat them as top-level or skip them).
