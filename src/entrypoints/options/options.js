@@ -4,6 +4,7 @@ import {AI_SYSTEM_PROMPT, AI_USER_PROMPT_STRING} from '../content/constants.js';
 import {browser} from "wxt/browser";
 import {storage} from '#imports';
 import {Logger} from "../../lib/utils.js";
+import {sendBackgroundMessage} from "../../lib/messaging.js";
 
 const OPTIONAL_HOST_PERMISSIONS = {
     openai: ['https://api.openai.com/*'],
@@ -211,27 +212,6 @@ async function saveSettings() {
     } catch (error) {
         await Logger.error('Error saving settings:', error);
     }
-}
-
-async function sendBackgroundMessage(type, data) {
-    let response;
-    try {
-        response = await browser.runtime.sendMessage({type, data});
-    } catch (error) {
-        await Logger.error(`Error sending browser runtime message ${type}:`, error);
-        throw error;
-    }
-
-    if (!response) {
-        await Logger.error(`No response from background message ${type}`);
-        throw new Error(`No response from background message ${type}`);
-    }
-    if (!response.success) {
-        await Logger.error(`Error response from background message ${type}:`, response.error);
-        throw new Error(response.error);
-    }
-
-    return response.data;
 }
 
 // Fetch Ollama models from API

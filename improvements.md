@@ -51,12 +51,12 @@ This is a review-backed list of potential improvements found while scanning the 
   6) **Error strings use textContent**: `handleSummaryError()` and other error paths pass plain strings to `summaryPanel.updateContent()`, which uses `textContent` for non-Node content.
   7) **Added dependencies**: `dompurify@^3.3.1` and `marked@^17.0.1` to `package.json`.
 
-### IMP-017 — Missing Google AI host permission
+### IMP-017 — Missing Google AI host permission  [Completed]
 - **Problem:** Google AI SDK uses `generativelanguage.googleapis.com` but this host is not included in `optional_host_permissions`. Google AI requests may fail silently without the proper permission.
 - **Where:** `wxt.config.ts:20-24`
 - **Suggestion:** Add `https://generativelanguage.googleapis.com/*` to `optional_host_permissions`.
 
-### IMP-018 — Duplicate `sendBackgroundMessage` implementation
+### IMP-018 — Duplicate `sendBackgroundMessage` implementation [Completed]
 - **Problem:** The `sendBackgroundMessage` function is implemented twice with nearly identical logic in both the options page and the content script.
 - **Where:** `src/entrypoints/options/options.js:59-78` and `src/entrypoints/content/hnenhancer.js:349-385`
 - **Suggestion:** Extract to a shared utility module in `src/lib/` and import where needed.

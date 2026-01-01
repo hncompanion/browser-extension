@@ -3,6 +3,7 @@ import SummaryPanel from './summary-panel.js';
 import {browser} from "wxt/browser";
 import {storage} from '#imports';
 import {Logger} from "../../lib/utils.js";
+import {sendBackgroundMessage} from "../../lib/messaging.js";
 import {AI_SYSTEM_PROMPT, AI_USER_PROMPT_TEMPLATE} from './constants.js';
 import {marked} from 'marked';
 import {enforceSafeLinks, sanitizeHtmlToFragment} from '../../lib/sanitize.js';
@@ -427,47 +428,9 @@ class HNEnhancer {
         return postAuthorElement ? postAuthorElement.textContent : null;
     }
 
-    async sendBackgroundMessage(type, data) {
-        Logger.debugSync(`Sending browser runtime message ${type}:`, data);
-
-        let response;
-        const startTime = performance.now();
-        let duration = 0;
-
-        try {
-            response = await browser.runtime.sendMessage({type, data});
-
-            const endTime = performance.now();
-            duration = Math.round((endTime - startTime) / 1000);
-
-            Logger.debugSync(`Got response from background message '${type}' in ${duration}s. URL: ${data.url || 'N/A'}`);
-
-        } catch (error) {
-            const endTime = performance.now();
-            duration = Math.round((endTime - startTime) / 1000);
-
-            const errorMessage = `Error sending background message '${type}' URL: ${data?.url || 'N/A'}. Duration: ${duration}s. Error: ${error.message}`;
-            await Logger.error(errorMessage);
-            throw new Error(errorMessage);
-        }
-
-        if (!response) {
-            await Logger.error(`No response from background message ${type}`);
-            throw new Error(`No response from background message ${type}`);
-        }
-        if (!response.success) {
-            await Logger.error(`Error response from background message ${type}:`, response.error);
-            throw new Error(response.error);
-        }
-
-        // Add the duration to the response for displaying in the summary panel
-        response.data.duration = duration;
-        return response.data;
-    }
-
     async fetchUserInfo(username) {
         try {
-            const data = await this.sendBackgroundMessage(
+            const data = await sendBackgroundMessage(
                 'FETCH_API_REQUEST',
                 {
                     url: `https://hn.algolia.com/api/v1/users/${username}`,
@@ -1464,7 +1427,7 @@ class HNEnhancer {
             //  If the summary is not available, the server will return a 404 error, which is expected.
             //  So we must handle the error gracefully by telling the background script that this is an expected error.
             //  The background script will not throw an error if the status is 404.
-            const data = await this.sendBackgroundMessage(
+            const data = await sendBackgroundMessage(
                 'FETCH_API_REQUEST',
                 {
                     url, is404Expected: true // Tell the background script this 404 is expected
@@ -1492,7 +1455,7 @@ class HNEnhancer {
     }
 
     async fetchHNCommentsFromAPI(itemId) {
-        return await this.sendBackgroundMessage(
+        return await sendBackgroundMessage(
             'FETCH_API_REQUEST',
             {
                 url: `https://hn.algolia.com/api/v1/items/${itemId}`,
@@ -1896,7 +1859,7 @@ class HNEnhancer {
             parameters,
         };
 
-        this.sendBackgroundMessage('HN_SUMMARIZE', llmInput).then(data => {
+        sendBackgroundMessage('HN_SUMMARIZE', llmInput).then(data => {
             const summary = data?.summary;
             if (!summary) {
                 throw new Error('Empty summary returned from background message HN_SUMMARIZE. data: ' + JSON.stringify(data));
@@ -2147,7 +2110,7 @@ class HNEnhancer {
         };
 
         // Make the API request using background message
-        this.sendBackgroundMessage('FETCH_API_REQUEST', {
+        sendBackgroundMessage('FETCH_API_REQUEST', {
             url: endpoint,
             method: 'POST',
             headers: {
