@@ -1,6 +1,12 @@
 class SummaryPanel {
     constructor() {
         this.panel = this.createPanel();
+        if (!this.panel) {
+            this.resizer = null;
+            this.mainWrapper = null;
+            return;
+        }
+
         this.resizer = this.createResizer();
 
         this.isResizing = false;
@@ -8,15 +14,16 @@ class SummaryPanel {
         this.startWidth = 0;
         this.resizerWidth = 8;
 
-        // set up resize handlers at the resizer and at the window level
-        this.setupResizeHandlers();
-        this.setupWindowResizeHandler();
-
-        // Attach panel and resizer to mainWrapper
+        // Attach panel and resizer to mainWrapper (created in createPanel)
         this.mainWrapper = document.querySelector('.main-content-wrapper');
+        if (!this.mainWrapper) return;
 
         this.mainWrapper.appendChild(this.resizer);
         this.mainWrapper.appendChild(this.panel);
+
+        // set up resize handlers at the resizer and at the window level
+        this.setupResizeHandlers();
+        this.setupWindowResizeHandler();
     }
 
     get isVisible() {
@@ -88,6 +95,8 @@ class SummaryPanel {
     }
 
     setupResizeHandlers() {
+        if (!this.resizer || !this.panel || !this.mainWrapper) return;
+
         this.resizer.addEventListener('mousedown', (e) => {
             this.isResizing = true;
             this.startX = e.clientX;
@@ -118,6 +127,8 @@ class SummaryPanel {
     }
 
     setupWindowResizeHandler() {
+        if (!this.panel || !this.mainWrapper) return;
+
         window.addEventListener('resize', () => {
             if (this.isVisible) {
                 const maxAvailableWidth = this.mainWrapper.offsetWidth - this.resizerWidth;
@@ -166,8 +177,9 @@ class SummaryPanel {
     }
 
     toggle() {
-        if (!this.panel) return;
+        if (!this.panel || !this.resizer || !this.mainWrapper) return;
 
+        const hnTable = document.querySelector('#hnmain');
         if (!this.isVisible) {
             const maxAvailableWidth = this.mainWrapper.offsetWidth - this.resizerWidth;
             const {minWidth} = this.calculatePanelConstraints(maxAvailableWidth);
@@ -176,15 +188,15 @@ class SummaryPanel {
             this.panel.style.display = 'block';
             this.resizer.style.display = 'block';
 
-            const hnTable = document.querySelector('#hnmain');
-            hnTable.style.minWidth = '0';
+            if (hnTable) hnTable.style.minWidth = '0';
         } else {
             this.panel.style.display = 'none';
             this.resizer.style.display = 'none';
 
-            const hnTable = document.querySelector('#hnmain');
-            hnTable.style.removeProperty('min-width');
-            hnTable.style.removeProperty('width');
+            if (hnTable) {
+                hnTable.style.removeProperty('min-width');
+                hnTable.style.removeProperty('width');
+            }
         }
     }
 

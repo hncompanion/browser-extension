@@ -73,7 +73,7 @@ This is a review-backed list of potential improvements found while scanning the 
 
 ## Medium Priority
 
-### IMP-009 — Brittle prompt template extraction via `Function.toString()`
+### IMP-009 — Brittle prompt template extraction via `Function.toString()` [Completed]
 - **Problem:** The options UI derives the default user prompt by parsing `AI_USER_PROMPT_TEMPLATE.toString()`, which is fragile and likely to break when minified/bundled.
 - **Where:** `src/entrypoints/options/options.js:174` and `src/entrypoints/options/options.js:181`
 - **Suggestion:** Export a real string constant for the default template and interpolate `${title}` / `${text}` yourself.
@@ -88,7 +88,7 @@ This is a review-backed list of potential improvements found while scanning the 
 - **Where:** `src/entrypoints/content/hnenhancer.js:1107` and `src/entrypoints/content/hnenhancer.js:2066`
 - **Suggestion:** Use event delegation, cache user info responses, and throttle/debounce hover fetches.
 
-### IMP-012 — `SummaryPanel` lacks null guards for unexpected DOM shapes
+### IMP-012 — `SummaryPanel` lacks null guards for unexpected DOM shapes [Completed]
 - **Problem:** If the expected HN table isn’t found, `createPanel()` can return `null`, but the constructor still uses `this.mainWrapper.appendChild(...)`.
 - **Where:** `src/entrypoints/content/summary-panel.js:2`
 - **Suggestion:** Add defensive checks and fail gracefully (no panel) if the DOM structure changes.
