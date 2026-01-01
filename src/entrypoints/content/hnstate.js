@@ -18,7 +18,7 @@ class HNState {
         try {
             const data = await storage.getItem('local:lastSeenPost');
             // Return null if no state or if state is older than 15 minutes
-            if (!data.lastSeenPost || Date.now() - data.lastSeenPost.timestamp > (15 * 60 * 1000)) {
+            if (!data || !data.lastSeenPost || Date.now() - data.lastSeenPost.timestamp > (15 * 60 * 1000)) {
                 await this.clearLastSeenPost();
                 return null;
             }

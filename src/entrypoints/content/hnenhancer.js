@@ -1016,11 +1016,12 @@ class HNEnhancer {
 
         // get the content of the thread
         const itemId = itemLinkElement.href.split('=')[1];
-        const {formattedComment, commentPathToIdMap} = await this.getHNThread(itemId);
-        if (!formattedComment) {
+        const threadData = await this.getHNThread(itemId);
+        if (!threadData || !threadData.formattedComment) {
             await Logger.error(`Could not get the thread for summarization. item id: ${itemId}`);
             return;
         }
+        const {formattedComment, commentPathToIdMap} = threadData;
 
         const commentDepth = commentPathToIdMap.size;
         const {aiProvider, model} = await this.getAIProviderModel();
@@ -1376,8 +1377,17 @@ class HNEnhancer {
                 text: this.createLoadingMessage(loadingParts)
             });
 
-            const {formattedComment, commentPathToIdMap} = await this.getHNThread(itemId);
-            await this.summarizeText(formattedComment, commentPathToIdMap);
+            const threadData = await this.getHNThread(itemId);
+            if (!threadData || !threadData.formattedComment) {
+                await Logger.error(`Could not get thread data for post summarization. item id: ${itemId}`);
+                this.summaryPanel.updateContent({
+                    title: 'Error',
+                    metadata: '',
+                    text: 'Failed to retrieve comments for summarization. Please try again.'
+                });
+                return;
+            }
+            await this.summarizeText(threadData.formattedComment, threadData.commentPathToIdMap);
 
         } catch (error) {
             await Logger.error('Error preparing for summarization:', error);
@@ -1524,7 +1534,8 @@ class HNEnhancer {
                 commentPathToIdMap
             };
         } catch (error) {
-            await Logger.error(`Error: ${error.message}`);
+            await Logger.error(`Error in getHNThread: ${error.message}`);
+            return null;
         }
     }
 

@@ -173,10 +173,10 @@ This is a review-backed list of potential improvements found while scanning the 
 - **Suggestion:** Track and return duration from the `summarizeText` call, or handle missing duration gracefully in the content script.
 - **Reason ignored:** The `sendBackgroundMessage` function in messaging.js already tracks round-trip duration and adds it to the response data (line 41). No change needed.
 
-### IMP-031 — `HNState.getLastSeenPostId()` throws on null storage data
+### IMP-031 — `HNState.getLastSeenPostId()` throws on null storage data [Completed]
 - **Problem:** `getLastSeenPostId()` accesses `data.lastSeenPost` without first checking if `data` is truthy. If storage returns `null` or `undefined`, this causes a TypeError.
 - **Where:** `src/entrypoints/content/hnstate.js:21`
-- **Suggestion:** Add a null check before accessing `data.lastSeenPost`: `if (!data || !data.lastSeenPost || ...)`.
+- **Solution:** Added null check: `if (!data || !data.lastSeenPost || ...)`.
 
 ### IMP-032 — Ollama URL is hardcoded in multiple places
 - **Problem:** The Ollama API endpoint (`http://localhost:11434`) is hardcoded in both `hnenhancer.js` and `options.js`. Users running Ollama on a different host or port cannot use the extension.
@@ -198,10 +198,13 @@ This is a review-backed list of potential improvements found while scanning the 
 - **Where:** `src/entrypoints/content/hnstate.js:1`
 - **Suggestion:** Remove the unused `import {browser} from "wxt/browser";` line.
 
-### IMP-036 — `getHNThread()` returns `undefined` on error
+### IMP-036 — `getHNThread()` returns `undefined` on error [Completed]
 - **Problem:** When `getHNThread()` catches an error, it logs but doesn't return a value. The calling code (`summarizeThread`, `summarizeAllComments`) expects an object with `formattedComment` and `commentPathToIdMap`. The undefined return causes downstream errors.
 - **Where:** `src/entrypoints/content/hnenhancer.js:1526-1528`
-- **Suggestion:** Return `null` or an object with null values in the catch block, and check for this in calling code before proceeding with summarization.
+- **Solution:**
+  1. `getHNThread()` now returns `null` on error.
+  2. Updated `summarizeThread()` to check for null before destructuring.
+  3. Updated `summarizeAllComments()` to check for null and display user-friendly error message.
 
 ### IMP-037 — SummaryPanel document-level event listeners are never removed
 - **Problem:** `setupResizeHandlers()` attaches `mousemove` and `mouseup` listeners to `document` that are never cleaned up. While the panel persists for the page lifetime, this pattern could cause issues if the panel is ever re-instantiated.
