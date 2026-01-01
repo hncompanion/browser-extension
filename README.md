@@ -47,10 +47,10 @@ This extension streamlines how you read and navigate through discussions, making
 2. Setup Steps (to configure CORS):
    ```bash
    # Mac OS
-   launchctl setenv OLLAMA_ORIGINS "https://news.ycombinator.com,chrome-extension://*,moz-extension://*"
+   launchctl setenv OLLAMA_ORIGINS "chrome-extension://*,moz-extension://*"
    
    # Windows
-   setx OLLAMA_ORIGINS "chrome-extension://*,https://news.ycombinator.com,moz-extension://*"
+   setx OLLAMA_ORIGINS "chrome-extension://*,moz-extension://*"
    
    # Make sure to restart Ollama after setting the environment variable.
    ```

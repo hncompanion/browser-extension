@@ -2198,7 +2198,7 @@ class HNEnhancer {
 
 1. Restart Ollama with CORS enabled:
    \`\`\`
-   OLLAMA_ORIGINS="chrome-extension://*" ollama serve
+   OLLAMA_ORIGINS="chrome-extension://*,moz-extension://*" ollama serve
    \`\`\`
 
 2. Verify the Ollama URL in the extension settings and ensure Ollama is running.
