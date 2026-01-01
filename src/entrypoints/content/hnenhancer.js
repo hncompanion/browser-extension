@@ -33,6 +33,7 @@ class HNEnhancer {
 
         this.authorComments = this.createAuthorCommentsMap();    // Create a map of comment elements by author
         this.popup = this.createAuthorPopup();
+        this.userInfoCache = new Map();                         // Cache for user info to avoid repeated API calls
         this.postAuthor = this.getPostAuthor();
 
         this.currentComment = null;         // Track currently focused comment
@@ -429,6 +430,11 @@ class HNEnhancer {
     }
 
     async fetchUserInfo(username) {
+        // Check cache first
+        if (this.userInfoCache.has(username)) {
+            return this.userInfoCache.get(username);
+        }
+
         try {
             const data = await sendBackgroundMessage(
                 'FETCH_API_REQUEST',
@@ -460,10 +466,14 @@ class HNEnhancer {
                 );
             }
 
-            return {
+            const result = {
                 karma: data.karma || 'Not found',
                 about: about
             };
+
+            // Cache the successful result
+            this.userInfoCache.set(username, result);
+            return result;
         } catch (error) {
             return {
                 karma: 'User info error',
@@ -1190,43 +1200,61 @@ class HNEnhancer {
     }
 
     setupUserHover() {
+        let hoverTimeout = null;
+
         document.querySelectorAll('.hnuser').forEach(authorElement => {
-            authorElement.addEventListener('mouseenter', async (e) => {
-                const username = e.target.textContent.replace(/[^a-zA-Z0-9_-]/g, '');
-                const userInfo = await this.fetchUserInfo(username);
+            authorElement.addEventListener('mouseenter', (e) => {
+                const target = e.target;
 
-                if (userInfo) {
-                    this.popup.replaceChildren();
-
-                    const name = document.createElement('strong');
-                    name.textContent = username;
-                    this.popup.appendChild(name);
-                    this.popup.appendChild(document.createElement('br'));
-
-                    this.popup.append(`Karma: ${userInfo.karma}`);
-                    this.popup.appendChild(document.createElement('br'));
-
-                    const aboutLabel = document.createElement('div');
-                    aboutLabel.textContent = 'About:';
-                    this.popup.appendChild(aboutLabel);
-
-                    const aboutContent = document.createElement('div');
-                    const aboutFragment = sanitizeHtmlToFragment(userInfo.about || '');
-                    enforceSafeLinks(aboutFragment);
-                    aboutContent.appendChild(aboutFragment);
-                    this.popup.appendChild(aboutContent);
-
-                    const rect = e.target.getBoundingClientRect();
-                    this.popup.style.left = `${rect.left}px`;
-                    this.popup.style.top = `${rect.bottom + window.scrollY + 5}px`;
-                    this.popup.style.display = 'block';
-
-                    // Track whether mouse is over user element or popup
-                    this.isMouseOverUserOrPopup = true;
+                // Clear any pending hover timeout
+                if (hoverTimeout) {
+                    clearTimeout(hoverTimeout);
                 }
+
+                // Debounce: wait 200ms before fetching user info
+                hoverTimeout = setTimeout(async () => {
+                    const username = target.textContent.replace(/[^a-zA-Z0-9_-]/g, '');
+                    const userInfo = await this.fetchUserInfo(username);
+
+                    if (userInfo) {
+                        this.popup.replaceChildren();
+
+                        const name = document.createElement('strong');
+                        name.textContent = username;
+                        this.popup.appendChild(name);
+                        this.popup.appendChild(document.createElement('br'));
+
+                        this.popup.append(`Karma: ${userInfo.karma}`);
+                        this.popup.appendChild(document.createElement('br'));
+
+                        const aboutLabel = document.createElement('div');
+                        aboutLabel.textContent = 'About:';
+                        this.popup.appendChild(aboutLabel);
+
+                        const aboutContent = document.createElement('div');
+                        const aboutFragment = sanitizeHtmlToFragment(userInfo.about || '');
+                        enforceSafeLinks(aboutFragment);
+                        aboutContent.appendChild(aboutFragment);
+                        this.popup.appendChild(aboutContent);
+
+                        const rect = target.getBoundingClientRect();
+                        this.popup.style.left = `${rect.left}px`;
+                        this.popup.style.top = `${rect.bottom + window.scrollY + 5}px`;
+                        this.popup.style.display = 'block';
+
+                        // Track whether mouse is over user element or popup
+                        this.isMouseOverUserOrPopup = true;
+                    }
+                }, 200);
             });
 
             authorElement.addEventListener('mouseleave', () => {
+                // Clear pending hover timeout to cancel fetch if mouse left quickly
+                if (hoverTimeout) {
+                    clearTimeout(hoverTimeout);
+                    hoverTimeout = null;
+                }
+
                 // Don't hide immediately - wait to check if mouse moved to popup
                 setTimeout(() => {
                     if (!this.isMouseOverUserOrPopup) {

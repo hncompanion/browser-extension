@@ -66,7 +66,7 @@ This is a review-backed list of potential improvements found while scanning the 
 - **Where:** `src/entrypoints/content/hnenhancer.js:387-427`
 - **Suggestion:** Add a reasonable timeout (e.g., 5-10 seconds) to the user info fetch request.
 
-### IMP-020 — Memory leak potential in event listeners
+### IMP-020 — Memory leak potential in event listeners [Ignored]
 - **Problem:** Event listeners added in `setupUserHover()` are never cleaned up. Document-level click and keydown listeners persist for the lifetime of the page. On SPAs or long-lived pages, this could accumulate.
 - **Where:** `src/entrypoints/content/hnenhancer.js:1107-1165`
 - **Suggestion:** Store listener references and provide a cleanup method, or use `AbortController` for event listener management.
@@ -83,7 +83,7 @@ This is a review-backed list of potential improvements found while scanning the 
 - **Where:** `src/entrypoints/content/hnenhancer.js:1778`
 - **Suggestion:** Align model IDs across `options/index.html`, `options.js`, and `getModelConfiguration()` (or remove the per-model table and use provider defaults + user overrides).
 
-### IMP-011 — Event handling may be heavy on large threads (no delegation/caching)
+### IMP-011 — Event handling may be heavy on large threads (no delegation/caching) [Completed]
 - **Problem:** The content script attaches many per-element listeners (e.g., `.hnuser` hover, comment click), and user hover triggers network calls repeatedly without caching.
 - **Where:** `src/entrypoints/content/hnenhancer.js:1107` and `src/entrypoints/content/hnenhancer.js:2066`
 - **Suggestion:** Use event delegation, cache user info responses, and throttle/debounce hover fetches.
