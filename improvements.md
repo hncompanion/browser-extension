@@ -172,3 +172,48 @@ This is a review-backed list of potential improvements found while scanning the 
 - **Where:** `src/entrypoints/background/index.js:90-91`
 - **Suggestion:** Track and return duration from the `summarizeText` call, or handle missing duration gracefully in the content script.
 - **Reason ignored:** The `sendBackgroundMessage` function in messaging.js already tracks round-trip duration and adds it to the response data (line 41). No change needed.
+
+### IMP-031 — `HNState.getLastSeenPostId()` throws on null storage data
+- **Problem:** `getLastSeenPostId()` accesses `data.lastSeenPost` without first checking if `data` is truthy. If storage returns `null` or `undefined`, this causes a TypeError.
+- **Where:** `src/entrypoints/content/hnstate.js:21`
+- **Suggestion:** Add a null check before accessing `data.lastSeenPost`: `if (!data || !data.lastSeenPost || ...)`.
+
+### IMP-032 — Ollama URL is hardcoded in multiple places
+- **Problem:** The Ollama API endpoint (`http://localhost:11434`) is hardcoded in both `hnenhancer.js` and `options.js`. Users running Ollama on a different host or port cannot use the extension.
+- **Where:** `src/entrypoints/content/hnenhancer.js:2119`, `src/entrypoints/options/options.js:221`
+- **Suggestion:** Add an Ollama URL configuration field to the options page and store it in settings. Use this configured URL instead of the hardcoded value.
+
+### IMP-033 — Missing error handling for `marked.parse()` in `createSummaryFragment()`
+- **Problem:** `marked.parse()` can throw an error for malformed markdown input, but the call is not wrapped in a try-catch block. A malformed LLM response could crash the summary display.
+- **Where:** `src/entrypoints/content/hnenhancer.js:821`
+- **Suggestion:** Wrap `marked.parse()` in a try-catch and fall back to displaying the raw text if parsing fails.
+
+### IMP-034 — `userInfoCache` Map has no size limit
+- **Problem:** The `userInfoCache` Map in HNEnhancer stores user info indefinitely and can grow unbounded. On pages with many unique users (e.g., large discussions), this could lead to excessive memory usage.
+- **Where:** `src/entrypoints/content/hnenhancer.js:36`
+- **Suggestion:** Implement a maximum cache size (e.g., LRU cache with 100-200 entries) or add a TTL-based expiration for cached entries.
+
+### IMP-035 — Unused `browser` import in `hnstate.js`
+- **Problem:** The `browser` import from `wxt/browser` is declared but never used in the file. All storage operations use the `storage` import from `#imports`.
+- **Where:** `src/entrypoints/content/hnstate.js:1`
+- **Suggestion:** Remove the unused `import {browser} from "wxt/browser";` line.
+
+### IMP-036 — `getHNThread()` returns `undefined` on error
+- **Problem:** When `getHNThread()` catches an error, it logs but doesn't return a value. The calling code (`summarizeThread`, `summarizeAllComments`) expects an object with `formattedComment` and `commentPathToIdMap`. The undefined return causes downstream errors.
+- **Where:** `src/entrypoints/content/hnenhancer.js:1526-1528`
+- **Suggestion:** Return `null` or an object with null values in the catch block, and check for this in calling code before proceeding with summarization.
+
+### IMP-037 — SummaryPanel document-level event listeners are never removed
+- **Problem:** `setupResizeHandlers()` attaches `mousemove` and `mouseup` listeners to `document` that are never cleaned up. While the panel persists for the page lifetime, this pattern could cause issues if the panel is ever re-instantiated.
+- **Where:** `src/entrypoints/content/summary-panel.js:108-126`
+- **Suggestion:** Store listener references and provide a `destroy()` method that removes them, or use `AbortController` for event listener management.
+
+### IMP-038 — `enrichPostComments()` silently swallows missing parent comments
+- **Problem:** When calculating paths in `enrichPostComments()`, if a parent comment was skipped (flagged/collapsed), `enrichedComments.get(comment.parentId)` returns undefined, and accessing `.path` on it throws an error.
+- **Where:** `src/entrypoints/content/hnenhancer.js:1713`
+- **Suggestion:** Add a null check for the parent comment before accessing its path, and handle orphaned comments gracefully (e.g., treat them as top-level or skip them).
+
+### IMP-039 — `window.location.search` parsing is fragile for item IDs
+- **Problem:** `getCurrentHNItemId()` uses a simple regex match on the search string. This could fail if the URL has additional parameters before `id=` or uses different encoding.
+- **Where:** `src/entrypoints/content/hnenhancer.js:1393`
+- **Suggestion:** Use `URLSearchParams` for more robust URL parameter parsing: `new URLSearchParams(window.location.search).get('id')`.
