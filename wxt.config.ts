@@ -31,7 +31,6 @@ export default defineConfig({
                 128: '/icon/icon-128.png',
             },
             action: {},
-            page_action: {},
         };
         if(browser === 'firefox') {
             manifest["browser_specific_settings"] = {

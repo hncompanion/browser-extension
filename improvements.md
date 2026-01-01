@@ -93,7 +93,7 @@ This is a review-backed list of potential improvements found while scanning the 
 - **Where:** `src/entrypoints/content/summary-panel.js:2`
 - **Suggestion:** Add defensive checks and fail gracefully (no panel) if the DOM structure changes.
 
-### IMP-013 — Manifest includes MV2-era `page_action`
+### IMP-013 — Manifest includes MV2-era `page_action` [Completed] 
 - **Problem:** `page_action` is included in the generated manifest; MV3 uses `action`. Keeping both can be confusing and may be ignored.
 - **Where:** `wxt.config.ts:33`
 - **Suggestion:** Remove `page_action` unless there is a specific cross-browser requirement.
