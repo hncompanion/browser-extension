@@ -130,12 +130,12 @@ This is a review-backed list of potential improvements found while scanning the 
 - **Where:** `.idea/*` (tracked)
 - **Suggestion:** Remove from git and add to `.gitignore` (unless your team standardizes on committing these).
 
-### IMP-016 — Privacy policy wording is likely inaccurate given data flows
+### IMP-016 — Privacy policy wording is likely inaccurate given data flows [Completed]
 - **Problem:** `PRIVACY.md` says the extension does not transmit any user data, but summaries send thread text to third-party LLMs and API keys are stored (and potentially synced).
 - **Where:** `PRIVACY.md:4`
 - **Suggestion:** Update wording to clearly describe what is sent to LLM providers, what is stored locally/synced, and when the cache server is used.
 
-### IMP-017 — Implement test harness for the HTML sanitization functions
+### IMP-017 — Implement test harness for the HTML sanitization functions [Completed]
 - **Problem:** The new sanitization functions are critical for security but lack automated tests to verify
 - **Where:** `src/entrypoints/content/summary-panel.js`, `src/entrypoints/content/hnenhancer.js`
 - **Suggestion:** Create unit tests using a framework like Jest to cover various input cases, ensuring that malicious content is properly sanitized and safe HTML is preserved.
