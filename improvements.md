@@ -167,7 +167,8 @@ This is a review-backed list of potential improvements found while scanning the 
 - **Suggestion:** Add a timeout to automatically clear stale key combination state after `KEY_COMBO_TIMEOUT`.
 - **Reason ignored:** The existing code already checks `(currentTime - lastKeyPressTime) < KEY_COMBO_TIMEOUT` before using `lastKey`, so stale state is effectively ignored. No functional issue exists.
 
-### IMP-030 — Background script `summarizeText` return value missing duration
+### IMP-030 — Background script `summarizeText` return value missing duration [Ignored]
 - **Problem:** The `HN_SUMMARIZE` handler in background script returns `{ summary }` but doesn't include the duration like `FETCH_API_REQUEST` does. The content script expects `data.duration` which will be undefined.
 - **Where:** `src/entrypoints/background/index.js:90-91`
 - **Suggestion:** Track and return duration from the `summarizeText` call, or handle missing duration gracefully in the content script.
+- **Reason ignored:** The `sendBackgroundMessage` function in messaging.js already tracks round-trip duration and adds it to the response data (line 41). No change needed.
