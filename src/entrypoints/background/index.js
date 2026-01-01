@@ -105,8 +105,11 @@ export default defineBackground(() => {
                 const response = await asyncOperation();
                 sendResponse({success: true, data: response});
             } catch (error) {
-                await Logger.error(`Background script handler for ${message.type} message failed. Error: ${error}`);
-                sendResponse({success: false, error: error.toString()});
+                // Only log error if not an expected failure (e.g., Ollama not running)
+                if (!message.data?.isErrorExpected) {
+                    await Logger.error(`Background script handler for ${message.type} message failed. Error: ${error}`);
+                }
+                sendResponse({success: false, error: error.toString(), isErrorExpected: message.data?.isErrorExpected});
             }
         })();
 

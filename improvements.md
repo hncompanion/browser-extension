@@ -145,7 +145,7 @@ This is a review-backed list of potential improvements found while scanning the 
 - **Where:** `src/entrypoints/content/summary-panel.js:169`
 - **Suggestion:** Add a null check before accessing `hnTable.style`.
 
-### IMP-026 — `fetchOllamaModels` error logged at info level
+### IMP-026 — `fetchOllamaModels` error logged at info level [Completed]
 - **Problem:** When fetching Ollama models fails, the error is logged with `Logger.info()` instead of `Logger.error()`, inconsistent with IMP-022 standardization.
 - **Where:** `src/entrypoints/options/options.js:246`
 - **Suggestion:** Change `Logger.info()` to `Logger.error()` for error conditions.

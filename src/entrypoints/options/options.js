@@ -219,7 +219,8 @@ async function fetchOllamaModels() {
     try {
         const data = await sendBackgroundMessage('FETCH_API_REQUEST', {
             url: 'http://localhost:11434/api/tags',
-            method: 'GET'
+            method: 'GET',
+            isErrorExpected: true  // Ollama not running is expected, suppress error logs
         });
 
         const selectElement = document.getElementById('ollama-model');
@@ -243,14 +244,16 @@ async function fetchOllamaModels() {
             });
         }
     } catch (error) {
-        await Logger.info('Error fetching Ollama models:', error);
-        // Handle error by adding an error option
+        // Ollama not running is expected - user may not have started it yet
+        // Only log at debug level to avoid noise
+        await Logger.debug('Could not fetch Ollama models (Ollama may not be running):', error.message);
+        // Handle error by adding a helpful status option
         const selectElement = document.getElementById('ollama-model');
         selectElement.options.length = 0
 
         const option = document.createElement('option');
         option.value = '';
-        option.textContent = 'Error loading models';
+        option.textContent = 'Ollama not running';
         selectElement.appendChild(option);
     }
 }

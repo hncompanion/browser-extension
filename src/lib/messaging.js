@@ -30,7 +30,10 @@ export async function sendBackgroundMessage(type, data) {
         throw new Error(`No response from background message ${type}`);
     }
     if (!response.success) {
-        await Logger.error(`Error response from background message ${type}:`, response.error);
+        // Only log error if not an expected failure
+        if (!response.isErrorExpected) {
+            await Logger.error(`Error response from background message ${type}:`, response.error);
+        }
         throw new Error(response.error);
     }
 
