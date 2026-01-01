@@ -188,12 +188,12 @@ This is a review-backed list of potential improvements found while scanning the 
 - **Where:** `src/entrypoints/content/hnenhancer.js:821`
 - **Suggestion:** Wrap `marked.parse()` in a try-catch and fall back to displaying the raw text if parsing fails.
 
-### IMP-034 — `userInfoCache` Map has no size limit
+### IMP-034 — `userInfoCache` Map has no size limit [Ignored]
 - **Problem:** The `userInfoCache` Map in HNEnhancer stores user info indefinitely and can grow unbounded. On pages with many unique users (e.g., large discussions), this could lead to excessive memory usage.
 - **Where:** `src/entrypoints/content/hnenhancer.js:36`
 - **Suggestion:** Implement a maximum cache size (e.g., LRU cache with 100-200 entries) or add a TTL-based expiration for cached entries.
 
-### IMP-035 — Unused `browser` import in `hnstate.js`
+### IMP-035 — Unused `browser` import in `hnstate.js` [Completed]
 - **Problem:** The `browser` import from `wxt/browser` is declared but never used in the file. All storage operations use the `storage` import from `#imports`.
 - **Where:** `src/entrypoints/content/hnstate.js:1`
 - **Suggestion:** Remove the unused `import {browser} from "wxt/browser";` line.

@@ -1,4 +1,3 @@
-import {browser} from "wxt/browser";
 import {storage} from '#imports';
 import {Logger} from "../../lib/utils.js";
 
