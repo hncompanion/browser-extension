@@ -139,3 +139,33 @@ This is a review-backed list of potential improvements found while scanning the 
 - **Problem:** The new sanitization functions are critical for security but lack automated tests to verify
 - **Where:** `src/entrypoints/content/summary-panel.js`, `src/entrypoints/content/hnenhancer.js`
 - **Suggestion:** Create unit tests using a framework like Jest to cover various input cases, ensuring that malicious content is properly sanitized and safe HTML is preserved.
+
+### IMP-025 — `adjustMainContentWidth` lacks null guard for `#hnmain`
+- **Problem:** `adjustMainContentWidth()` in `SummaryPanel` calls `document.querySelector('#hnmain')` without checking if the element exists, which could throw if the DOM structure changes.
+- **Where:** `src/entrypoints/content/summary-panel.js:169`
+- **Suggestion:** Add a null check before accessing `hnTable.style`.
+
+### IMP-026 — `fetchOllamaModels` error logged at info level
+- **Problem:** When fetching Ollama models fails, the error is logged with `Logger.info()` instead of `Logger.error()`, inconsistent with IMP-022 standardization.
+- **Where:** `src/entrypoints/options/options.js:246`
+- **Suggestion:** Change `Logger.info()` to `Logger.error()` for error conditions.
+
+### IMP-027 — No validation of user-provided prompts before sending to LLM
+- **Problem:** Custom system/user prompts from settings are sent directly to LLM APIs without validation. Extremely long or malformed prompts could cause API errors or unexpected behavior.
+- **Where:** `src/entrypoints/content/hnenhancer.js:2000-2012`
+- **Suggestion:** Add basic validation (e.g., max length, non-empty) for custom prompts before sending to LLM.
+
+### IMP-028 — `decodeHtmlEntities` uses incomplete entity map
+- **Problem:** `decodeHtmlEntities()` only handles a small set of common HTML entities. Other valid entities (e.g., `&nbsp;`, `&mdash;`, numeric entities like `&#8212;`) will pass through unprocessed.
+- **Where:** `src/entrypoints/content/hnenhancer.js:880-896`
+- **Suggestion:** Use a more complete solution like creating a temporary textarea element to decode entities, or expand the entity map.
+
+### IMP-029 — Keyboard shortcut handler doesn't clear stale key combination state
+- **Problem:** The `lastKey` and `lastKeyPressTime` variables are only cleared on successful combination. If a user starts a combination but doesn't complete it within timeout, the stale state persists until another key is pressed.
+- **Where:** `src/entrypoints/content/hnenhancer.js:528-586`
+- **Suggestion:** Add a timeout to automatically clear stale key combination state after `KEY_COMBO_TIMEOUT`.
+
+### IMP-030 — Background script `summarizeText` return value missing duration
+- **Problem:** The `HN_SUMMARIZE` handler in background script returns `{ summary }` but doesn't include the duration like `FETCH_API_REQUEST` does. The content script expects `data.duration` which will be undefined.
+- **Where:** `src/entrypoints/background/index.js:90-91`
+- **Suggestion:** Track and return duration from the `summarizeText` call, or handle missing duration gracefully in the content script.
