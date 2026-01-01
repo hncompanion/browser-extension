@@ -78,7 +78,7 @@ This is a review-backed list of potential improvements found while scanning the 
 - **Where:** `src/entrypoints/options/options.js:174` and `src/entrypoints/options/options.js:181`
 - **Suggestion:** Export a real string constant for the default template and interpolate `${title}` / `${text}` yourself.
 
-### IMP-010 — Model configuration is out of sync with options defaults
+### IMP-010 — Model configuration is out of sync with options defaults [Completed]
 - **Problem:** Options defaults include newer model IDs (e.g., OpenAI `gpt-5`, Google `gemini-2.5-pro`, Anthropic `claude-opus-4-1`), but `getModelConfiguration()` only lists older IDs and placeholders, so settings fall back to generic defaults.
 - **Where:** `src/entrypoints/content/hnenhancer.js:1778`
 - **Suggestion:** Align model IDs across `options/index.html`, `options.js`, and `getModelConfiguration()` (or remove the per-model table and use provider defaults + user overrides).

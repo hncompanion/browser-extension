@@ -1920,13 +1920,21 @@ class HNEnhancer {
         // Model-specific configurations
         const modelConfigs = {
             'openai': {
+                'gpt-5': { inputTokenLimit: 25000, temperature: 0.7 },
+                'gpt-5-mini': { inputTokenLimit: 20000, temperature: 0.7 },
+                'gpt-5-nano': { inputTokenLimit: 16000, temperature: 0.7 },
+                'gpt-4.1-nano': { inputTokenLimit: 16000, temperature: 0.7 },
                 'gpt-4': { inputTokenLimit: 25000, temperature: 0.7 },
                 'gpt-4-turbo': { inputTokenLimit: 27000, temperature: 0.7 },
                 'gpt-3.5-turbo': { inputTokenLimit: 16000, temperature: 0.7 }
             },
             'anthropic': {
-                'claude-3-opus-20240229': { inputTokenLimit: 25000, outputTokenLimit: 3000, temperature: 0.7 },
-                'claude-3-sonnet-20240229': { inputTokenLimit: 20000, outputTokenLimit: 3000, temperature: 0.7 },
+                'claude-opus-4-1': { inputTokenLimit: 25000, outputTokenLimit: 4000, temperature: 0.7 },
+                'claude-sonnet-4-0': { inputTokenLimit: 24000, outputTokenLimit: 4000, temperature: 0.7 },
+                'claude-3-7-sonnet-latest': { inputTokenLimit: 24000, outputTokenLimit: 4000, temperature: 0.7 },
+                'claude-3-5-sonnet-latest': { inputTokenLimit: 22000, outputTokenLimit: 4000, temperature: 0.7 },
+                'claude-3-5-haiku-latest': { inputTokenLimit: 20000, outputTokenLimit: 3000, temperature: 0.7 },
+                'claude-3-opus-latest': { inputTokenLimit: 25000, outputTokenLimit: 4000, temperature: 0.7 },
             },
             'google': {
                 'gemini-3-pro-preview': { inputTokenLimit: 15000, temperature: 0.7 },
