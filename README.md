@@ -17,7 +17,7 @@ Transform your Hacker News experience with AI-powered summaries, and keyboard na
 This extension streamlines how you read and navigate through discussions, making it easier than ever to engage with rich conversations.
 
 ### 🌟 Key Features
-* **AI-Powered Thread Summarization**
+* **AI-Powered Summarization**
    * Multiple AI provider options
    * Connect to cloud-hosted models - Google AI, Anthropic, OpenAI, OpenRouter for advanced summaries
    * Use local models hosted on Ollama
