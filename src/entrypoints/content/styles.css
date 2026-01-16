@@ -348,6 +348,38 @@
     margin: 0;
 }
 
+.summary-panel-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.status-item {
+    font-size: 11px;
+    color: #828282;
+    display: flex;
+    align-items: center;
+    cursor: default;
+}
+
+.action-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    color: #828282;
+    padding: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    transition: color 0.2s ease;
+}
+
+.action-btn:hover {
+    color: #ff6600;
+}
+
 .summary-panel-tabs {
     display: flex;
     gap: 2px;

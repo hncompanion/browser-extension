@@ -59,10 +59,16 @@ class SummaryPanel {
 
         const titleBar = document.createElement('div');
         titleBar.className = 'summary-panel-title-bar';
+        
         const title = document.createElement('h3');
         title.className = 'summary-panel-title';
         title.textContent = 'HN Companion';
         titleBar.appendChild(title);
+
+        const actions = document.createElement('div');
+        actions.className = 'summary-panel-actions';
+        titleBar.appendChild(actions);
+
         header.appendChild(titleBar);
 
         const tabs = document.createElement('div');
@@ -78,14 +84,12 @@ class SummaryPanel {
         const content = document.createElement('div');
         content.className = 'summary-panel-content';
         
-        const metadata = document.createElement('div');
-        metadata.className = 'summary-metadata';
+        // Removed separate metadata div as it's now in the header actions
 
         const text = document.createElement('div');
         text.className = 'summary-text';
         text.textContent = 'Select a thread to summarize.';
 
-        content.appendChild(metadata);
         content.appendChild(text);
 
         // --- Footer ---
@@ -238,7 +242,7 @@ class SummaryPanel {
         element.textContent = String(content);
     }
 
-    updateContent({ title, metadata, text }) {
+    updateContent({ title, text, status, onRegenerate, onSettings }) {
         if (!this.panel) return;
 
         if (!this.isVisible) {
@@ -250,9 +254,49 @@ class SummaryPanel {
             titleElement.textContent = title ?? '';
         }
 
-        const metadataElement = this.panel.querySelector('.summary-metadata');
-        if (metadataElement && metadata !== undefined) {
-            this.setElementContent(metadataElement, metadata);
+        // Update Actions/Status Bar
+        const actionsContainer = this.panel.querySelector('.summary-panel-actions');
+        if (actionsContainer) {
+            actionsContainer.replaceChildren();
+
+            if (status) {
+                // Time Cached Info
+                if (status.timeAgo) {
+                    const timeSpan = document.createElement('span');
+                    timeSpan.className = 'status-item';
+                    timeSpan.title = `Summary generated ${status.timeAgo} ago`;
+                    timeSpan.textContent = `🕒 ${status.timeAgo}`;
+                    actionsContainer.appendChild(timeSpan);
+                }
+
+                // Separator if needed, or just gap
+                
+                // Regenerate Button
+                if (onRegenerate) {
+                    const regenBtn = document.createElement('button');
+                    regenBtn.className = 'action-btn';
+                    regenBtn.title = 'Generate fresh summary';
+                    regenBtn.textContent = '↻'; // Refresh icon
+                    regenBtn.onclick = (e) => {
+                        e.preventDefault();
+                        onRegenerate();
+                    };
+                    actionsContainer.appendChild(regenBtn);
+                }
+
+                // Settings Button
+                if (onSettings) {
+                    const settingsBtn = document.createElement('button');
+                    settingsBtn.className = 'action-btn';
+                    settingsBtn.title = 'Configure AI Provider';
+                    settingsBtn.textContent = '⚙'; // Gear icon
+                    settingsBtn.onclick = (e) => {
+                        e.preventDefault();
+                        onSettings();
+                    };
+                    actionsContainer.appendChild(settingsBtn);
+                }
+            }
         }
 
         const textElement = this.panel.querySelector('.summary-text');
