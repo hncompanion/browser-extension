@@ -2126,13 +2126,15 @@ class HNEnhancer {
         
         if (fromCache) {
             status.timeAgo = duration || 'some time';
+            // For cached summaries, we might not have the provider info readily available in the same format, 
+            // or we can parse it if needed. For now, we'll leave it generic or use a default.
         } else if (aiProvider) {
-            // For fresh summaries, we might want to show provider info in the future
-            // status.provider = `${aiProvider}/${model || ''}`;
+            status.provider = `${aiProvider} ${model || ''}`;
         }
 
         this.summaryPanel.updateContent({
             text: formattedSummary,
+            rawText: summary, // Pass raw text for 'Copy to Clipboard'
             status: status,
             onRegenerate: () => this.summarizeAllComments(true),
             onSettings: () => this.openOptionsPage()

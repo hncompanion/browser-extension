@@ -242,7 +242,7 @@ class SummaryPanel {
         element.textContent = String(content);
     }
 
-    updateContent({ title, text, status, onRegenerate, onSettings }) {
+    updateContent({ title, text, rawText, status, onRegenerate, onSettings }) {
         if (!this.panel) return;
 
         if (!this.isVisible) {
@@ -269,8 +269,6 @@ class SummaryPanel {
                     actionsContainer.appendChild(timeSpan);
                 }
 
-                // Separator if needed, or just gap
-                
                 // Regenerate Button
                 if (onRegenerate) {
                     const regenBtn = document.createElement('button');
@@ -297,6 +295,57 @@ class SummaryPanel {
                     actionsContainer.appendChild(settingsBtn);
                 }
             }
+        }
+
+        // Update Footer
+        const footer = this.panel.querySelector('.summary-panel-footer');
+        if (footer) {
+            footer.replaceChildren();
+
+            // Left: Provider Info
+            const poweredBy = document.createElement('span');
+            const providerName = (status && status.provider) ? status.provider : 'AI';
+            poweredBy.textContent = `Powered by ${providerName}`;
+            poweredBy.title = status && status.provider ? 'Model used for generation' : '';
+            footer.appendChild(poweredBy);
+
+            // Right: Actions
+            const footerRight = document.createElement('div');
+            footerRight.className = 'footer-actions';
+            
+            // Copy Button
+            if (rawText) {
+                const copyBtn = document.createElement('button');
+                copyBtn.className = 'action-btn copy-btn';
+                copyBtn.title = 'Copy summary to clipboard';
+                copyBtn.textContent = '📋';
+                copyBtn.style.marginRight = '8px';
+                
+                copyBtn.onclick = async (e) => {
+                    e.preventDefault();
+                    try {
+                        await navigator.clipboard.writeText(rawText);
+                        const originalText = copyBtn.textContent;
+                        copyBtn.textContent = '✓';
+                        setTimeout(() => {
+                            copyBtn.textContent = originalText;
+                        }, 2000);
+                    } catch (err) {
+                        console.error('Failed to copy text: ', err);
+                    }
+                };
+                footerRight.appendChild(copyBtn);
+            }
+
+            const link = document.createElement('a');
+            link.className = 'summary-footer-link';
+            link.href = 'https://github.com/hncompanion/browser-extension';
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            link.textContent = 'More details';
+            footerRight.appendChild(link);
+
+            footer.appendChild(footerRight);
         }
 
         const textElement = this.panel.querySelector('.summary-text');

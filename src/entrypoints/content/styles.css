@@ -431,6 +431,11 @@
     align-items: center;
 }
 
+.footer-actions {
+    display: flex;
+    align-items: center;
+}
+
 .summary-footer-link {
     color: #828282;
     text-decoration: none;
