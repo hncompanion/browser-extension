@@ -395,14 +395,15 @@ class HNEnhancer {
         return link;
     }
 
-    createCommentLink(commentId) {
+    createCommentLink(commentId, author) {
         const link = document.createElement('a');
         link.href = '#';
         link.title = `Go to comment #${commentId}`;
         link.dataset.commentLink = 'true';
         link.dataset.commentId = commentId;
         link.className = 'summary-comment-link';
-        link.textContent = `comment #${commentId}`;
+        const authorName = author && author.trim();
+        link.textContent = (authorName && authorName.toLowerCase() !== 'null') ? `(${authorName})` : `comment #${commentId}`;
         return link;
     }
 
@@ -841,27 +842,55 @@ class HNEnhancer {
     replaceCommentBacklinks(fragment, commentPathToIdMap) {
         if (!fragment) return;
 
+        // URL-based links: [comment #12345 (author)](https://...)
         fragment.querySelectorAll('a[href]').forEach(link => {
-            const href = link.getAttribute('href');
+            const href = link.href;
             if (!href) return;
-            const match = href.match(/^https?:\/\/news\.ycombinator\.com\/item\?id=\d+#(\d+)/);
-            if (!match) return;
-            const commentId = match[1];
-            link.replaceWith(this.createCommentLink(commentId));
+
+            // Match HN item URLs with a fragment (comment ID). 
+            // Allow for other query parameters between id and the hash (e.g. &p=2)
+            // Also allow optional www. subdomain
+            const hnCommentUrlMatch = href.match(/^https?:\/\/(?:www\.)?news\.ycombinator\.com\/item\?id=[^#]+#(\d+)/);
+            if (!hnCommentUrlMatch) return;
+
+            const commentId = hnCommentUrlMatch[1];
+            
+            // Check if author is in the link text: [comment #123 (author)](...)
+            let authorMatch = link.textContent.match(/\(([^)]+)\)/);
+            let author = authorMatch ? authorMatch[1].trim() : null;
+
+            // If not found, check if author is in the next sibling text node: [comment #123](...) (author)
+            if (!author && link.nextSibling && link.nextSibling.nodeType === Node.TEXT_NODE) {
+                const siblingText = link.nextSibling.nodeValue;
+                // Look for leading " (author)" pattern
+                const siblingMatch = siblingText.match(/^\s*\(([^)]+)\)/);
+                if (siblingMatch) {
+                    author = siblingMatch[1].trim();
+                    
+                    // Remove the author text from the sibling to avoid duplication
+                    const newSiblingText = siblingText.substring(siblingMatch[0].length);
+                    if (newSiblingText) {
+                        link.nextSibling.nodeValue = newSiblingText;
+                    } else {
+                        link.nextSibling.remove();
+                    }
+                }
+            }
+
+            link.replaceWith(this.createCommentLink(commentId, author));
         });
 
+        // Path-based links: [1.2.3] (author)
         const textNodes = [];
         const walker = document.createTreeWalker(fragment, NodeFilter.SHOW_TEXT);
         while (walker.nextNode()) {
             textNodes.push(walker.currentNode);
         }
 
-        const pathRegex = /\[(\d+(?:\.\d+)*)]/g;
+        const pathRegex = /\[(\d+(?:\.\d+)*)](?:\s*\(([^)]+)\))?/g;
         textNodes.forEach(node => {
             const text = node.nodeValue;
-            if (!text) return;
-
-            if (!pathRegex.test(text)) {
+            if (!text || !pathRegex.test(text)) {
                 pathRegex.lastIndex = 0;
                 return;
             }
@@ -870,19 +899,24 @@ class HNEnhancer {
             const replacement = document.createDocumentFragment();
             let lastIndex = 0;
             let match;
+
             while ((match = pathRegex.exec(text)) !== null) {
                 if (match.index > lastIndex) {
                     replacement.append(text.slice(lastIndex, match.index));
                 }
+
                 const path = match[1];
+                const author = (match[2] && match[2].trim()) || null;
                 const commentId = commentPathToIdMap?.get(path);
+
                 if (commentId) {
-                    replacement.appendChild(this.createCommentLink(commentId));
+                    replacement.appendChild(this.createCommentLink(commentId, author));
                 } else {
                     replacement.append(match[0]);
                 }
                 lastIndex = match.index + match[0].length;
             }
+
             if (lastIndex < text.length) {
                 replacement.append(text.slice(lastIndex));
             }
