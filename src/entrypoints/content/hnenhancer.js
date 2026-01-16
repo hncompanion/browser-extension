@@ -666,7 +666,10 @@ class HNEnhancer {
             },
             'r': () => {
                 // Find the 'root' hyperlink in the HN nav panel and set that as the current comment.
-                const rootComment = this.getNavElementByName(this.currentComment, 'root');
+                // Try 'root' link first (for indent 2+), then 'parent' (for indent 1).
+                // Top-level comments have neither, so nothing happens (already at root).
+                const rootComment = this.getNavElementByName(this.currentComment, 'root')
+                                 || this.getNavElementByName(this.currentComment, 'parent');
                 if (rootComment) {
                     this.setCurrentComment(rootComment);
                 }
