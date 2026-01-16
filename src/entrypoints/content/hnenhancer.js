@@ -67,6 +67,7 @@ class HNEnhancer {
             // this.initChromeBuiltinAI();
 
             this.summaryPanel = new SummaryPanel();
+            this.summaryPanel.onStatsRequest = this.loadStats.bind(this);
         }
 
         // set up all keyboard shortcuts - global and page-specific (Home pages vs. Comments page)
@@ -325,6 +326,66 @@ class HNEnhancer {
         });
 
         return authorCommentsMap;
+    }
+
+    loadStats() {
+        // 1. Top Authors
+        const topAuthors = Array.from(this.authorComments.entries())
+            .map(([name, comments]) => ({ name, count: comments.length }))
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 8);
+
+        // 2. Shared Links
+        const sharedLinks = this.extractSharedLinks();
+
+        // 3. Update UI
+        this.summaryPanel.updateStats({
+            topAuthors,
+            sharedLinks,
+            onAuthorClick: (author) => {
+                const comments = this.authorComments.get(author);
+                if (comments && comments.length > 0) {
+                    this.setCurrentComment(comments[0]);
+                }
+            }
+        });
+    }
+
+    extractSharedLinks() {
+        const linksMap = new Map(); // Use Map to deduplicate by URL
+        
+        const commentTexts = document.querySelectorAll('.commtext');
+        commentTexts.forEach(block => {
+            const anchors = block.querySelectorAll('a[href]');
+            anchors.forEach(a => {
+                const url = a.href;
+                
+                // Filter out internal/noise links
+                if (url.includes('news.ycombinator.com') || 
+                    url.startsWith('javascript:') ||
+                    url === '' ||
+                    url.includes('reply?id=') ||
+                    url.includes('user?id=')) {
+                    return;
+                }
+
+                if (!linksMap.has(url)) {
+                    let domain;
+                    try {
+                        domain = new URL(url).hostname.replace('www.', '');
+                    } catch (e) {
+                        domain = url; // Fallback
+                    }
+                    
+                    linksMap.set(url, {
+                        url: url,
+                        domain: domain
+                    });
+                }
+            });
+        });
+
+        return Array.from(linksMap.values());
     }
 
     createHelpIcon() {

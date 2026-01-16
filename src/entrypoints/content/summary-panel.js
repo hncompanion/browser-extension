@@ -73,16 +73,26 @@ class SummaryPanel {
 
         const tabs = document.createElement('div');
         tabs.className = 'summary-panel-tabs';
+        
         const summaryTab = document.createElement('button');
         summaryTab.className = 'summary-tab active';
         summaryTab.textContent = 'Summary';
+        summaryTab.onclick = () => this.switchTab('summary');
+        
+        const statsTab = document.createElement('button');
+        statsTab.className = 'summary-tab';
+        statsTab.textContent = 'Stats';
+        statsTab.onclick = () => this.switchTab('stats');
+
         tabs.appendChild(summaryTab);
-        // Future tabs can be added here
+        tabs.appendChild(statsTab);
+        
         header.appendChild(tabs);
 
         // --- Content ---
         const content = document.createElement('div');
         content.className = 'summary-panel-content';
+        content.id = 'panel-view-summary';
         
         // Removed separate metadata div as it's now in the header actions
 
@@ -91,6 +101,13 @@ class SummaryPanel {
         text.textContent = 'Select a thread to summarize.';
 
         content.appendChild(text);
+
+        // --- Stats View ---
+        const statsView = document.createElement('div');
+        statsView.className = 'summary-panel-content summary-panel-stats';
+        statsView.id = 'panel-view-stats';
+        statsView.style.display = 'none';
+        statsView.textContent = 'Loading stats...';
 
         // --- Footer ---
         const footer = document.createElement('div');
@@ -111,9 +128,99 @@ class SummaryPanel {
         // --- Assembly ---
         panel.appendChild(header);
         panel.appendChild(content);
+        panel.appendChild(statsView);
         panel.appendChild(footer);
 
         return panel;
+    }
+
+    switchTab(tabName) {
+        if (!this.panel) return;
+
+        const summaryTab = this.panel.querySelector('.summary-tab:nth-child(1)');
+        const statsTab = this.panel.querySelector('.summary-tab:nth-child(2)');
+        const summaryView = this.panel.querySelector('#panel-view-summary');
+        const statsView = this.panel.querySelector('#panel-view-stats');
+
+        if (tabName === 'summary') {
+            summaryTab.classList.add('active');
+            statsTab.classList.remove('active');
+            summaryView.style.display = 'block';
+            statsView.style.display = 'none';
+        } else {
+            statsTab.classList.add('active');
+            summaryTab.classList.remove('active');
+            statsView.style.display = 'block';
+            summaryView.style.display = 'none';
+            
+            // Trigger callback if data needs to be loaded
+            if (this.onStatsRequest) {
+                this.onStatsRequest();
+            }
+        }
+    }
+
+    updateStats({ topAuthors, sharedLinks, onAuthorClick }) {
+        const statsView = this.panel.querySelector('#panel-view-stats');
+        if (!statsView) return;
+
+        statsView.replaceChildren();
+
+        // Helper to create sections
+        const createSection = (title) => {
+            const h4 = document.createElement('h4');
+            h4.className = 'stats-section-title';
+            h4.textContent = title;
+            return h4;
+        };
+
+        // 1. Top Authors
+        if (topAuthors && topAuthors.length > 0) {
+            statsView.appendChild(createSection('Most Active Authors'));
+            const authorList = document.createElement('ul');
+            authorList.className = 'stats-list author-list';
+            
+            topAuthors.forEach(author => {
+                const li = document.createElement('li');
+                const btn = document.createElement('button');
+                btn.className = 'stats-author-btn';
+                btn.textContent = `${author.name} (${author.count})`;
+                btn.title = `Jump to first comment by ${author.name}`;
+                btn.onclick = () => onAuthorClick(author.name);
+                
+                li.appendChild(btn);
+                authorList.appendChild(li);
+            });
+            statsView.appendChild(authorList);
+        }
+
+        // 2. Shared Links
+        if (sharedLinks && sharedLinks.length > 0) {
+            statsView.appendChild(createSection('Shared Links'));
+            const linkList = document.createElement('ul');
+            linkList.className = 'stats-list link-list';
+
+            sharedLinks.forEach(linkObj => {
+                const li = document.createElement('li');
+                const a = document.createElement('a');
+                a.href = linkObj.url;
+                a.target = '_blank';
+                a.rel = 'noopener noreferrer';
+                a.textContent = linkObj.domain;
+                a.title = linkObj.url;
+                
+                // Truncate text if needed or show full URL on hover
+                // showing domain is cleaner, maybe add title?
+                
+                li.appendChild(a);
+                linkList.appendChild(li);
+            });
+            statsView.appendChild(linkList);
+        }
+        
+        if ((!topAuthors || topAuthors.length === 0) && (!sharedLinks || sharedLinks.length === 0)) {
+            statsView.textContent = 'No stats available for this thread.';
+        }
     }
 
     createResizer() {
