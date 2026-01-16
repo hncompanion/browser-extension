@@ -2137,7 +2137,8 @@ class HNEnhancer {
             rawText: summary, // Pass raw text for 'Copy to Clipboard'
             status: status,
             onRegenerate: () => this.summarizeAllComments(true),
-            onSettings: () => this.openOptionsPage()
+            onSettings: () => this.openOptionsPage(),
+            onHelp: () => this.toggleHelpModal(true)
         });
 
         // Now that the summary links are in the DOM< attach listeners to those hyperlinks to navigate to the respective comments

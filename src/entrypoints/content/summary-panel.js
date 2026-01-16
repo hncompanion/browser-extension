@@ -211,6 +211,8 @@ class SummaryPanel {
         if (!this.panel || !this.resizer || !this.mainWrapper) return;
 
         const hnTable = document.querySelector('#hnmain');
+        const helpIcon = document.querySelector('.help-icon');
+
         if (!this.isVisible) {
             const maxAvailableWidth = this.mainWrapper.offsetWidth - this.resizerWidth;
             const {minWidth} = this.calculatePanelConstraints(maxAvailableWidth);
@@ -220,6 +222,7 @@ class SummaryPanel {
             this.resizer.style.display = 'block';
 
             if (hnTable) hnTable.style.minWidth = '0';
+            if (helpIcon) helpIcon.style.display = 'none'; // Hide floating help icon
         } else {
             this.panel.style.display = 'none';
             this.resizer.style.display = 'none';
@@ -228,6 +231,7 @@ class SummaryPanel {
                 hnTable.style.removeProperty('min-width');
                 hnTable.style.removeProperty('width');
             }
+            if (helpIcon) helpIcon.style.display = 'flex'; // Restore floating help icon
         }
     }
 
@@ -242,7 +246,7 @@ class SummaryPanel {
         element.textContent = String(content);
     }
 
-    updateContent({ title, text, rawText, status, onRegenerate, onSettings }) {
+    updateContent({ title, text, rawText, status, onRegenerate, onSettings, onHelp }) {
         if (!this.panel) return;
 
         if (!this.isVisible) {
@@ -280,6 +284,19 @@ class SummaryPanel {
                         onRegenerate();
                     };
                     actionsContainer.appendChild(regenBtn);
+                }
+
+                // Help Button
+                if (onHelp) {
+                    const helpBtn = document.createElement('button');
+                    helpBtn.className = 'action-btn';
+                    helpBtn.title = 'Keyboard Shortcuts';
+                    helpBtn.textContent = '?'; 
+                    helpBtn.onclick = (e) => {
+                        e.preventDefault();
+                        onHelp();
+                    };
+                    actionsContainer.appendChild(helpBtn);
                 }
 
                 // Settings Button
