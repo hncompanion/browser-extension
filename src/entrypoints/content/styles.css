@@ -616,16 +616,40 @@
     text-decoration: underline;
 }
 
-.link-list a {
+.link-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.stats-link-btn {
+    background: none;
+    border: none;
+    padding: 0;
     color: #828282;
-    text-decoration: none;
-    display: block;
+    cursor: pointer;
+    font-size: 12px;
+    font-family: inherit;
+    text-align: left;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    flex: 1;
+    margin-right: 8px;
 }
 
-.link-list a:hover {
+.stats-link-btn:hover {
     color: #ff6600;
     text-decoration: underline;
+}
+
+.external-link-icon {
+    color: #828282;
+    text-decoration: none;
+    font-size: 14px;
+    flex: 0 0 auto;
+}
+
+.external-link-icon:hover {
+    color: #ff6600;
 }

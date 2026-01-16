@@ -160,7 +160,7 @@ class SummaryPanel {
         }
     }
 
-    updateStats({ topAuthors, sharedLinks, onAuthorClick }) {
+    updateStats({ topAuthors, sharedLinks, onAuthorClick, onLinkClick }) {
         const statsView = this.panel.querySelector('#panel-view-stats');
         if (!statsView) return;
 
@@ -202,17 +202,29 @@ class SummaryPanel {
 
             sharedLinks.forEach(linkObj => {
                 const li = document.createElement('li');
-                const a = document.createElement('a');
-                a.href = linkObj.url;
-                a.target = '_blank';
-                a.rel = 'noopener noreferrer';
-                a.textContent = linkObj.domain;
-                a.title = linkObj.url;
                 
-                // Truncate text if needed or show full URL on hover
-                // showing domain is cleaner, maybe add title?
+                // Domain button (Context Jump)
+                const domainBtn = document.createElement('button');
+                domainBtn.className = 'stats-link-btn';
+                domainBtn.textContent = linkObj.domain;
+                domainBtn.title = 'Jump to comment context';
+                domainBtn.onclick = () => {
+                    if (onLinkClick && linkObj.commentId) {
+                        onLinkClick(linkObj.commentId);
+                    }
+                };
+
+                // External Link Icon
+                const extLink = document.createElement('a');
+                extLink.className = 'external-link-icon';
+                extLink.href = linkObj.url;
+                extLink.target = '_blank';
+                extLink.rel = 'noopener noreferrer';
+                extLink.textContent = '↗'; // External link symbol
+                extLink.title = linkObj.url;
                 
-                li.appendChild(a);
+                li.appendChild(domainBtn);
+                li.appendChild(extLink);
                 linkList.appendChild(li);
             });
             statsView.appendChild(linkList);

@@ -347,6 +347,12 @@ class HNEnhancer {
                 if (comments && comments.length > 0) {
                     this.setCurrentComment(comments[0]);
                 }
+            },
+            onLinkClick: (commentId) => {
+                const comment = document.getElementById(commentId);
+                if (comment) {
+                    this.setCurrentComment(comment);
+                }
             }
         });
     }
@@ -356,6 +362,10 @@ class HNEnhancer {
         
         const commentTexts = document.querySelectorAll('.commtext');
         commentTexts.forEach(block => {
+            const parentRow = block.closest('.athing');
+            if (!parentRow) return;
+            const commentId = parentRow.id;
+
             const anchors = block.querySelectorAll('a[href]');
             anchors.forEach(a => {
                 const url = a.href;
@@ -379,7 +389,8 @@ class HNEnhancer {
                     
                     linksMap.set(url, {
                         url: url,
-                        domain: domain
+                        domain: domain,
+                        commentId: commentId
                     });
                 }
             });
