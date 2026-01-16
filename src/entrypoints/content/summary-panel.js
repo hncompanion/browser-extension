@@ -53,36 +53,61 @@ class SummaryPanel {
         panel.className = 'summary-panel';
         panel.style.display = 'none';
 
+        // --- Header ---
         const header = document.createElement('div');
         header.className = 'summary-panel-header';
 
+        const titleBar = document.createElement('div');
+        titleBar.className = 'summary-panel-title-bar';
         const title = document.createElement('h3');
         title.className = 'summary-panel-title';
-        title.textContent = 'Summary';
-        header.appendChild(title);
+        title.textContent = 'HN Companion';
+        titleBar.appendChild(title);
+        header.appendChild(titleBar);
 
+        const tabs = document.createElement('div');
+        tabs.className = 'summary-panel-tabs';
+        const summaryTab = document.createElement('button');
+        summaryTab.className = 'summary-tab active';
+        summaryTab.textContent = 'Summary';
+        tabs.appendChild(summaryTab);
+        // Future tabs can be added here
+        header.appendChild(tabs);
+
+        // --- Content ---
         const content = document.createElement('div');
         content.className = 'summary-panel-content';
+        
         const metadata = document.createElement('div');
         metadata.className = 'summary-metadata';
 
         const text = document.createElement('div');
         text.className = 'summary-text';
-        text.append('Select a thread to summarize. More details ');
-        const link = document.createElement('a');
-        link.className = 'navs';
-        link.href = 'https://github.com/hncompanion/browser-extension';
-        link.target = '_blank';
-        link.rel = 'noopener noreferrer';
-        link.textContent = 'here';
-        text.appendChild(link);
-        text.append('.');
+        text.textContent = 'Select a thread to summarize.';
 
         content.appendChild(metadata);
         content.appendChild(text);
 
+        // --- Footer ---
+        const footer = document.createElement('div');
+        footer.className = 'summary-panel-footer';
+
+        const poweredBy = document.createElement('span');
+        poweredBy.textContent = 'Powered by AI';
+        footer.appendChild(poweredBy);
+
+        const link = document.createElement('a');
+        link.className = 'summary-footer-link';
+        link.href = 'https://github.com/hncompanion/browser-extension';
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.textContent = 'More details';
+        footer.appendChild(link);
+
+        // --- Assembly ---
         panel.appendChild(header);
         panel.appendChild(content);
+        panel.appendChild(footer);
 
         return panel;
     }
@@ -187,7 +212,7 @@ class SummaryPanel {
             const {minWidth} = this.calculatePanelConstraints(maxAvailableWidth);
             this.panel.style.flexBasis = `${minWidth}px`;
 
-            this.panel.style.display = 'block';
+            this.panel.style.display = 'flex'; // Use flex to maintain layout structure
             this.resizer.style.display = 'block';
 
             if (hnTable) hnTable.style.minWidth = '0';

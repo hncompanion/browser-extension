@@ -300,40 +300,113 @@
 .summary-panel {
     flex: 0 1 400px; /* grow :0, shrink: 1, basis: 400px */
     position: sticky;
-    top: 0;
+    top: 8px; /* Align with HN body margin */
     align-self: flex-start;
     background-color: #f6f6ef;
-    padding: 16px;
+    /* padding: 16px; Removed to handle full-width header/footer */
     box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
-    height: 100vh;
+    
+    /* Fit within the viewport accounting for HN's default 8px margins */
+    height: calc(100vh - 16px);
+    border-radius: 8px; /* Soften the edges */
+    
+    overflow: hidden; /* Ensure children don't bleed out */
 
     transition: transform 0.3s ease;
+    
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box; /* Crucial for correct sizing */
+}
+
+/* Apply box-sizing to all children of the panel to avoid layout quirks */
+.summary-panel * {
+    box-sizing: border-box;
 }
 
 /* Panel content styling */
 .summary-panel-header {
-    margin-bottom: 20px;
-    text-align: left;
+    flex: 0 0 auto;
+    background-color: #f6f6ef;
+    border-bottom: 1px solid #ff6600; /* Distinct separation */
+    padding: 12px 16px 0 16px;
+    display: flex;
+    flex-direction: column;
+}
+
+.summary-panel-title-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
 }
 
 .summary-panel-title {
     color: #ff6600;
-    font-size: 18px;
+    font-size: 16px;
     font-weight: bold;
-    margin-bottom: 12px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid #eee;
+    margin: 0;
+}
+
+.summary-panel-tabs {
+    display: flex;
+    gap: 2px;
+}
+
+.summary-tab {
+    padding: 8px 16px;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: #828282;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.summary-tab:hover {
+    color: #ff6600;
+    background-color: rgba(255, 102, 0, 0.05);
+}
+
+.summary-tab.active {
+    color: #ff6600;
+    border-bottom-color: #ff6600;
 }
 
 .summary-panel-content {
+    flex: 1 1 auto;
+    min-height: 0; /* Critical for scrolling inside flex item */
     text-align: left;
     font-family: Verdana, Geneva, sans-serif;
     color: #828282;
     font-size: 12px;
     overflow-y: auto; /* Enable vertical scrolling within the content */
-    max-height: 95%; /* Ensure it takes the full height of the panel */
-    padding-bottom: 12px;
+    padding: 16px;
     line-height: 1.5; /* Add more breathing room */
+}
+
+.summary-panel-footer {
+    flex: 0 0 auto;
+    background-color: #f6f6ef;
+    border-top: 1px solid #dcdcdc;
+    padding: 8px 16px;
+    font-size: 11px;
+    color: #828282;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.summary-footer-link {
+    color: #828282;
+    text-decoration: none;
+}
+
+.summary-footer-link:hover {
+    color: #ff6600;
+    text-decoration: underline;
 }
 
 .summary-author {
@@ -352,12 +425,10 @@
 }
 
 .summary-text {
-    margin-bottom: 20px;
     color: #000000;
     font-size: 12px;
     text-align: left;
     line-height: 1.4;
-    padding-bottom: 32px;
 }
 
 .summary-metadata strong {
