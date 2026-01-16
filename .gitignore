@@ -12,3 +12,4 @@ stats-*.json
 web-ext.config.ts
 /.idea/copilot.data.migration.agent.xml
 /.idea/copilot.data.migration.edit.xml
+/.idea
