@@ -1411,7 +1411,7 @@ class HNEnhancer {
         const cacheConfigEnabled = await this.serverCacheConfigEnabled();
         if(cacheConfigEnabled && !skipCache) {
             this.summaryPanel.updateContent({
-                title: 'Post Summary',
+                title: 'Discussion Summary',
                 metadata: 'Analyzing all threads in this post...',
                 text: this.createLoadingMessage([
                     'Looking for cached summary on HNCompanion server...'
@@ -1456,7 +1456,7 @@ class HNEnhancer {
             }
             loadingParts.push('... This may take a few moments. ');
             this.summaryPanel.updateContent({
-                title: 'Post Summary',
+                title: 'Discussion Summary',
                 metadata: `Analyzing all threads in this post...`,
                 text: this.createLoadingMessage(loadingParts)
             });
