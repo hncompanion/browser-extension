@@ -395,14 +395,35 @@ class HNEnhancer {
         return link;
     }
 
-    createCommentLink(commentId) {
+    /**
+     * Creates an in-page navigation anchor for a comment reference in AI summaries.
+     * 
+     * Unlike standard <a href="#id"> links, this creates a custom anchor that
+     * highlights the target comment, smoothly scrolls to it, and saves navigation
+     * history for undo functionality. Click handling is set up in showSummaryInPanel().
+     * 
+     * Example: <a href="...#46667941">MPSimmons</a> → <a data-comment-id="46667941">MPSimmons</a>
+     */
+    createCommentAnchor(commentId) {
         const link = document.createElement('a');
         link.href = '#';
-        link.title = `Go to comment #${commentId}`;
         link.dataset.commentLink = 'true';
         link.dataset.commentId = commentId;
         link.className = 'summary-comment-link';
-        link.textContent = `comment #${commentId}`;
+        
+        // Set link's text and title such that it shows author name if found, else 'comment #123456'
+        const commentElement = document.getElementById(commentId);
+        const authorElement = commentElement?.querySelector('.hnuser');
+        const authorName = authorElement?.textContent;
+        
+        if (authorName) {
+            link.textContent = authorName;
+            link.title = `Jump to ${authorName}'s comment`;
+        } else {
+            link.textContent = `comment #${commentId}`;
+            link.title = `Jump to comment #${commentId}`;
+        }
+        
         return link;
     }
 
@@ -820,15 +841,48 @@ class HNEnhancer {
         }
     }
 
+    /**
+    * Converts markdown summary text into a safe, interactive DOM fragment with interactive comment anchors.
+    * 
+    * Handles two summary formats for comment references:
+    * - Server-cached: [comment #123](url) (author) → [author](url) → navigation anchor
+    * - User-generated: [1.2.3] path notation → looked up in commentPathToIdMap → navigation anchor
+    * 
+    * Code Flow for each format:
+    ** Server-cached summaries:
+        markdown: [comment #123](<url>) (author) says...
+        → preprocessCachedMarkdownLinks: [author](url) says...
+        → marked.parse: <a href="url">author</a>  (converts markdown links to HTML hrefs)
+        → replaceCommentBacklinks: finds <a href>, creates navigation anchor <a href="#" data-comment-id="...">(author)</a>
+
+    ** User-generated summaries:
+        markdown: [1.2.3] (author) says...
+        → marked.parse: [1.2.3] (author) says... (unchanged, it's just text)
+        → replaceCommentBacklinks: walks text nodes, finds path [1.2.3], looks up ID, 
+            creates navigation anchor <a href="#" data-comment-id="...">(author)</a>
+    */
     createSummaryFragment(markdown, commentPathToIdMap) {
+
+        // In server-cached summary, rewrite markdown links to use author names instead of comment IDs as link text.
+        // This must happen before parsing markdown to HTML. If we do this after parsing, the redundant suffix (author) 
+        // becomes a separate text node, which would be harder to locate and remove from the DOM.
+        
+        //  Match pattern: [comment #12345](https://news.ycombinator.com/item?id=...#12345) (authorname)
+        //  Replace with:  [authorname](url) - removing the redundant (authorname) after
+        const cachedLinkRegex = /\[comment #\d+\]\((https?:\/\/news\.ycombinator\.com\/item\?id=\d+#\d+)\)\s*\(([^)]+)\)/g;
+        
+        const normalizedMarkdown = markdown
+            ? markdown.replace(cachedLinkRegex, (_, url, author) => `[${author}](${url})`)
+            : '';
+
         let html;
         try {
-            html = marked.parse(markdown || '');
+            html = marked.parse(normalizedMarkdown || '');
         } catch (e) {
             Logger.error('Failed to parse markdown, displaying raw text:', e);
             const fragment = document.createDocumentFragment();
             const pre = document.createElement('pre');
-            pre.textContent = markdown || '';
+            pre.textContent = normalizedMarkdown || '';
             fragment.appendChild(pre);
             return fragment;
         }
@@ -838,16 +892,27 @@ class HNEnhancer {
         return fragment;
     }
 
+    /**
+    * Replaces comment references with interactive in-page navigation anchors.
+    * 
+    * Format handling:
+    * - Server-cached summaries arrive with resolved URLs: <a href="...#commentId">
+    * - User-generated summaries use path notation: [1.2.3] requiring commentPathToIdMap lookup
+    */
     replaceCommentBacklinks(fragment, commentPathToIdMap) {
         if (!fragment) return;
 
+        // Server-cached summaries: Contains <a href> links with URLs already resolved to comment IDs
+        //  Example: <a href="https://news.ycombinator.com/item?id=46657122#46667941">MPSimmons</a>
+        //  We just need to convert this to our custom in-page navigation anchor to jump to the comment.
+        //  From: <a href="...#46667941">MPSimmons</a> → To: <a data-comment-id="46667941">MPSimmons</a>
         fragment.querySelectorAll('a[href]').forEach(link => {
             const href = link.getAttribute('href');
             if (!href) return;
             const match = href.match(/^https?:\/\/news\.ycombinator\.com\/item\?id=\d+#(\d+)/);
             if (!match) return;
             const commentId = match[1];
-            link.replaceWith(this.createCommentLink(commentId));
+            link.replaceWith(this.createCommentAnchor(commentId));
         });
 
         const textNodes = [];
@@ -856,33 +921,39 @@ class HNEnhancer {
             textNodes.push(walker.currentNode);
         }
 
-        const pathRegex = /\[(\d+(?:\.\d+)*)]/g;
+        // User-generated summaries: Contains path notations like [1.2.3] that represents comment hierarchy
+        //  Example: [1.2.3] (author) = 3rd reply to 2nd reply to 1st top-level comment
+        //  We need to map these paths to actual comment IDs and then replace them with in-page navigation anchors.
+        //  From: [1.2.3] (MPSimmons) → To: <a data-comment-id="46667941">MPSimmons</a>
+        const pathRegex = /\[(\d+(?:\.\d+)*)]\s*(?:\([^)]+\))?/g;
         textNodes.forEach(node => {
             const text = node.nodeValue;
-            if (!text) return;
+            if (!text || !text.includes('[')) return;  // Quick check without regex
 
-            if (!pathRegex.test(text)) {
-                pathRegex.lastIndex = 0;
-                return;
-            }
-
-            pathRegex.lastIndex = 0;
             const replacement = document.createDocumentFragment();
             let lastIndex = 0;
             let match;
+            let hasMatches = false;
+
             while ((match = pathRegex.exec(text)) !== null) {
+                hasMatches = true;
                 if (match.index > lastIndex) {
                     replacement.append(text.slice(lastIndex, match.index));
                 }
                 const path = match[1];
+                // Lookup comment ID from path, eg: "1.2.3" → "46667941"
                 const commentId = commentPathToIdMap?.get(path);
                 if (commentId) {
-                    replacement.appendChild(this.createCommentLink(commentId));
+                    replacement.appendChild(this.createCommentAnchor(commentId));
                 } else {
                     replacement.append(match[0]);
                 }
                 lastIndex = match.index + match[0].length;
             }
+            pathRegex.lastIndex = 0;  // Reset for next node
+
+            if (!hasMatches) return;  // No matches, skip replacement
+
             if (lastIndex < text.length) {
                 replacement.append(text.slice(lastIndex));
             }
