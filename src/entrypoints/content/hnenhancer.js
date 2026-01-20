@@ -230,13 +230,15 @@ class HNEnhancer {
         const authorElement = comment.querySelector('.hnuser');
         if (authorElement && !authorElement.querySelector('.comment-count')) {
             const author = authorElement.textContent;
-            const count = this.authorComments.get(author).length;
+            const authorCommentsList = this.authorComments.get(author);
+            const count = authorCommentsList.length;
+            const position = authorCommentsList.indexOf(comment) + 1;  // 1-based position
 
             const container = document.createElement('span');
 
             const countSpan = document.createElement('span');
             countSpan.className = 'comment-count';
-            countSpan.textContent = `(${count})`;
+            countSpan.textContent = count > 1 ? `(${position}/${count})` : `(${count})`;
             container.appendChild(countSpan);
 
             const navPrev = document.createElement('span');
