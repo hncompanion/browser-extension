@@ -1,6 +1,7 @@
 class SummaryPanel {
     constructor() {
         this.panel = this.createPanel();
+        this.contentUpdated = false;  // Track if updateContent has been called
         if (!this.panel) {
             this.resizer = null;
             this.mainWrapper = null;
@@ -215,6 +216,8 @@ class SummaryPanel {
 
     updateContent({ title, metadata, text }) {
         if (!this.panel) return;
+
+        this.contentUpdated = true;  // Mark that content has been updated
 
         if (!this.isVisible) {
             this.toggle();

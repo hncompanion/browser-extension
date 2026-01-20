@@ -733,10 +733,12 @@ class HNEnhancer {
                     window.open(postLink.href, '_blank');
                 }
             },
-            's': () => {
-                // Open/close the summary panel on the right
+            's': async () => {
+                // Toggle the summary panel and summarize all comments on first open
                 this.summaryPanel.toggle();
-
+                if (this.summaryPanel.isVisible && !this.summaryPanel.contentUpdated) {
+                    await this.summarizeAllComments();
+                }
             },
             'u': () => {
                 // Undo navigation - go back to previous comment focus position
