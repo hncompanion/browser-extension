@@ -69,15 +69,7 @@ class SummaryPanel {
 
         const text = document.createElement('div');
         text.className = 'summary-text';
-        text.append('Select a thread to summarize. More details ');
-        const link = document.createElement('a');
-        link.className = 'navs';
-        link.href = 'https://github.com/hncompanion/browser-extension';
-        link.target = '_blank';
-        link.rel = 'noopener noreferrer';
-        link.textContent = 'here';
-        text.appendChild(link);
-        text.append('.');
+        text.append("Press 's' or click 'summarize all comments' to generate an AI summary of this discussion.");
 
         content.appendChild(metadata);
         content.appendChild(text);

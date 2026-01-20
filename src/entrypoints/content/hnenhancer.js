@@ -13,14 +13,6 @@ marked.setOptions({
     mangle: false
 });
 
-// TODO: Remove or move inside
-const SummarizeCheckStatus = {
-    OK: 'ok',
-    TEXT_TOO_SHORT: 'too_short',
-    THREAD_TOO_SHALLOW: 'too_shallow',
-    THREAD_TOO_DEEP: 'chrome_depth_limit'
-};
-
 class HNEnhancer {
 
     static DEBUG = false;  // Set to true when debugging
@@ -217,9 +209,6 @@ class HNEnhancer {
 
             // customize the default next/prev/root/parent links to do the Companion behavior
             this.customizeDefaultNavLinks(comment);
-
-            // Insert summarize thread link at the end
-            this.injectSummarizeThreadLinks(comment);
         });
 
         // Set up the hover events on all user elements - in the main post subline and each comment
@@ -277,32 +266,6 @@ class HNEnhancer {
             // Get the parent element of the author element and append the container as second child
             authorElement.parentElement.insertBefore(container, authorElement.parentElement.children[1]);
         }
-    }
-
-    injectSummarizeThreadLinks(comment) {
-        const navsElement = comment.querySelector('.navs');
-        if(!navsElement) {
-            Logger.infoSync('Could not find the navs element to inject the summarize thread link');
-            return;
-        }
-
-        navsElement.appendChild(document.createTextNode(' | '));
-
-        const summarizeThreadLink = document.createElement('a');
-        summarizeThreadLink.href = '#';
-        summarizeThreadLink.textContent = 'summarize thread';
-        summarizeThreadLink.title = 'Summarize all child comments in this thread';
-
-        summarizeThreadLink.addEventListener('click', async (e) => {
-            e.preventDefault();
-
-            // Set the current comment and summarize the thread starting from this comment
-            this.setCurrentComment(comment);
-
-            await this.summarizeThread(comment);
-        });
-
-        navsElement.appendChild(summarizeThreadLink);
     }
 
     createAuthorCommentsMap() {
@@ -1091,144 +1054,6 @@ class HNEnhancer {
         });
 
         return modal;
-    }
-
-    async summarizeThread(comment) {
-
-        // Get the item id from the 'age' link that shows '10 hours ago' or similar
-        const itemLinkElement = comment.querySelector('.age')?.getElementsByTagName('a')[0];
-        if (!itemLinkElement) {
-            await Logger.error('Could not find the item link element to get the item id for summarization');
-            return;
-        }
-
-        // get the content of the thread
-        const itemId = itemLinkElement.href.split('=')[1];
-        const threadData = await this.getHNThread(itemId);
-        if (!threadData || !threadData.formattedComment) {
-            await Logger.error(`Could not get the thread for summarization. item id: ${itemId}`);
-            return;
-        }
-        const {formattedComment, commentPathToIdMap} = threadData;
-
-        const commentDepth = commentPathToIdMap.size;
-        const {aiProvider, model} = await this.getAIProviderModel();
-
-        if (!aiProvider) {
-            await Logger.info('AI provider not configured. Prompting user to complete setup.');
-            this.showConfigureAIMessage();
-            return;
-        }
-
-        const authorElement = comment.querySelector('.hnuser');
-        const author = authorElement.textContent || '';
-
-        const summarizeCheckResult = this.shouldSummarizeText(formattedComment, commentDepth, aiProvider);
-
-        if (summarizeCheckResult.status !== SummarizeCheckStatus.OK) {
-            const metadataTemplates = {
-                [SummarizeCheckStatus.TEXT_TOO_SHORT]: this.buildFragment([
-                    'Thread too brief to use the selected cloud AI ',
-                    this.createStrong(aiProvider)
-                ]),
-                [SummarizeCheckStatus.THREAD_TOO_SHALLOW]: this.buildFragment([
-                    'Thread not deep enough to use the selected cloud AI ',
-                    this.createStrong(aiProvider)
-                ]),
-                [SummarizeCheckStatus.THREAD_TOO_DEEP]: this.buildFragment([
-                    'Thread too deep for the selected AI ',
-                    this.createStrong(aiProvider)
-                ])
-            };
-
-            const createThreadTooDeepMessage = () => this.buildFragment([
-                'This ',
-                this.createHighlightedAuthor(author),
-                ' thread is too long or deeply nested to be handled by Chrome Built-in AI. The underlying model Gemini Nano may struggle and hallucinate with large content and deep nested threads due to model size limitations. This model works best with individual comments or brief discussion threads.',
-                document.createElement('br'),
-                document.createElement('br'),
-                'However, if you still want to summarize this thread, you can ',
-                this.createInternalLink('options-page-link', 'configure another AI provider'),
-                ' like local ',
-                this.createExternalLink('https://ollama.com/', 'Ollama'),
-                ' or cloud AI services like OpenAI or Claude.'
-            ]);
-
-            const createThreadTooShortMessage = () => this.buildFragment([
-                'This ',
-                this.createHighlightedAuthor(author),
-                ' thread is concise enough to read directly. Summarizing short threads with a cloud AI service would be inefficient.',
-                document.createElement('br'),
-                document.createElement('br'),
-                'However, if you still want to summarize this thread, you can ',
-                this.createInternalLink('options-page-link', 'configure a local AI provider'),
-                ' like ',
-                this.createExternalLink('https://developer.chrome.com/docs/ai/built-in', 'Chrome Built-in AI'),
-                ' or ',
-                this.createExternalLink('https://ollama.com/', 'Ollama'),
-                ' for more efficient processing of shorter threads.'
-            ]);
-
-            this.summaryPanel.updateContent({
-                title: 'Summarization not recommended',
-                metadata: metadataTemplates[summarizeCheckResult.status],
-                text: summarizeCheckResult.status === SummarizeCheckStatus.THREAD_TOO_DEEP
-                    ? createThreadTooDeepMessage()
-                    : createThreadTooShortMessage()
-            });
-
-            // Once the error message is rendered in the summary panel, add the click handler for the Options page link
-            const optionsLink = this.summaryPanel.panel.querySelector('#options-page-link');
-            if (optionsLink) {
-                optionsLink.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    this.openOptionsPage();
-                });
-            }
-            return;
-        }
-
-        // Show an in-progress text in the summary panel
-        const metadata = this.buildFragment([
-            'Analyzing discussion in ',
-            this.createHighlightedAuthor(author),
-            ' thread'
-        ]);
-        const loadingParts = ['Generating summary'];
-        if (aiProvider) {
-            loadingParts.push(' using ', this.createStrong(`${aiProvider}/${model || ''}`));
-        }
-        loadingParts.push('... This may take a few moments.');
-
-        this.summaryPanel.updateContent({
-            title: 'Thread Summary',
-            metadata: metadata,
-            text: this.createLoadingMessage(loadingParts)
-        });
-
-        await this.summarizeText(formattedComment, commentPathToIdMap);
-    }
-
-    shouldSummarizeText(formattedText, commentDepth, aiProvider) {
-        // Ollama can handle all kinds of data - large, small, deep threads. So return true
-        if (aiProvider === 'ollama') {
-            return { status: SummarizeCheckStatus.OK };
-        }
-
-        // OpenAI and Claude can handle larger data, but they are expensive, so there should be a minimum length and depth
-        const minSentenceLength = 8;
-        const minCommentDepth = 3;
-        const sentences = formattedText.split(/[.!?]+(?:\s+|$)/)
-            .filter(sentence => sentence.trim().length > 0);
-
-        if (sentences.length <= minSentenceLength) {
-            return { status: SummarizeCheckStatus.TEXT_TOO_SHORT };
-        }
-        if (commentDepth <= minCommentDepth) {
-            return { status: SummarizeCheckStatus.THREAD_TOO_SHALLOW };
-        }
-
-        return { status: SummarizeCheckStatus.OK };
     }
 
     // Customize the default HN navigation such that it is synchronized with our navigation.
