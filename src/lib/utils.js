@@ -71,6 +71,10 @@ class Logger {
     }
 }
 
+storage.watch('local:loggerEnabled', (newValue) => {
+    Logger.enabled = !!newValue;
+});
+
 Logger.refreshEnabled().catch(() => {});
 
 /**
