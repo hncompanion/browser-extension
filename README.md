@@ -8,13 +8,13 @@ AI-powered summaries tuned to HN's threaded discussions + Vim-style keyboard nav
 
 ## Overview
 
-HN Companion is a browser extension that enhances Hacker News experience with AI summaries that understand HN thread hierarchy and Vim-inspired keyboard navigation.
+HN Companion is a browser extension that helps you catch up on lengthy HN discussions with AI summaries that understand thread structure, deep dive to conversations and navigate seamlessly with Vim-style keyboard shortcuts.
 
 **Features**: HN-aware summaries • Keyboard navigation • Multiple AI providers • Free cached summaries • Privacy-focused • Open source
 
 👉 **See [hncompanion.com](https://hncompanion.com) for full feature details, demos, and AI setup guides**
 
-### 🌟 Key Features
+### Key Features
 * **Summaries Built for HN**
     * Understands thread hierarchy, conversation flow, and rankings
     * Highlights key debates, contrasting viewpoints, and side discussions
@@ -23,7 +23,7 @@ HN Companion is a browser extension that enhances Hacker News experience with AI
 * **Follow the Conversation**
     * Jump to specific comments from the summary
     * Navigate to other comments by the same author (`[` and `]`)
-    * User profile previews on hover (karma, account age)
+    * Hover on username to preview user profile (karma, account info)
 
 * **Fully Customizable**
     * Bring your own API key (OpenAI, Anthropic, Google, OpenRouter)
@@ -175,3 +175,6 @@ MIT Licensed - free to use, modify, and distribute.
 ---
 
 > **Note**: This extension is not endorsed by, affiliated with, or sponsored by Y Combinator or Hacker News.
+
+> [!NOTE] 
+> Note: This extension is not endorsed by, affiliated with, or sponsored by Y Combinator or Hacker News.
