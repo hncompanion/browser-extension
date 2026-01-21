@@ -1,43 +1,48 @@
-### Hacker News Companion - Chrome Extension
+### Hacker News Companion - Browser Extension
 
-[![Basic features video](http://img.youtube.com/vi/SJxsczfF9pI/maxresdefault.jpg)](https://youtu.be/SJxsczfF9pI)
+[![Demo video](http://img.youtube.com/vi/SJxsczfF9pI/maxresdefault.jpg)](https://youtu.be/SJxsczfF9pI)
 
 > [!TIP]
-> You can also find this extension on the [Chrome Web Store](https://chromewebstore.google.com/detail/hacker-news-companion/khfcainelcaedmmhjicphbkpigklejgf).
-> Or on the [Firefox Addon store](https://addons.mozilla.org/en-US/firefox/addon/hacker-news-companion/).
+> Install on the [Chrome Web Store](https://chromewebstore.google.com/detail/hacker-news-companion/khfcainelcaedmmhjicphbkpigklejgf) or the [Firefox Addon store](https://addons.mozilla.org/en-US/firefox/addon/hacker-news-companion/).
+> You can also see the latest product overview at [hncompanion.com](https://hncompanion.com).
 
 ## 🚀 Quick Start Guide
-1. Install from [Chrome Web Store](https://chromewebstore.google.com/detail/hacker-news-companion/khfcainelcaedmmhjicphbkpigklejgf) or [Firefox Addon store](https://addons.mozilla.org/en-US/firefox/addon/hacker-news-companion/)
-2. Navigate to [Hacker News](https://news.ycombinator.com)
-3. Press '?' to view keyboard shortcuts
-4. Choose your preferred AI provider in extension settings
+1. Install from the [Chrome Web Store](https://chromewebstore.google.com/detail/hacker-news-companion/khfcainelcaedmmhjicphbkpigklejgf) or [Firefox Addon store](https://addons.mozilla.org/en-US/firefox/addon/hacker-news-companion/).
+2. Navigate to [Hacker News](https://news.ycombinator.com).
+3. Press '?' to view keyboard shortcuts.
+4. Choose your preferred AI provider in extension settings, or use cached summaries when available.
 
 ### Overview
-Transform your Hacker News experience with AI-powered summaries, and keyboard navigation with vim-style shortcuts. 
-This extension streamlines how you read and navigate through discussions, making it easier than ever to engage with rich conversations.
+Get the gist of long HN discussions with summaries tuned to the HN semantics of threads, rankings and hierarchy of conversations. Move through the comments fast with Vim-style navigation. This README aligns with the product overview at [hncompanion.com](https://hncompanion.com) and the store listing language used for the extension.
 
 ### 🌟 Key Features
-* **AI-Powered Summarization**
-   * Multiple AI provider options
-   * Connect to cloud-hosted models - Google AI, Anthropic, OpenAI, OpenRouter for advanced summaries
-   * Use local models hosted on Ollama
-   
-* **Smart Keyboard Navigation**
-  * Vim-inspired shortcuts (`h`, `j`, `k`, `l`) for intuitive movement
-  * Quick-jump between comments by the same author (`[` and `]`)
-  * Collapsible comment threads (`c` to toggle) or open comments in the home page
-  * Press '?' to view all shortcuts
+* **Summaries Built for HN**
+    * Understands thread hierarchy, conversation flow, and rankings
+    * Highlights key debates, contrasting viewpoints, and side discussions
+    * Cached summaries available for popular stories
 
-* **Enhanced Comment Navigation**
-    * Quick-jump between comments by the same author
-    * Visual indicators for post authors and comment counts
-    * Comment count display
+* **Follow the Conversation**
+    * Jump to specific comments from the summary
+    * Navigate to other comments by the same author (`[` and `]`)
+    * User profile previews on hover (karma, account age)
 
-* **Rich User Interactions**
-    * User profile previews on hover
-    * Resizable summary panel
+* **Fully Customizable**
+    * Bring your own API key (OpenAI, Anthropic, Google, OpenRouter)
+    * Or run locally with Ollama for complete privacy
+    * Customize system and user prompts in settings
+
+* **Keyboard-First Navigation**
+    * Vim-inspired shortcuts (`h`, `j`, `k`, `l`) for intuitive movement
+    * Collapse/expand threads (`c`) and jump to first comment (`gg`)
+    * Press '?' anytime to view all shortcuts
+
+* **Privacy-Focused & Open Source**
+    * No tracking or analytics
+    * Runs only on Hacker News pages
+    * Open source on [GitHub](https://github.com/hncompanion/browser-extension)
 
 ## 🤖 AI Provider Setup Guide
+You can use free cached summaries when available, or connect your own provider for fresh summaries and model choice.
 
 ### Ollama 
 1. Requirements:
@@ -116,6 +121,18 @@ This extension streamlines how you read and navigate through discussions, making
 * `c` - Collapse/expand comment
 * `u` - Undo last comment navigation
 
+## ✅ Supported Browsers
+Officially supported: Chrome, Firefox, and Edge. Also works on Chromium browsers like Brave, Arc, and Vivaldi.
+
+## 🔒 Privacy
+HN Companion runs only on Hacker News pages and stores your settings locally. It has zero analytics or tracking and never sends your API keys to any server. You can also use local-only summaries with [Ollama](https://ollama.com/).
+
+## 📚 Documentation
+* [Wiki home](https://github.com/hncompanion/browser-extension/wiki) for high-level project docs
+* [Summarizing threaded discussions with LLMs](https://github.com/hncompanion/browser-extension/wiki/HN-Companion-Wiki-Home) for the summary approach
+* [HN Page Structure](https://github.com/hncompanion/browser-extension/wiki/HN-Page-Structure) for DOM and parsing details
+* [Developer Notes](https://github.com/hncompanion/browser-extension/wiki/Developer-Notes) for implementation notes
+
 
 ## 🛠️ Development Setup
 1. Clone the repository:
@@ -151,7 +168,8 @@ This extension streamlines how you read and navigate through discussions, making
     * Clear browser cache
 
 ### Support
-* GitHub Issues: [Report bugs](https://github.com/hncompanion/browser-extension/issues)
+* Report bugs on [GitHub Issues](https://github.com/hncompanion/browser-extension/issues)
+* Ask questions in [GitHub Discussions](https://github.com/hncompanion/browser-extension/discussions)
 
 ## 📜 License
 MIT Licensed - free to use, modify, and distribute
