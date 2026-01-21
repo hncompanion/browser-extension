@@ -1,17 +1,5 @@
 # Architecture Overview
-
 This document describes the modular architecture of the HN Companion content script codebase.
-
-## Background
-
-The original `hnenhancer.js` grew to approximately 2,400 lines, making it difficult to navigate, maintain, and modify. This monolithic structure caused several problems:
-
-- **Cognitive load**: Understanding the full codebase required reading thousands of lines
-- **AI/LLM challenges**: Large files are harder for AI coding assistants to parse and reason about effectively
-- **Merge conflicts**: Multiple changes to a single file increased conflict likelihood
-- **Testing difficulty**: Tightly coupled code made unit testing impractical
-
-The codebase has been refactored into focused, single-responsibility modules.
 
 ## Module Structure
 
@@ -19,21 +7,21 @@ The codebase has been refactored into focused, single-responsibility modules.
 src/
 ├── entrypoints/
 │   └── content/
-│       ├── hnenhancer.js          # Main orchestrator (730 lines)
-│       ├── ai-summarizer.js       # AI provider logic (404 lines)
-│       ├── comment-navigator.js   # Comment navigation state (243 lines)
-│       ├── comment-processor.js   # Comment parsing/enrichment (346 lines)
-│       ├── help-modal.js          # Help UI component (159 lines)
-│       ├── hn-dom-utils.js        # HN-specific DOM helpers (73 lines)
-│       ├── keyboard-shortcuts.js  # Keyboard handling (263 lines)
-│       ├── user-popup.js          # User info popup (177 lines)
+│       ├── hnenhancer.js          # Main orchestrator
+│       ├── ai-summarizer.js       # AI provider logic
+│       ├── comment-navigator.js   # Comment navigation state
+│       ├── comment-processor.js   # Comment parsing/enrichment
+│       ├── help-modal.js          # Help UI component
+│       ├── hn-dom-utils.js        # HN-specific DOM helpers
+│       ├── keyboard-shortcuts.js  # Keyboard handling
+│       ├── user-popup.js          # User info popup
 │       ├── summary-panel.js       # Summary panel UI component
 │       ├── hnstate.js             # Persistent state management
 │       └── constants.js           # AI prompts and configuration
 │
 └── lib/
-    ├── dom-utils.js               # Generic DOM utilities (75 lines)
-    ├── text-utils.js              # Text processing utilities (48 lines)
+    ├── dom-utils.js               # Generic DOM utilities
+    ├── text-utils.js              # Text processing utilities
     ├── utils.js                   # Logger and general utilities
     ├── messaging.js               # Background script communication
     └── sanitize.js                # HTML sanitization
