@@ -73,4 +73,47 @@ class Logger {
 
 Logger.refreshEnabled().catch(() => {});
 
-export { Logger };
+/**
+ * Calculates a human-readable "time ago" string from a date.
+ * @param {string} dateString - Date string (ISO format or "YYYY-MM-DD HH:mm:ss")
+ * @returns {string|null} Formatted time ago string or null on error
+ */
+function getTimeAgo(dateString) {
+    try {
+        let localDate;
+
+        // Check if the string already has 'T' and 'Z' (ISO format)
+        if (dateString.includes('T') && dateString.endsWith('Z')) {
+            localDate = new Date(dateString);
+        } else {
+            // Convert server format "YYYY-MM-DD HH:mm:ss" to ISO format
+            const isoString = dateString.replace(' ', 'T') + 'Z';
+            localDate = new Date(isoString);
+        }
+
+        // Check if the date is valid
+        if (isNaN(localDate.getTime())) {
+            Logger.errorSync(`Error parsing date. dateString: ${dateString}. localDate: ${localDate}`);
+            return null;
+        }
+
+        const now = new Date();
+        const diffMs = now - localDate;
+        const diffMinutes = Math.floor(diffMs / (1000 * 60));
+        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+        if (diffMinutes < 60) {
+            return `${diffMinutes} min`;
+        } else if (diffHours < 24) {
+            return `${diffHours} hr${diffHours === 1 ? '' : 's'}`;
+        } else {
+            return `${diffDays} day${diffDays === 1 ? '' : 's'}`;
+        }
+    } catch (error) {
+        Logger.errorSync(`Error parsing date. dateString: ${dateString}. Error: ${error}`);
+        return null;
+    }
+}
+
+export { Logger, getTimeAgo };
