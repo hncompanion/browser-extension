@@ -21,7 +21,43 @@ HN Companion enhances Hacker News with AI summaries that understand thread hiera
 3. Press `?` to view keyboard shortcuts
 4. Click "summarize" on any discussion (uses free cached summaries when available)
 
-**Need AI setup?** See the [setup guide](https://hncompanion.com/#faq) for configuring OpenAI, Anthropic, Google, OpenRouter, or local Ollama.
+**Need AI setup?** See below for provider configuration.
+
+## AI Provider Setup
+
+HN Companion supports multiple AI providers. Choose one and configure it in the extension settings.
+
+### Ollama (Local & Private)
+```bash
+# 1. Install Ollama from https://ollama.com
+# 2. Configure CORS for browser extension access
+
+# macOS/Linux
+launchctl setenv OLLAMA_ORIGINS "chrome-extension://*,moz-extension://*"
+
+# Windows
+setx OLLAMA_ORIGINS "chrome-extension://*,moz-extension://*"
+
+# 3. Restart Ollama
+```
+
+### OpenAI
+1. Get API key from [platform.openai.com](https://platform.openai.com/api-keys)
+2. Enter in extension settings
+
+### Anthropic (Recommended)
+1. Get API key from [console.anthropic.com](https://console.anthropic.com/settings/keys)
+2. Enter in extension settings
+
+### Google AI
+1. Get API key from [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
+2. Enter in extension settings
+
+### OpenRouter (Multi-Model Gateway)
+1. Get API key from [openrouter.ai/settings/keys](https://openrouter.ai/settings/keys)
+2. Enter API key and model name in extension settings
+3. Recommended model: `anthropic/claude-3.5-sonnet`
+4. See all models at [openrouter.ai/models](https://openrouter.ai/models)
 
 ## Development
 
