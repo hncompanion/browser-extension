@@ -4,15 +4,41 @@ AI-powered summaries tuned to HN's threaded discussions + Vim-style keyboard nav
 
 [![Demo video](http://img.youtube.com/vi/SJxsczfF9pI/maxresdefault.jpg)](https://youtu.be/SJxsczfF9pI)
 
-**[Chrome Web Store](https://chromewebstore.google.com/detail/hacker-news-companion/khfcainelcaedmmhjicphbkpigklejgf)** • **[Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/hacker-news-companion/)** • **[Website](https://hncompanion.com)** • **[Wiki](https://github.com/hncompanion/browser-extension/wiki)**
+**[Chrome Web Store](https://chromewebstore.google.com/detail/hacker-news-companion/khfcainelcaedmmhjicphbkpigklejgf)** • **[Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/hacker-news-companion/)** • **[Website - hncompanion.com](https://hncompanion.com)** • **[Wiki](https://github.com/hncompanion/browser-extension/wiki)**
 
 ## Overview
 
-HN Companion enhances Hacker News with AI summaries that understand thread hierarchy and Vim-inspired keyboard navigation.
+HN Companion is a browser extension that enhances Hacker News experience with AI summaries that understand HN thread hierarchy and Vim-inspired keyboard navigation.
 
 **Features**: HN-aware summaries • Keyboard navigation • Multiple AI providers • Free cached summaries • Privacy-focused • Open source
 
 👉 **See [hncompanion.com](https://hncompanion.com) for full feature details, demos, and AI setup guides**
+
+### 🌟 Key Features
+* **Summaries Built for HN**
+    * Understands thread hierarchy, conversation flow, and rankings
+    * Highlights key debates, contrasting viewpoints, and side discussions
+    * Cached summaries available for popular stories
+
+* **Follow the Conversation**
+    * Jump to specific comments from the summary
+    * Navigate to other comments by the same author (`[` and `]`)
+    * User profile previews on hover (karma, account age)
+
+* **Fully Customizable**
+    * Bring your own API key (OpenAI, Anthropic, Google, OpenRouter)
+    * Or run locally with Ollama for complete privacy
+    * Customize system and user prompts in settings
+
+* **Keyboard-First Navigation**
+    * Vim-inspired shortcuts (`h`, `j`, `k`, `l`) for intuitive movement
+    * Collapse/expand threads (`c`) and jump to first comment (`gg`)
+    * Press '?' anytime to view all shortcuts
+
+* **Privacy-Focused & Open Source**
+    * No tracking or analytics
+    * Runs only on Hacker News pages
+    * Open source on [GitHub](https://github.com/hncompanion/browser-extension)
 
 ## Quick Start for Users
 
@@ -22,7 +48,6 @@ HN Companion enhances Hacker News with AI summaries that understand thread hiera
 4. Click "summarize" on any discussion (uses free cached summaries when available)
 
 **Need AI setup?** See below for provider configuration.
-
 ## AI Provider Setup
 
 HN Companion supports multiple AI providers. Choose one and configure it in the extension settings.
