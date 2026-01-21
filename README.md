@@ -12,7 +12,7 @@ HN Companion is a browser extension that helps you catch up on lengthy HN discus
 
 **Features**: HN-aware summaries • Keyboard navigation • Multiple AI providers • Free cached summaries • Privacy-focused • Open source
 
-👉 **See [hncompanion.com](https://hncompanion.com) for full feature details, demos, and AI setup guides**
+👉 See [hncompanion.com](https://hncompanion.com) for full feature details, demos, and AI setup guides.
 
 ### Key Features
 * **Summaries Built for HN**
@@ -127,7 +127,7 @@ src/
 
 See the [Wiki](https://github.com/hncompanion/browser-extension/wiki) for architecture details, HN page structure documentation, and implementation notes
 
-## ⌨️ Keyboard Shortcuts
+## Keyboard Shortcuts
 
 ### Global
 * `?` / `/` - Toggle help panel
@@ -171,10 +171,6 @@ For questions, use [GitHub Discussions](https://github.com/hncompanion/browser-e
 ## License
 
 MIT Licensed - free to use, modify, and distribute.
-
----
-
-> **Note**: This extension is not endorsed by, affiliated with, or sponsored by Y Combinator or Hacker News.
 
 > [!NOTE] 
 > Note: This extension is not endorsed by, affiliated with, or sponsored by Y Combinator or Hacker News.
