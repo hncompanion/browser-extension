@@ -193,17 +193,8 @@ async function saveSettings() {
     };
 
     try {
-        const origins = OPTIONAL_HOST_PERMISSIONS[providerSelection] || [];
-        if (origins.length > 0) {
-            const alreadyGranted = await hasOptionalHostPermissions(origins);
-            if (!alreadyGranted) {
-                const granted = await requestOptionalHostPermissions(origins);
-                if (!granted) {
-                    window.alert('Permission was not granted. Requests to the selected AI provider may fail until you allow access.');
-                }
-            }
-        }
-
+        // Note: Permission request is now handled in the form submit handler
+        // to preserve user gesture context for Firefox compatibility.
         await storage.setItem('sync:settings', settings);
 
         const saveButton = document.querySelector('button[type="submit"]');
@@ -367,6 +358,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     const form = document.querySelector('form');
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
+
+        // IMPORTANT: Firefox loses "user action handler" status after any await.
+        // permissions.request() MUST be the FIRST await to preserve user gesture context.
+        // See: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/User_actions
+
+        // 1. Determine provider selection SYNCHRONOUSLY (no await before permissions.request)
+        let providerSelection = 'google';
+        const checkedRadio = document.querySelector('input[name="provider-selection"]:checked');
+        if (checkedRadio?.id) {
+            providerSelection = checkedRadio.id;
+        }
+
+        // 2. Request permission FIRST (MUST be first await to preserve user gesture in Firefox)
+        const origins = OPTIONAL_HOST_PERMISSIONS[providerSelection] || [];
+        if (origins.length > 0) {
+            const permissionGranted = await requestOptionalHostPermissions(origins);
+            if (!permissionGranted) {
+                window.alert('Permission was not granted. Requests to the selected AI provider may fail until you allow access.');
+            }
+        }
+
+        // 3. Now proceed with saving (user gesture no longer needed for storage operations)
         await saveSettings();
     });
 
