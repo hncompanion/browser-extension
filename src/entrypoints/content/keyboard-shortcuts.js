@@ -255,9 +255,16 @@ export function setupKeyboardShortcuts(config) {
             trackingState.lastKey = null;
             trackingState.lastKeyPressTime = 0;
         } else {
-            // Update tracking for potential combination
-            trackingState.lastKey = shortcutKey;
-            trackingState.lastKeyPressTime = currentTime;
+            // Only track keys that could start valid combinations (e.g., 'g' for 'g+g')
+            const validCombinationStarters = new Set(['g']);
+            if (validCombinationStarters.has(shortcutKey)) {
+                trackingState.lastKey = shortcutKey;
+                trackingState.lastKeyPressTime = currentTime;
+            } else {
+                // Reset tracking for invalid keys
+                trackingState.lastKey = null;
+                trackingState.lastKeyPressTime = 0;
+            }
         }
     });
 }
