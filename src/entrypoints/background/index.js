@@ -52,17 +52,19 @@ export default defineBackground(() => {
         }
 
         try {
-            // Check if we've already shown the options page before
-            const hasShownOptionsPage = await storage.getItem('local:hasShownOptionsPage');
+            // Check if we've already shown the welcome page before
+            const hasShownWelcomePage = await storage.getItem('local:hasShownWelcomePage');
 
-            // Only open options page if we haven't shown it before
-            if (!hasShownOptionsPage) {
-                // Set flag that we've shown the options page
-                await storage.setItem('local:hasShownOptionsPage', true);
-                await browser.runtime.openOptionsPage();
+            // Only open welcome page if we haven't shown it before
+            if (!hasShownWelcomePage) {
+                // Set flag that we've shown the welcome page
+                await storage.setItem('local:hasShownWelcomePage', true);
+                await browser.tabs.create({
+                    url: browser.runtime.getURL('/welcome.html')
+                });
             }
         } catch (e) {
-            await Logger.error('Error during options page handling:', e);
+            await Logger.error('Error during welcome page handling:', e);
         }
     }
 
