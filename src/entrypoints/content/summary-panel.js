@@ -102,6 +102,11 @@ class SummaryPanel {
         logo.innerHTML = ICONS.logo;
         branding.appendChild(logo);
 
+        const logoText = document.createElement('span');
+        logoText.className = 'summary-panel-logo';
+        logoText.innerText = 'HN Companion';
+        branding.appendChild(logoText);
+
         headerTop.appendChild(branding);
 
         // Controls (refresh, copy, settings, close)
