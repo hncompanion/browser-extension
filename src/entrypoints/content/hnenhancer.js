@@ -30,9 +30,7 @@ import {getHNThread, createSummaryFragment} from './comment-processor.js';
 
 // Import AI summarizer functions
 import {
-    SummarizeCheckStatus,
     getAIProviderModel,
-    shouldSummarizeText,
     createSummarizationErrorContent,
     formatSummaryError,
     summarizeTextWithLLM,
@@ -219,7 +217,6 @@ class HNEnhancer {
         allComments.forEach(comment => {
             this.injectAuthorCommentsNavLinks(comment);
             this.customizeDefaultNavLinks(comment);
-            this.injectSummarizeThreadLinks(comment);
         });
 
         setupUserHover(this.popup, this.userInfoCache, this.userPopupState);
@@ -275,29 +272,6 @@ class HNEnhancer {
 
             authorElement.parentElement.insertBefore(container, authorElement.parentElement.children[1]);
         }
-    }
-
-    injectSummarizeThreadLinks(comment) {
-        const navsElement = comment.querySelector('.navs');
-        if (!navsElement) {
-            Logger.infoSync('Could not find the navs element to inject the summarize thread link');
-            return;
-        }
-
-        navsElement.appendChild(document.createTextNode(' | '));
-
-        const summarizeThreadLink = document.createElement('a');
-        summarizeThreadLink.href = '#';
-        summarizeThreadLink.textContent = 'summarize thread';
-        summarizeThreadLink.title = 'Summarize all child comments in this thread';
-
-        summarizeThreadLink.addEventListener('click', async (e) => {
-            e.preventDefault();
-            this.setCurrentComment(comment);
-            await this.summarizeThread(comment);
-        });
-
-        navsElement.appendChild(summarizeThreadLink);
     }
 
     customizeDefaultNavLinks(comment) {
@@ -422,70 +396,6 @@ class HNEnhancer {
     }
 
     // ==================== Summarization ====================
-
-    async summarizeThread(comment) {
-        const itemLinkElement = comment.querySelector('.age')?.getElementsByTagName('a')[0];
-        if (!itemLinkElement) {
-            await Logger.error('Could not find the item link element to get the item id for summarization');
-            return;
-        }
-
-        const itemId = itemLinkElement.href.split('=')[1];
-        const threadData = await getHNThread(itemId);
-        if (!threadData || !threadData.formattedComment) {
-            await Logger.error(`Could not get the thread for summarization. item id: ${itemId}`);
-            return;
-        }
-        const {formattedComment, commentPathToIdMap} = threadData;
-
-        const commentDepth = commentPathToIdMap.size;
-        const {aiProvider, model} = await getAIProviderModel();
-
-        if (!aiProvider) {
-            await Logger.info('AI provider not configured. Prompting user to complete setup.');
-            this.showConfigureAIMessage();
-            return;
-        }
-
-        const authorElement = comment.querySelector('.hnuser');
-        const author = authorElement.textContent || '';
-
-        const summarizeCheckResult = shouldSummarizeText(formattedComment, commentDepth, aiProvider);
-
-        if (summarizeCheckResult.status !== SummarizeCheckStatus.OK) {
-            const errorContent = createSummarizationErrorContent(summarizeCheckResult.status, author, aiProvider);
-            this.summaryPanel.updateContent(errorContent);
-
-            const optionsLink = this.summaryPanel.panel.querySelector('#options-page-link');
-            if (optionsLink) {
-                optionsLink.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    this.openOptionsPage();
-                });
-            }
-            return;
-        }
-
-        // Show in-progress message
-        const metadata = buildFragment([
-            'Analyzing discussion in ',
-            createHighlightedAuthor(author),
-            ' thread'
-        ]);
-        const loadingParts = ['Generating summary'];
-        if (aiProvider) {
-            loadingParts.push(' using ', createStrong(`${aiProvider}/${model || ''}`));
-        }
-        loadingParts.push('... This may take a few moments.');
-
-        this.summaryPanel.updateContent({
-            title: 'Thread Summary',
-            metadata: metadata,
-            text: createLoadingMessage(loadingParts)
-        });
-
-        await this.summarizeText(formattedComment, commentPathToIdMap);
-    }
 
     async summarizeAllComments(skipCache = false) {
         const itemId = this.getCurrentHNItemId();

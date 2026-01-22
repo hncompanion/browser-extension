@@ -16,16 +16,6 @@ import {createHighlightedAuthor, createLoadingMessage} from './hn-dom-utils.js';
 import {getHNThread, createSummaryFragment} from './comment-processor.js';
 
 /**
- * Status codes for summarization validation.
- */
-export const SummarizeCheckStatus = {
-    OK: 'ok',
-    TEXT_TOO_SHORT: 'too_short',
-    THREAD_TOO_SHALLOW: 'too_shallow',
-    THREAD_TOO_DEEP: 'chrome_depth_limit'
-};
-
-/**
  * Gets the AI provider and model from settings.
  * @returns {Promise<{aiProvider: string, model: string}>}
  */
@@ -113,35 +103,6 @@ export function getModelConfiguration(provider, modelId) {
     return (modelConfigs[provider] && modelConfigs[provider][modelId])
         || (modelConfigs[provider] && modelConfigs[provider].default)
         || defaultConfig;
-}
-
-/**
- * Checks if the text should be summarized based on various criteria.
- * @param {string} formattedText - The text to check
- * @param {number} commentDepth - Number of comments
- * @param {string} aiProvider - The AI provider
- * @returns {{status: string}}
- */
-export function shouldSummarizeText(formattedText, commentDepth, aiProvider) {
-    // Ollama can handle all kinds of data
-    if (aiProvider === 'ollama') {
-        return {status: SummarizeCheckStatus.OK};
-    }
-
-    // Cloud providers need minimum length and depth
-    const minSentenceLength = 8;
-    const minCommentDepth = 3;
-    const sentences = formattedText.split(/[.!?]+(?:\s+|$)/)
-        .filter(sentence => sentence.trim().length > 0);
-
-    if (sentences.length <= minSentenceLength) {
-        return {status: SummarizeCheckStatus.TEXT_TOO_SHORT};
-    }
-    if (commentDepth <= minCommentDepth) {
-        return {status: SummarizeCheckStatus.THREAD_TOO_SHALLOW};
-    }
-
-    return {status: SummarizeCheckStatus.OK};
 }
 
 /**
