@@ -33,6 +33,24 @@ class HNState {
             Logger.errorSync('Error clearing lastSeenPost post state:', error);
         });
     }
+
+    // ==================== Sort Mode ====================
+
+    static async getSortMode() {
+        try {
+            const data = await storage.getItem('local:postsSortMode');
+            return data?.mode ?? 'default';
+        } catch (error) {
+            Logger.errorSync('Error retrieving posts sort mode:', error);
+            return 'default';
+        }
+    }
+
+    static setSortMode(mode) {
+        storage.setItem('local:postsSortMode', { mode }).catch(error => {
+            Logger.errorSync('Error saving posts sort mode:', error);
+        });
+    }
 }
 
 export default HNState;

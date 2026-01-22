@@ -8,6 +8,7 @@ import SummaryPanel from './summary-panel.js';
 import {browser} from "wxt/browser";
 import {storage} from '#imports';
 import {Logger, getTimeAgo} from "../../lib/utils.js";
+import PostNavigator from './post-navigator.js';
 
 // Import generic utilities from lib
 import {buildFragment, createStrong, createInternalLink} from '../../lib/dom-utils.js';
@@ -31,7 +32,6 @@ import {getHNThread, createSummaryFragment} from './comment-processor.js';
 // Import AI summarizer functions
 import {
     getAIProviderModel,
-    createSummarizationErrorContent,
     formatSummaryError,
     summarizeTextWithLLM,
     summarizeUsingOllama,
@@ -69,6 +69,11 @@ class HNEnhancer {
         if (this.isHomePage) {
             this.currentPostIndex = -1;
             this.allPosts = null;
+
+            // Initialize posts navigator and attach the handler when sorting is complete
+            this.postNavigator = new PostNavigator({
+                onSortComplete: () => this.updatePostList()
+            });
 
             this.initHomePageNavigation();
 
@@ -205,6 +210,24 @@ class HNEnhancer {
 
         newPost.classList.add('highlight-post');
         newPost.scrollIntoView({behavior: 'smooth', block: 'center'});
+    }
+
+    updatePostList() {
+        // Save reference to current post BEFORE updating the post list
+        const currentPost = this.getCurrentPost();
+        
+        // Now update the post list
+        this.allPosts = document.querySelectorAll('.athing:not(.comtr)');
+
+        // Find the post's new position in the new list
+        if (currentPost) {
+            const currentId = currentPost.getAttribute('id');
+            const posts = Array.from(this.allPosts);
+            const newIndex = posts.findIndex(post => post.getAttribute('id') === currentId);
+            if (newIndex !== -1) {
+                this.currentPostIndex = newIndex;
+            }
+        }
     }
 
     // ==================== Comments Page Navigation ====================
