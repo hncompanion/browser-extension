@@ -229,18 +229,20 @@ class HNEnhancer {
         const authorElement = comment.querySelector('.hnuser');
         if (authorElement && !authorElement.querySelector('.comment-count')) {
             const author = authorElement.textContent;
-            const count = this.authorComments.get(author).length;
+            const authorCommentsList = this.authorComments.get(author);
+            const count = authorCommentsList.length;
+            const position = authorCommentsList.indexOf(comment) + 1;  // 1-based position
 
             const container = document.createElement('span');
 
             const countSpan = document.createElement('span');
             countSpan.className = 'comment-count';
-            countSpan.textContent = `(${count})`;
+            countSpan.textContent = count > 1 ? `(${position}/${count})` : `(${count})`;
             container.appendChild(countSpan);
 
             const navPrev = document.createElement('span');
             navPrev.className = 'author-nav nav-triangle';
-            navPrev.textContent = '\u23F4';
+            navPrev.textContent = '\u23F4';  // Unicode for left arrow '◀'
             navPrev.title = 'Go to previous comment by this author';
             navPrev.onclick = (e) => {
                 e.preventDefault();
@@ -250,7 +252,7 @@ class HNEnhancer {
 
             const navNext = document.createElement('span');
             navNext.className = 'author-nav nav-triangle';
-            navNext.textContent = '\u23F5';
+            navNext.textContent = '\u23F5';   // Unicode for right arrow '▶'
             navNext.title = 'Go to next comment by this author';
             navNext.onclick = (e) => {
                 e.preventDefault();
