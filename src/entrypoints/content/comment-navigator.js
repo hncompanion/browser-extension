@@ -143,6 +143,18 @@ export class CommentNavigator {
     }
 
     /**
+     * Navigates to the first comment by a specific author.
+     * @param {string} author - The author name
+     * @param {Map} authorComments - Map of author to their comments
+     */
+    navigateToAuthorFirstComment(author, authorComments) {
+        const comments = authorComments.get(author);
+        if (comments && comments.length > 0) {
+            this.setCurrentComment(comments[0]);
+        }
+    }
+
+    /**
      * Saves navigation state for undo functionality.
      * @param {HTMLElement} comment - The comment to save
      */
