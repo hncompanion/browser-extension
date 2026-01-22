@@ -81,6 +81,14 @@ class HNEnhancer {
             // Wire up refresh button to force-refresh summary
             if (this.summaryPanel) {
                 this.summaryPanel.onRefresh = () => this.summarizeAllComments(true);
+                this.summaryPanel.onHelp = () => this.toggleHelpModal(true);
+                this.summaryPanel.onVisibilityChange = (isVisible) => {
+                    // Hide floating help button when panel is open
+                    const helpIcon = document.querySelector('.help-icon');
+                    if (helpIcon) {
+                        helpIcon.style.display = isVisible ? 'none' : 'flex';
+                    }
+                };
             }
         }
 
@@ -595,14 +603,15 @@ class HNEnhancer {
 
         if (fromCache) {
             const durationText = duration || 'some time';
-            subtitle = buildFragment([
-                createInternalLink('llm-summarize-link', 'Generate fresh summary'),
-                ' using LLM ',
-                createInternalLink('options-page-link', 'configured in settings'),
-                '.'
-            ]);
+            subtitle = null; // No metadata text for cached summaries
             cacheStatus = `cached ${durationText} ago`;
-            providerInfo = 'HNCompanion';
+            // Create HNCompanion as a clickable link
+            const providerLink = document.createElement('a');
+            providerLink.href = 'https://hncompanion.com';
+            providerLink.target = '_blank';
+            providerLink.textContent = 'HNCompanion';
+            providerLink.className = 'summary-provider-link';
+            providerInfo = providerLink;
         } else if (aiProvider) {
             subtitle = buildFragment([
                 'Summarized in ',
@@ -619,14 +628,6 @@ class HNEnhancer {
             cacheStatus,
             providerInfo
         });
-
-        const llmSummarizeLink = this.summaryPanel.panel.querySelector('#llm-summarize-link');
-        if (llmSummarizeLink) {
-            llmSummarizeLink.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.summarizeAllComments(true);
-            });
-        }
 
         const optionsLink = this.summaryPanel.panel.querySelector('#options-page-link');
         if (optionsLink) {
