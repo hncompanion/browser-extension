@@ -14,6 +14,7 @@ export function getHomePageKeyboardShortcuts(handlers) {
     return {
         'j': () => handlers.navigateToPost('next'),
         'k': () => handlers.navigateToPost('prev'),
+        's': () => handlers.cycleSortMode(),
         'o': () => {
             const currentPost = handlers.getCurrentPost();
             if (!currentPost) return;
