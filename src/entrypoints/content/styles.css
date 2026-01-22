@@ -708,3 +708,30 @@
     margin-right: 10px;
     vertical-align: middle;
 }
+
+/* ==================== Post Navigator (sorting the posts) ==================== */
+
+/* Active sort column highlight */
+.hnc-sort-active {
+    text-decoration: underline !important;
+}
+
+/* Sort UI container in nav bar */
+.hnc-sort-container {
+    display: inline-block;
+    font-size: 10pt;
+}
+
+.hnc-sort-label {
+    color: #000;
+    cursor: pointer;
+}
+
+.hnc-sort-label:hover {
+    text-decoration: underline;
+}
+
+.hnc-sort-label:focus-visible {
+    outline: 1px dotted #000;
+    outline-offset: 1px;
+}
