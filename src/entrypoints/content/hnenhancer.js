@@ -463,6 +463,7 @@ class HNEnhancer {
                 // Home page handlers
                 navigateToPost: (dir) => this.navigateToPost(dir),
                 getCurrentPost: () => this.getCurrentPost(),
+                cycleSortMode:  () => this.postNavigator.cycleSortMode(),
 
                 // Comments page handlers
                 commentNavigator: this.commentNavigator,
