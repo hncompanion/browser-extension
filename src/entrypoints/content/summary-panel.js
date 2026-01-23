@@ -148,50 +148,50 @@ class SummaryPanel {
         const content = document.createElement('div');
         content.className = 'summary-panel-content';
 
-        const contextRow = document.createElement('div');
-        contextRow.className = 'summary-context-row';
+        // Set up scroll shadow detection
+        content.addEventListener('scroll', () => {
+            if (content.scrollTop > 0) {
+                content.classList.add('is-scrolled');
+            } else {
+                content.classList.remove('is-scrolled');
+            }
+        });
 
-        const summaryMeta = document.createElement('div');
-        summaryMeta.className = 'summary-meta';
-        summaryMeta.dataset.hasCache = 'false';
-        summaryMeta.dataset.hasProvider = 'false';
-        summaryMeta.dataset.hasMetadata = 'false';
+        // Metadata row (single line with info + actions)
+        const metadataRow = document.createElement('div');
+        metadataRow.className = 'summary-metadata-row';
+        metadataRow.style.display = 'none'; // Hidden until content is set
 
-        const metadata = document.createElement('div');
-        metadata.className = 'summary-metadata summary-chip';
+        const metadataInfo = document.createElement('div');
+        metadataInfo.className = 'summary-metadata-info';
 
-        const cacheStatus = document.createElement('span');
-        cacheStatus.className = 'summary-cache-status summary-chip';
+        const metadataActions = document.createElement('div');
+        metadataActions.className = 'summary-metadata-actions';
 
-        const providerInfo = document.createElement('span');
-        providerInfo.className = 'summary-provider-info summary-chip';
-
-        summaryMeta.appendChild(metadata);
-        summaryMeta.appendChild(cacheStatus);
-        summaryMeta.appendChild(providerInfo);
-
-        const actions = document.createElement('div');
-        actions.className = 'summary-panel-actions';
-
-        const refreshBtn = this.createIconButton('refresh', ICONS.refresh, 'Regenerate summary');
-        refreshBtn.addEventListener('click', () => {
+        // Generate button (icon + text)
+        const generateBtn = document.createElement('button');
+        generateBtn.className = 'summary-generate-btn';
+        generateBtn.title = 'Generate fresh summary';
+        generateBtn.innerHTML = `${ICONS.refresh} Generate`;
+        generateBtn.addEventListener('click', () => {
             if (this.onRefresh) this.onRefresh();
         });
-        actions.appendChild(refreshBtn);
+        metadataActions.appendChild(generateBtn);
 
+        // Copy button (icon only)
         const copyBtn = this.createIconButton('copy', ICONS.copy, 'Copy summary');
         copyBtn.style.display = 'none'; // Hidden by default, shown when content exists
         copyBtn.addEventListener('click', () => this.copyToClipboard());
-        actions.appendChild(copyBtn);
+        metadataActions.appendChild(copyBtn);
+
+        metadataRow.appendChild(metadataInfo);
+        metadataRow.appendChild(metadataActions);
 
         const text = document.createElement('div');
         text.className = 'summary-text';
         text.textContent = "Press 's' or click 'summarize all comments' to generate an AI summary of this discussion.";
 
-        contextRow.appendChild(summaryMeta);
-        contextRow.appendChild(actions);
-
-        content.appendChild(contextRow);
+        content.appendChild(metadataRow);
         content.appendChild(text);
 
         // === FOOTER ===
@@ -439,11 +439,6 @@ class SummaryPanel {
 
         // Note: title is no longer used in the new design (tabs replace title)
 
-        const metadataElement = this.panel.querySelector('.summary-metadata');
-        if (metadataElement && metadata !== undefined) {
-            this.setElementContent(metadataElement, metadata);
-        }
-
         const textElement = this.panel.querySelector('.summary-text');
         if (textElement && text !== undefined) {
             this.setElementContent(textElement, text);
@@ -452,36 +447,74 @@ class SummaryPanel {
             this.updateCopyButtonVisibility(hasContent);
         }
 
-        // Update summary meta elements
-        const hasMetadata = metadataElement && metadataElement.textContent.trim().length > 0;
-        if (metadataElement) {
-            metadataElement.style.display = hasMetadata ? 'inline-flex' : 'none';
+        // Update the new metadata row
+        this.updateMetadataRow({ cacheStatus, providerInfo });
+    }
+
+    updateMetadataRow({ cacheStatus, providerInfo }) {
+        const metadataRow = this.panel?.querySelector('.summary-metadata-row');
+        const metadataInfo = this.panel?.querySelector('.summary-metadata-info');
+
+        if (!metadataRow || !metadataInfo) return;
+
+        // Clear existing content
+        metadataInfo.replaceChildren();
+
+        // Determine if we have metadata to show
+        const hasCacheStatus = cacheStatus && cacheStatus !== 'error' && cacheStatus !== 'generating...';
+        const hasProviderInfo = providerInfo && (typeof providerInfo === 'string' ? providerInfo.trim().length > 0 : true);
+
+        if (!hasCacheStatus && !hasProviderInfo) {
+            metadataRow.style.display = 'none';
+            return;
         }
 
-        const cacheStatusElement = this.panel.querySelector('.summary-cache-status');
-        if (cacheStatusElement && cacheStatus !== undefined) {
-            this.setElementContent(cacheStatusElement, cacheStatus);
-        }
+        metadataRow.style.display = 'flex';
 
-        const providerInfoElement = this.panel.querySelector('.summary-provider-info');
-        if (providerInfoElement && providerInfo !== undefined) {
-            this.setElementContent(providerInfoElement, providerInfo);
-        }
+        // Detect state based on cacheStatus
+        const isCached = cacheStatus && cacheStatus.startsWith('cached');
+        const isJustGenerated = cacheStatus === 'just generated';
 
-        const summaryMetaElement = this.panel.querySelector('.summary-meta');
-        if (summaryMetaElement) {
-            const hasCache = cacheStatusElement && cacheStatusElement.textContent.trim().length > 0;
-            const hasProvider = providerInfoElement && providerInfoElement.textContent.trim().length > 0;
-            if (cacheStatusElement) {
-                cacheStatusElement.style.display = hasCache ? 'inline-flex' : 'none';
+        if (isCached) {
+            // State 1: Cached Summary
+            // Format: "3 hrs ago | HNCompanion"
+            const cacheAge = cacheStatus.replace('cached ', '').replace(' ago', '');
+
+            const ageSpan = document.createElement('span');
+            ageSpan.className = 'summary-metadata-primary';
+            ageSpan.textContent = `${cacheAge} ago`;
+            metadataInfo.appendChild(ageSpan);
+
+            const separator = document.createElement('span');
+            separator.className = 'summary-metadata-separator';
+            separator.textContent = ' | ';
+            metadataInfo.appendChild(separator);
+
+            // providerInfo is either a string or a link element for cached summaries
+            if (providerInfo instanceof Node) {
+                metadataInfo.appendChild(providerInfo);
+            } else if (providerInfo) {
+                const providerText = document.createElement('span');
+                providerText.textContent = providerInfo;
+                metadataInfo.appendChild(providerText);
             }
-            if (providerInfoElement) {
-                providerInfoElement.style.display = hasProvider ? 'inline-flex' : 'none';
+        } else if (isJustGenerated && hasProviderInfo) {
+            // State 2: Fresh LLM Summary
+            // Format: "Anthropic/claude-3-haiku · 4.2s"
+            const providerSpan = document.createElement('span');
+            providerSpan.className = 'summary-metadata-primary';
+            providerSpan.textContent = typeof providerInfo === 'string' ? providerInfo : 'AI';
+            metadataInfo.appendChild(providerSpan);
+        } else if (hasProviderInfo) {
+            // Fallback: just show provider info
+            const providerSpan = document.createElement('span');
+            providerSpan.className = 'summary-metadata-primary';
+            if (providerInfo instanceof Node) {
+                metadataInfo.appendChild(providerInfo);
+            } else {
+                providerSpan.textContent = providerInfo;
+                metadataInfo.appendChild(providerSpan);
             }
-            summaryMetaElement.dataset.hasMetadata = hasMetadata ? 'true' : 'false';
-            summaryMetaElement.dataset.hasCache = hasCache ? 'true' : 'false';
-            summaryMetaElement.dataset.hasProvider = hasProvider ? 'true' : 'false';
-            summaryMetaElement.style.display = (hasMetadata || hasCache || hasProvider) ? 'flex' : 'none';
         }
     }
 }

@@ -684,17 +684,17 @@ class HNEnhancer {
             const providerLink = document.createElement('a');
             providerLink.href = 'https://hncompanion.com';
             providerLink.target = '_blank';
-            providerLink.textContent = 'HNCompanion';
+            providerLink.textContent = 'HN Companion';
             providerLink.className = 'summary-provider-link';
             providerInfo = providerLink;
         } else if (aiProvider) {
-            subtitle = buildFragment([
-                'Summarized in ',
-                createStrong(`${duration || '0'} secs`),
-                '.'
-            ]);
+            subtitle = null; // No subtitle needed in new design
             cacheStatus = 'just generated';
-            providerInfo = `${aiProvider}/${model || ''}`;
+            // Include generation time in provider info for new metadata row format
+            const durationText = duration ? `${duration}s` : '';
+            providerInfo = durationText
+                ? `${aiProvider}/${model || ''} · ${durationText}`
+                : `${aiProvider}/${model || ''}`;
         }
 
         this.summaryPanel.updateContent({
