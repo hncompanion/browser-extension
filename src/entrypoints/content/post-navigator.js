@@ -14,7 +14,7 @@ class PostNavigator {
         this.activeSort = 'default';
         this.tableBody = null;
         this.footerRows = [];
-        this.sortLabel = null;
+        this.sortModeButton = null;
 
         this.init();
     }
@@ -198,26 +198,30 @@ class PostNavigator {
         const container = document.createElement('span');
         container.className = 'hnc-sort-container';
 
-        const label = document.createElement('span');
-        label.className = 'hnc-sort-label';
-        label.textContent = `sort: ${this.activeSort}`;
-        label.title = 'Click or press s to change sort order';
-        label.setAttribute('role', 'button');
-        label.setAttribute('aria-label', 'Cycle sort mode');
-        label.tabIndex = 0;
+        const prefix = document.createElement('span');
+        prefix.textContent = 'sort: ';
 
-        label.addEventListener('click', () => {
+        const modeButton = document.createElement('span');
+        modeButton.className = 'hnc-sort-mode-button';
+        modeButton.textContent = `[${this.activeSort}]`;
+        modeButton.title = 'Click or press s to change sort order';
+        modeButton.setAttribute('role', 'button');
+        modeButton.setAttribute('aria-label', 'Cycle sort mode');
+        modeButton.tabIndex = 0;
+
+        modeButton.addEventListener('click', () => {
             this.cycleSortMode();
         });
 
-        label.addEventListener('keydown', (e) => {
+        modeButton.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
                 this.cycleSortMode();
             }
         });
 
-        container.appendChild(label);
+        container.appendChild(prefix);
+        container.appendChild(modeButton);
 
         // Insert before login link if present, otherwise append
         const loginLink = pagetop.querySelector('a[href^="login"]');
@@ -230,8 +234,8 @@ class PostNavigator {
             pagetop.appendChild(container);
         }
 
-        this.sortLabel = label;
-        return label;
+        this.sortModeButton = modeButton;
+        return modeButton;
     }
 
     getSortPanelParent() {
@@ -269,8 +273,8 @@ class PostNavigator {
     }
 
     updateSortLabel() {
-        if (this.sortLabel) {
-            this.sortLabel.textContent = `sort: ${this.activeSort}`;
+        if (this.sortModeButton) {
+            this.sortModeButton.textContent = `[${this.activeSort}]`;
         }
     }
 
