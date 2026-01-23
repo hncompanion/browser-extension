@@ -528,16 +528,12 @@
     font-size: 10pt;
 }
 
-.hnc-sort-label {
+.hnc-sort-mode-button {
     color: #000;
     cursor: pointer;
 }
 
-.hnc-sort-label:hover {
+.hnc-sort-mode-button:hover {
     text-decoration: underline;
 }
 
-.hnc-sort-label:focus-visible {
-    outline: 1px dotted #000;
-    outline-offset: 1px;
-}
