@@ -499,12 +499,10 @@ class HNEnhancer {
         const cacheConfigEnabled = await serverCacheConfigEnabled();
         if (cacheConfigEnabled && !skipCache) {
             this.summaryPanel.updateContent({
-                metadata: 'Analyzing all threads in this post...',
                 text: createLoadingMessage([
                     'Looking for cached summary on HNCompanion server...'
                 ]),
-                cacheStatus: '',
-                providerInfo: ''
+                metadata: { state: 'loading', statusText: 'Checking cache...' }
             });
 
             const cacheResult = await getCachedSummary(itemId);
@@ -533,20 +531,16 @@ class HNEnhancer {
             }
             loadingParts.push('... This may take a few moments. ');
             this.summaryPanel.updateContent({
-                metadata: `Analyzing all threads in this post...`,
                 text: createLoadingMessage(loadingParts),
-                cacheStatus: 'generating...',
-                providerInfo: aiProvider ? `${aiProvider}/${model || ''}` : ''
+                metadata: { state: 'loading', statusText: 'Generating...', provider: aiProvider ? `${aiProvider}/${model || ''}` : undefined }
             });
 
             const threadData = await getHNThread(itemId);
             if (!threadData || !threadData.formattedComment) {
                 await Logger.error(`Could not get thread data for post summarization. item id: ${itemId}`);
                 this.summaryPanel.updateContent({
-                    metadata: '',
                     text: 'Failed to retrieve comments for summarization. Please try again.',
-                    cacheStatus: 'error',
-                    providerInfo: ''
+                    metadata: { state: 'error' }
                 });
                 return;
             }
@@ -555,10 +549,8 @@ class HNEnhancer {
         } catch (error) {
             await Logger.error('Error preparing for summarization:', error);
             this.summaryPanel.updateContent({
-                metadata: '',
                 text: `Error preparing for summarization: ${error.message}`,
-                cacheStatus: 'error',
-                providerInfo: ''
+                metadata: { state: 'error' }
             });
         }
     }
@@ -604,10 +596,8 @@ class HNEnhancer {
                         (error) => {
                             const errorFragment = createOllamaErrorMessage(error);
                             this.summaryPanel.updateContent({
-                                metadata: '',
                                 text: errorFragment,
-                                cacheStatus: 'error',
-                                providerInfo: 'ollama'
+                                metadata: { state: 'error', provider: 'ollama' }
                             });
                         },
                         postTitle
@@ -636,10 +626,8 @@ class HNEnhancer {
     handleSummaryError(error) {
         const errorMessage = formatSummaryError(error);
         this.summaryPanel.updateContent({
-            metadata: '',
             text: errorMessage,
-            cacheStatus: 'error',
-            providerInfo: ''
+            metadata: { state: 'error' }
         });
     }
 
@@ -653,10 +641,8 @@ class HNEnhancer {
         ]);
 
         this.summaryPanel.updateContent({
-            metadata: 'Setup Required',
             text: message,
-            cacheStatus: '',
-            providerInfo: 'not configured'
+            metadata: { state: 'setup-required' }
         });
 
         const optionsLink = this.summaryPanel.panel.querySelector('#options-page-link');
@@ -671,38 +657,24 @@ class HNEnhancer {
     async showSummaryInPanel(summary, fromCache, duration, commentPathToIdMap = null) {
         const formattedSummary = createSummaryFragment(summary, commentPathToIdMap);
 
-        const {aiProvider, model} = await getAIProviderModel();
-        let subtitle = null;
-        let cacheStatus = '';
-        let providerInfo = '';
-
+        let metadata;
         if (fromCache) {
-            const durationText = duration || 'some time';
-            subtitle = null; // No metadata text for cached summaries
-            cacheStatus = `cached ${durationText} ago`;
-            // Create HNCompanion as a clickable link
-            const providerLink = document.createElement('a');
-            providerLink.href = 'https://hncompanion.com';
-            providerLink.target = '_blank';
-            providerLink.textContent = 'HN Companion';
-            providerLink.className = 'summary-provider-link';
-            providerInfo = providerLink;
-        } else if (aiProvider) {
-            subtitle = null; // No subtitle needed in new design
-            cacheStatus = 'just generated';
-            // Include generation time in provider info for new metadata row format
-            const durationText = duration ? `${duration}s` : '';
-            providerInfo = durationText
-                ? `${aiProvider}/${model || ''} · ${durationText}`
-                : `${aiProvider}/${model || ''}`;
+            metadata = {
+                state: 'cached',
+                statusText: duration ? `${duration} ago` : undefined,
+                provider: 'HN Companion',
+                providerUrl: 'https://hncompanion.com'
+            };
+        } else {
+            const {aiProvider, model} = await getAIProviderModel();
+            metadata = {
+                state: 'generated',
+                provider: aiProvider ? `${aiProvider}/${model || ''}` : undefined,
+                generationTime: duration ? `${duration}s` : undefined
+            };
         }
 
-        this.summaryPanel.updateContent({
-            metadata: subtitle,
-            text: formattedSummary,
-            cacheStatus,
-            providerInfo
-        });
+        this.summaryPanel.updateContent({ text: formattedSummary, metadata });
 
         const optionsLink = this.summaryPanel.panel.querySelector('#options-page-link');
         if (optionsLink) {

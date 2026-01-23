@@ -428,7 +428,24 @@ class SummaryPanel {
         element.textContent = String(content);
     }
 
-    updateContent({ title, metadata, text, cacheStatus, providerInfo }) {
+    /**
+     * @typedef {'loading' | 'cached' | 'generated' | 'error' | 'setup-required'} SummaryState
+     *
+     * @typedef {Object} SummaryMetadata
+     * @property {SummaryState} state
+     * @property {string} [statusText]     - e.g., "23m ago", "generating..."
+     * @property {string} [provider]       - e.g., "HN Companion", "anthropic/claude-3-haiku"
+     * @property {string} [providerUrl]    - Optional link for provider
+     * @property {string} [generationTime] - e.g., "4.2s"
+     */
+
+    /**
+     * Update panel content with structured metadata
+     * @param {Object} params
+     * @param {Node|string} params.text - The summary content
+     * @param {SummaryMetadata} params.metadata - Structured metadata for the summary
+     */
+    updateContent({ text, metadata }) {
         if (!this.panel) return;
 
         this.contentUpdated = true;  // Mark that content has been updated
@@ -436,8 +453,6 @@ class SummaryPanel {
         if (!this.isVisible) {
             this.toggle();
         }
-
-        // Note: title is no longer used in the new design (tabs replace title)
 
         const textElement = this.panel.querySelector('.summary-text');
         if (textElement && text !== undefined) {
@@ -447,74 +462,79 @@ class SummaryPanel {
             this.updateCopyButtonVisibility(hasContent);
         }
 
-        // Update the new metadata row
-        this.updateMetadataRow({ cacheStatus, providerInfo });
+        // Update the metadata row based on state
+        this.updateMetadataRow(metadata);
     }
 
-    updateMetadataRow({ cacheStatus, providerInfo }) {
+    updateMetadataRow(metadata) {
         const metadataRow = this.panel?.querySelector('.summary-metadata-row');
         const metadataInfo = this.panel?.querySelector('.summary-metadata-info');
-
         if (!metadataRow || !metadataInfo) return;
 
-        // Clear existing content
         metadataInfo.replaceChildren();
 
-        // Determine if we have metadata to show
-        const hasCacheStatus = cacheStatus && cacheStatus !== 'error' && cacheStatus !== 'generating...';
-        const hasProviderInfo = providerInfo && (typeof providerInfo === 'string' ? providerInfo.trim().length > 0 : true);
-
-        if (!hasCacheStatus && !hasProviderInfo) {
+        // Hide for non-display states
+        if (!metadata || metadata.state === 'loading' || metadata.state === 'error' || metadata.state === 'setup-required') {
             metadataRow.style.display = 'none';
             return;
         }
 
         metadataRow.style.display = 'flex';
 
-        // Detect state based on cacheStatus
-        const isCached = cacheStatus && cacheStatus.startsWith('cached');
-        const isJustGenerated = cacheStatus === 'just generated';
+        if (metadata.state === 'cached') {
+            this.renderCachedMetadata(metadataInfo, metadata);
+        } else if (metadata.state === 'generated') {
+            this.renderGeneratedMetadata(metadataInfo, metadata);
+        }
+    }
 
-        if (isCached) {
-            // State 1: Cached Summary
-            // Format: "3 hrs ago | HNCompanion"
-            const cacheAge = cacheStatus.replace('cached ', '').replace(' ago', '');
-
+    renderCachedMetadata(container, metadata) {
+        // "23m ago | HN Companion"
+        if (metadata.statusText) {
             const ageSpan = document.createElement('span');
             ageSpan.className = 'summary-metadata-primary';
-            ageSpan.textContent = `${cacheAge} ago`;
-            metadataInfo.appendChild(ageSpan);
-
-            const separator = document.createElement('span');
-            separator.className = 'summary-metadata-separator';
-            separator.textContent = ' | ';
-            metadataInfo.appendChild(separator);
-
-            // providerInfo is either a string or a link element for cached summaries
-            if (providerInfo instanceof Node) {
-                metadataInfo.appendChild(providerInfo);
-            } else if (providerInfo) {
-                const providerText = document.createElement('span');
-                providerText.textContent = providerInfo;
-                metadataInfo.appendChild(providerText);
+            ageSpan.textContent = metadata.statusText;
+            container.appendChild(ageSpan);
+        }
+        if (metadata.provider) {
+            if (metadata.statusText) {
+                const sep = document.createElement('span');
+                sep.className = 'summary-metadata-separator';
+                sep.textContent = ' | ';
+                container.appendChild(sep);
             }
-        } else if (isJustGenerated && hasProviderInfo) {
-            // State 2: Fresh LLM Summary
-            // Format: "Anthropic/claude-3-haiku · 4.2s"
-            const providerSpan = document.createElement('span');
-            providerSpan.className = 'summary-metadata-primary';
-            providerSpan.textContent = typeof providerInfo === 'string' ? providerInfo : 'AI';
-            metadataInfo.appendChild(providerSpan);
-        } else if (hasProviderInfo) {
-            // Fallback: just show provider info
-            const providerSpan = document.createElement('span');
-            providerSpan.className = 'summary-metadata-primary';
-            if (providerInfo instanceof Node) {
-                metadataInfo.appendChild(providerInfo);
+            if (metadata.providerUrl) {
+                const link = document.createElement('a');
+                link.href = metadata.providerUrl;
+                link.target = '_blank';
+                link.textContent = metadata.provider;
+                link.className = 'summary-provider-link';
+                container.appendChild(link);
             } else {
-                providerSpan.textContent = providerInfo;
-                metadataInfo.appendChild(providerSpan);
+                const span = document.createElement('span');
+                span.textContent = metadata.provider;
+                container.appendChild(span);
             }
+        }
+    }
+
+    renderGeneratedMetadata(container, metadata) {
+        // "anthropic/claude-3-haiku · 4.2s"
+        if (metadata.provider) {
+            const providerSpan = document.createElement('span');
+            providerSpan.className = 'summary-metadata-primary';
+            providerSpan.textContent = metadata.provider;
+            container.appendChild(providerSpan);
+        }
+        if (metadata.generationTime) {
+            const sep = document.createElement('span');
+            sep.className = 'summary-metadata-separator';
+            sep.textContent = ' · ';
+            container.appendChild(sep);
+            const timeSpan = document.createElement('span');
+            timeSpan.className = 'summary-metadata-secondary';
+            timeSpan.textContent = metadata.generationTime;
+            container.appendChild(timeSpan);
         }
     }
 }
