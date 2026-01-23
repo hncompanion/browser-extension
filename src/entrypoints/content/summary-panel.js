@@ -109,20 +109,9 @@ class SummaryPanel {
 
         headerTop.appendChild(branding);
 
-        // Controls (refresh, copy, settings, close)
+        // Controls (settings, help, close)
         const controls = document.createElement('div');
         controls.className = 'summary-panel-controls';
-
-        const refreshBtn = this.createIconButton('refresh', ICONS.refresh, 'Refresh summary');
-        refreshBtn.addEventListener('click', () => {
-            if (this.onRefresh) this.onRefresh();
-        });
-        controls.appendChild(refreshBtn);
-
-        const copyBtn = this.createIconButton('copy', ICONS.copy, 'Copy summary');
-        copyBtn.style.display = 'none'; // Hidden by default, shown when content exists
-        copyBtn.addEventListener('click', () => this.copyToClipboard());
-        controls.appendChild(copyBtn);
 
         const settingsBtn = this.createIconButton('settings', ICONS.gear, 'Open settings');
         settingsBtn.addEventListener('click', () => {
@@ -159,28 +148,82 @@ class SummaryPanel {
         const content = document.createElement('div');
         content.className = 'summary-panel-content';
 
+        const contextRow = document.createElement('div');
+        contextRow.className = 'summary-context-row';
+
+        const summaryMeta = document.createElement('div');
+        summaryMeta.className = 'summary-meta';
+        summaryMeta.dataset.hasCache = 'false';
+        summaryMeta.dataset.hasProvider = 'false';
+        summaryMeta.dataset.hasMetadata = 'false';
+
         const metadata = document.createElement('div');
-        metadata.className = 'summary-metadata';
+        metadata.className = 'summary-metadata summary-chip';
+
+        const cacheStatus = document.createElement('span');
+        cacheStatus.className = 'summary-cache-status summary-chip';
+
+        const providerInfo = document.createElement('span');
+        providerInfo.className = 'summary-provider-info summary-chip';
+
+        summaryMeta.appendChild(metadata);
+        summaryMeta.appendChild(cacheStatus);
+        summaryMeta.appendChild(providerInfo);
+
+        const actions = document.createElement('div');
+        actions.className = 'summary-panel-actions';
+
+        const refreshBtn = this.createIconButton('refresh', ICONS.refresh, 'Regenerate summary');
+        refreshBtn.addEventListener('click', () => {
+            if (this.onRefresh) this.onRefresh();
+        });
+        actions.appendChild(refreshBtn);
+
+        const copyBtn = this.createIconButton('copy', ICONS.copy, 'Copy summary');
+        copyBtn.style.display = 'none'; // Hidden by default, shown when content exists
+        copyBtn.addEventListener('click', () => this.copyToClipboard());
+        actions.appendChild(copyBtn);
 
         const text = document.createElement('div');
         text.className = 'summary-text';
         text.textContent = "Press 's' or click 'summarize all comments' to generate an AI summary of this discussion.";
 
-        content.appendChild(metadata);
+        contextRow.appendChild(summaryMeta);
+        contextRow.appendChild(actions);
+
+        content.appendChild(contextRow);
         content.appendChild(text);
 
         // === FOOTER ===
         const footer = document.createElement('div');
         footer.className = 'summary-panel-footer';
 
-        const cacheStatus = document.createElement('span');
-        cacheStatus.className = 'summary-cache-status';
+        const footerLinks = document.createElement('div');
+        footerLinks.className = 'summary-footer-links';
 
-        const providerInfo = document.createElement('span');
-        providerInfo.className = 'summary-provider-info';
+        const createFooterLink = (text, href) => {
+            const link = document.createElement('a');
+            link.className = 'summary-footer-link';
+            link.href = href;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            link.textContent = text;
+            return link;
+        };
 
-        footer.appendChild(cacheStatus);
-        footer.appendChild(providerInfo);
+        const createFooterSeparator = () => {
+            const separator = document.createElement('span');
+            separator.className = 'summary-footer-separator';
+            separator.textContent = '·';
+            return separator;
+        };
+
+        footerLinks.appendChild(createFooterLink('Privacy', 'https://github.com/hncompanion/browser-extension/blob/main/PRIVACY.md'));
+        footerLinks.appendChild(createFooterSeparator());
+        footerLinks.appendChild(createFooterLink('FAQ', 'https://hncompanion.com'));
+        footerLinks.appendChild(createFooterSeparator());
+        footerLinks.appendChild(createFooterLink('About', 'https://github.com/hncompanion/browser-extension'));
+        footer.appendChild(footerLinks);
 
         // Assemble panel
         panel.appendChild(header);
@@ -206,7 +249,7 @@ class SummaryPanel {
         const text = textElement.innerText || textElement.textContent;
         try {
             await navigator.clipboard.writeText(text);
-            // Brief visual feedback on header copy button
+            // Brief visual feedback on summary copy button
             const copyBtn = this.panel.querySelector('.summary-panel-copy-btn');
             if (copyBtn) {
                 const originalTitle = copyBtn.title;
@@ -409,7 +452,12 @@ class SummaryPanel {
             this.updateCopyButtonVisibility(hasContent);
         }
 
-        // Update footer elements
+        // Update summary meta elements
+        const hasMetadata = metadataElement && metadataElement.textContent.trim().length > 0;
+        if (metadataElement) {
+            metadataElement.style.display = hasMetadata ? 'inline-flex' : 'none';
+        }
+
         const cacheStatusElement = this.panel.querySelector('.summary-cache-status');
         if (cacheStatusElement && cacheStatus !== undefined) {
             this.setElementContent(cacheStatusElement, cacheStatus);
@@ -418,6 +466,22 @@ class SummaryPanel {
         const providerInfoElement = this.panel.querySelector('.summary-provider-info');
         if (providerInfoElement && providerInfo !== undefined) {
             this.setElementContent(providerInfoElement, providerInfo);
+        }
+
+        const summaryMetaElement = this.panel.querySelector('.summary-meta');
+        if (summaryMetaElement) {
+            const hasCache = cacheStatusElement && cacheStatusElement.textContent.trim().length > 0;
+            const hasProvider = providerInfoElement && providerInfoElement.textContent.trim().length > 0;
+            if (cacheStatusElement) {
+                cacheStatusElement.style.display = hasCache ? 'inline-flex' : 'none';
+            }
+            if (providerInfoElement) {
+                providerInfoElement.style.display = hasProvider ? 'inline-flex' : 'none';
+            }
+            summaryMetaElement.dataset.hasMetadata = hasMetadata ? 'true' : 'false';
+            summaryMetaElement.dataset.hasCache = hasCache ? 'true' : 'false';
+            summaryMetaElement.dataset.hasProvider = hasProvider ? 'true' : 'false';
+            summaryMetaElement.style.display = (hasMetadata || hasCache || hasProvider) ? 'flex' : 'none';
         }
     }
 }

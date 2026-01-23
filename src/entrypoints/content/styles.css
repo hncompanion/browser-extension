@@ -402,6 +402,21 @@
     font-weight: 500;
 }
 
+/* Summary context row (meta chips + actions) */
+.summary-context-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+}
+
+.summary-panel-actions {
+    display: flex;
+    gap: 6px;
+    margin-left: auto;
+}
+
 /* Panel content - scrollable */
 .summary-panel-content {
     flex: 1 1 auto;
@@ -440,6 +455,31 @@
     scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
 }
 
+/* Summary meta (chips) */
+.summary-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.summary-meta[data-has-metadata="false"][data-has-cache="false"][data-has-provider="false"] {
+    display: none;
+}
+
+.summary-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 6px;
+    border-radius: 2px;
+    background-color: #fbfbf4;
+    border: 1px solid #e0e0d8;
+    color: #555;
+    font-size: 11px;
+    line-height: 1.2;
+    white-space: nowrap;
+}
 
 /* Panel footer - stays at bottom via flex layout */
 .summary-panel-footer {
@@ -450,8 +490,27 @@
     font-size: 11px;
     color: #828282;
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: center;
+}
+
+.summary-footer-links {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.summary-footer-link {
+    color: #ff6600;
+    text-decoration: none;
+}
+
+.summary-footer-link:hover {
+    text-decoration: underline;
+}
+
+.summary-footer-separator {
+    color: #b0b0b0;
 }
 
 .summary-cache-status {
@@ -462,7 +521,7 @@
     color: #999;
 }
 
-/* Footer link for provider */
+/* Link for provider in summary meta */
 .summary-provider-link {
     color: #ff6600;
     text-decoration: none;
@@ -481,10 +540,10 @@
 
 .summary-metadata {
     color: #666;
-    font-size: 12px;
-    margin-bottom: 8px;
     text-align: left;
-    line-height: 1.4;
+    white-space: normal;
+    max-width: 100%;
+    line-height: 1.3;
 }
 
 .summary-text {
