@@ -275,11 +275,13 @@ class SummaryPanel {
             return separator;
         };
 
-        footerLinks.appendChild(createFooterLink('Privacy', 'https://github.com/hncompanion/browser-extension/blob/main/PRIVACY.md'));
+        footerLinks.appendChild(createFooterLink('Privacy', 'https://hncompanion.com/privacy'));
         footerLinks.appendChild(createFooterSeparator());
-        footerLinks.appendChild(createFooterLink('FAQ', 'https://hncompanion.com'));
+        footerLinks.appendChild(createFooterLink('FAQ', 'https://hncompanion.com/#faq'));
         footerLinks.appendChild(createFooterSeparator());
-        footerLinks.appendChild(createFooterLink('About', 'https://github.com/hncompanion/browser-extension'));
+        footerLinks.appendChild(createFooterLink('About', 'https://hncompanion.com'));
+        footerLinks.appendChild(createFooterSeparator());
+        footerLinks.appendChild(createFooterLink('Open Source', 'https://github.com/hncompanion/browser-extension'));
         footer.appendChild(footerLinks);
 
         return footer;

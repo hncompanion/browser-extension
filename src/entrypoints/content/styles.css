@@ -597,8 +597,10 @@
     gap: 8px;
 }
 
-.summary-footer-link {
-    color: #ff6600;
+.summary-footer-link,
+.summary-footer-link:link,
+.summary-footer-link:visited {
+    color: #666;
     text-decoration: none;
 }
 
