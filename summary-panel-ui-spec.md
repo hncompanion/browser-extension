@@ -1,7 +1,7 @@
 # Summary Panel UI Spec
 
 ## Purpose
-Define a layered UI for the HN Companion summary side panel. 
+Define a layered UI for the HN Companion summary side panel.
 The spec is declarative and describes required structure, placement, and responsibilities for global vs summary-specific elements.
 The style of this UI should match the HN site aesthetic and theme (color, typography, spacing etc).
 
@@ -13,11 +13,11 @@ The style of this UI should match the HN site aesthetic and theme (color, typogr
 
 ## Global Header (Panel-Wide)
 - Must contain only global controls: Settings, Help, Close.
-- Must NOT contain summary-specific controls (Regenerate, Copy) or summary metadata.
-- Branding may be present but minimal (icon + short label).
+- Must NOT contain summary-specific controls (Generate, Copy) or summary metadata.
+- Branding: icon + "HN Companion" label.
 
 ## Global Footer (Panel-Wide)
-- Must contain only global links: Privacy, FAQ, About (or equivalent).
+- Must contain only global links: Privacy, FAQ, About.
 - Must NOT contain summary metadata (created time, provider info) or summary actions.
 
 ## Tabs (Global)
@@ -26,41 +26,74 @@ The style of this UI should match the HN site aesthetic and theme (color, typogr
 - Additional tabs may exist in the future; each tab owns its own content and controls.
 
 ## Summary Tab (Topmost Content Layer)
-- Summary actions must live here, near the summary content:
-  - Regenerate
-  - Copy
-- Summary metadata must live here, near the summary content:
-  - Created time (cache age)
-  - Provider origin: "HN Companion" vs "User LLM"
-Both the metadata and actions should be in the same horizontal row, above the summary text.
-Explore options to show the metadata as in differ visual styles (e.g. chips, inline text).
 
-```
- ┌───────────────────────────────────────────┐
- │ [Cached] [23m ago]                  icons │
- └───────────────────────────────────────────┘
-```
-- Summary text is the primary content and has the strongest visual emphasis.
+### Metadata Row
+The metadata row displays summary status and actions in a single horizontal line:
 
+**For cached summaries (from HN Companion server):**
+```
+[CACHED] 1 hr ago | HN Companion     [Generate with your LLM] [Copy]
+```
+
+**For generated summaries (using user's LLM):**
+```
+[GENERATED] 33s | google/gemini-2.5-pro                       [Copy]
+```
+
+Elements:
+- **Status chip**: `[CACHED]` (gray) or `[GENERATED]` (green) badge
+- **Time**: Cache age (e.g., "1 hr ago") or generation duration (e.g., "33s")
+- **Separator**: `|` pipe character
+- **Provider**: "HN Companion" or the user's configured LLM (e.g., "google/gemini-2.5-pro")
+  - Provider is a clickable link (opens providerUrl for cached, or settings for generated)
+- **Actions** (right-aligned):
+  - "Generate with your LLM" link (orange) - generates fresh summary using user's configured LLM
+  - Copy button (icon) - copies summary text to clipboard
+
+### Summary Text
+- Primary content with strongest visual emphasis
+- Scrollable area with shadow effect when scrolled
 
 ## Layout Line Art
 ```
-┌──────────────────────────────────────────────┐
-│ HEADER (global)                              │
-│ [Brand]              [Settings][Help][Close] │
-├──────────────────────────────────────────────┤
-│ TABS (global)                                │
-│ [Summary] [Other…]                           │
-├──────────────────────────────────────────────┤
-│ SUMMARY TAB (content layer)                  │
-│  Actions: [Regenerate] [Copy]                │
-│  Meta: Created 23m ago · Provider: HN Comp.  │
-│                                              │
-│  Summary text…                               │
-│  …                                           │
-│                                              │
-├──────────────────────────────────────────────┤
-│ FOOTER (global)                              │
-│ Privacy · FAQ · About                        │
-└──────────────────────────────────────────────┘
++----------------------------------------------+
+| HEADER (global)                              |
+| [Logo] HN Companion    [Settings][Help][Close]|
++----------------------------------------------+
+| TABS (global)                                |
+| [Summary] [Other...]                         |
++----------------------------------------------+
+| METADATA ROW (summary tab)                   |
+| [CACHED] 1hr ago | HN Companion  [Generate] []|
++----------------------------------------------+
+| SUMMARY TEXT (scrollable)                    |
+|                                              |
+| Overview                                     |
+| The discussion revolves around...            |
+|                                              |
+| Main Themes & Key Insights                   |
+| - Point 1...                                 |
+| - Point 2...                                 |
+|                                              |
++----------------------------------------------+
+| FOOTER (global)                              |
+|                      Privacy . FAQ . About   |
++----------------------------------------------+
 ```
+
+## CSS Class Reference
+
+### Metadata Row Classes
+- `.summary-metadata-row` - Container for the metadata row
+- `.summary-metadata-info` - Left side: chip, time, separator, provider
+- `.summary-metadata-actions` - Right side: generate link, copy button
+- `.summary-metadata-chip` - Base chip/badge styling
+- `.summary-metadata-chip-cached` - Gray chip for cached summaries
+- `.summary-metadata-chip-generated` - Green chip for generated summaries
+- `.summary-metadata-primary` - Primary text (time, used for emphasis)
+- `.summary-metadata-separator` - Pipe separator styling
+- `.summary-metadata-provider-link` - Provider link styling (black, underline on hover)
+
+### Action Classes
+- `.summary-generate-link` - "Generate with your LLM" link (orange)
+- `.summary-panel-copy-btn` - Copy button (icon)

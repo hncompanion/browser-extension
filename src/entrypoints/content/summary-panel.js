@@ -85,7 +85,25 @@ class SummaryPanel {
         panel.className = 'summary-panel';
         panel.style.display = 'none';
 
-        // === HEADER ===
+        // Assemble the panel from sections (Header, Content, Footer)
+        //  The UI spec is defined in docs/summary-panel-ui-spec.md
+        const header = this.createGlobalHeader();
+        const content = this.createContent();
+        const footer = this.createGlobalFooter();
+
+        panel.appendChild(header);
+        panel.appendChild(content);
+        panel.appendChild(footer);
+
+        return panel;
+    }
+
+    /**
+     * Creates the global header section with branding, controls, and tabs.
+     * This is a panel-wide element that persists across all tab views.
+     * @returns {HTMLElement} The header element
+     */
+    createGlobalHeader() {
         const header = document.createElement('div');
         header.className = 'summary-panel-header';
 
@@ -93,7 +111,7 @@ class SummaryPanel {
         const headerTop = document.createElement('div');
         headerTop.className = 'summary-panel-header-top';
 
-        // Branding (logo)
+        // Branding (logo + text)
         const branding = document.createElement('div');
         branding.className = 'summary-panel-branding';
 
@@ -132,7 +150,19 @@ class SummaryPanel {
         headerTop.appendChild(controls);
         header.appendChild(headerTop);
 
-        // Tabs row
+        // Tabs row (global context switcher)
+        const tabs = this.createTabs();
+        header.appendChild(tabs);
+
+        return header;
+    }
+
+    /**
+     * Creates the tabs row for switching between panel views.
+     * Currently only contains Summary tab; extensible for future tabs.
+     * @returns {HTMLElement} The tabs container element
+     */
+    createTabs() {
         const tabs = document.createElement('div');
         tabs.className = 'summary-panel-tabs';
 
@@ -142,9 +172,15 @@ class SummaryPanel {
         summaryTab.textContent = 'Summary';
         tabs.appendChild(summaryTab);
 
-        header.appendChild(tabs);
+        return tabs;
+    }
 
-        // === CONTENT ===
+    /**
+     * Creates the main content area containing the summary tab content.
+     * Includes the metadata row (tab header) and summary text area.
+     * @returns {HTMLElement} The content container element
+     */
+    createContent() {
         const content = document.createElement('div');
         content.className = 'summary-panel-content';
 
@@ -157,7 +193,25 @@ class SummaryPanel {
             }
         });
 
-        // Metadata row (single line with info + actions)
+        // Summary tab header (metadata row with info + actions)
+        const metadataRow = this.createSummaryTabHeader();
+        content.appendChild(metadataRow);
+
+        // Summary text area
+        const text = document.createElement('div');
+        text.className = 'summary-text';
+        text.textContent = "Press 's' or click 'summarize all comments' to generate an AI summary of this discussion.";
+        content.appendChild(text);
+
+        return content;
+    }
+
+    /**
+     * Creates the summary tab header row containing metadata info and action buttons.
+     * This is tab-specific content (not global), showing cache status, age, provider, and actions.
+     * @returns {HTMLElement} The metadata row element
+     */
+    createSummaryTabHeader() {
         const metadataRow = document.createElement('div');
         metadataRow.className = 'summary-metadata-row';
         metadataRow.style.display = 'none'; // Hidden until content is set
@@ -168,15 +222,17 @@ class SummaryPanel {
         const metadataActions = document.createElement('div');
         metadataActions.className = 'summary-metadata-actions';
 
-        // Generate button (icon + text)
-        const generateBtn = document.createElement('button');
-        generateBtn.className = 'summary-generate-btn';
-        generateBtn.title = 'Generate fresh summary';
-        generateBtn.innerHTML = `${ICONS.refresh} Generate`;
-        generateBtn.addEventListener('click', () => {
+        // Generate link (styled as text link)
+        const generateLink = document.createElement('a');
+        generateLink.className = 'summary-generate-link';
+        generateLink.href = '#';
+        generateLink.title = 'Generate fresh summary using the LLM configured in settings';
+        generateLink.innerHTML = `${ICONS.refresh} Generate with your LLM`;
+        generateLink.addEventListener('click', (e) => {
+            e.preventDefault();
             if (this.onRefresh) this.onRefresh();
         });
-        metadataActions.appendChild(generateBtn);
+        metadataActions.appendChild(generateLink);
 
         // Copy button (icon only)
         const copyBtn = this.createIconButton('copy', ICONS.copy, 'Copy summary');
@@ -187,14 +243,15 @@ class SummaryPanel {
         metadataRow.appendChild(metadataInfo);
         metadataRow.appendChild(metadataActions);
 
-        const text = document.createElement('div');
-        text.className = 'summary-text';
-        text.textContent = "Press 's' or click 'summarize all comments' to generate an AI summary of this discussion.";
+        return metadataRow;
+    }
 
-        content.appendChild(metadataRow);
-        content.appendChild(text);
-
-        // === FOOTER ===
+    /**
+     * Creates the global footer with links (Privacy, FAQ, About).
+     * This is a panel-wide element that persists across all tab views.
+     * @returns {HTMLElement} The footer element
+     */
+    createGlobalFooter() {
         const footer = document.createElement('div');
         footer.className = 'summary-panel-footer';
 
@@ -225,12 +282,7 @@ class SummaryPanel {
         footerLinks.appendChild(createFooterLink('About', 'https://github.com/hncompanion/browser-extension'));
         footer.appendChild(footerLinks);
 
-        // Assemble panel
-        panel.appendChild(header);
-        panel.appendChild(content);
-        panel.appendChild(footer);
-
-        return panel;
+        return footer;
     }
 
     createIconButton(name, icon, title) {
@@ -489,7 +541,12 @@ class SummaryPanel {
     }
 
     renderCachedMetadata(container, metadata) {
-        // "23m ago | HN Companion"
+        // "[CACHED] 23m ago | HN Companion"
+        const cacheChip = document.createElement('span');
+        cacheChip.className = 'summary-metadata-chip summary-metadata-chip-cached';
+        cacheChip.textContent = 'Cached';
+        container.appendChild(cacheChip);
+
         if (metadata.statusText) {
             const ageSpan = document.createElement('span');
             ageSpan.className = 'summary-metadata-primary';
@@ -508,10 +565,11 @@ class SummaryPanel {
                 link.href = metadata.providerUrl;
                 link.target = '_blank';
                 link.textContent = metadata.provider;
-                link.className = 'summary-provider-link';
+                link.className = 'summary-metadata-provider-link';
                 container.appendChild(link);
             } else {
                 const span = document.createElement('span');
+                span.className = 'summary-metadata-primary';
                 span.textContent = metadata.provider;
                 container.appendChild(span);
             }
@@ -519,22 +577,36 @@ class SummaryPanel {
     }
 
     renderGeneratedMetadata(container, metadata) {
-        // "anthropic/claude-3-haiku · 4.2s"
-        if (metadata.provider) {
-            const providerSpan = document.createElement('span');
-            providerSpan.className = 'summary-metadata-primary';
-            providerSpan.textContent = metadata.provider;
-            container.appendChild(providerSpan);
-        }
+        // "[GENERATED] 33s | google/gemini-2.5-pro"
+        const generatedChip = document.createElement('span');
+        generatedChip.className = 'summary-metadata-chip summary-metadata-chip-generated';
+        generatedChip.textContent = 'Generated';
+        container.appendChild(generatedChip);
+
         if (metadata.generationTime) {
-            const sep = document.createElement('span');
-            sep.className = 'summary-metadata-separator';
-            sep.textContent = ' · ';
-            container.appendChild(sep);
             const timeSpan = document.createElement('span');
-            timeSpan.className = 'summary-metadata-secondary';
+            timeSpan.className = 'summary-metadata-primary';
             timeSpan.textContent = metadata.generationTime;
             container.appendChild(timeSpan);
+        }
+        if (metadata.provider) {
+            if (metadata.generationTime) {
+                const sep = document.createElement('span');
+                sep.className = 'summary-metadata-separator';
+                sep.textContent = ' | ';
+                container.appendChild(sep);
+            }
+            // Render provider as a link that opens settings
+            const providerLink = document.createElement('a');
+            providerLink.href = '#';
+            providerLink.className = 'summary-metadata-provider-link';
+            providerLink.textContent = metadata.provider;
+            providerLink.title = 'Open settings to configure LLM provider';
+            providerLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                browser.runtime.sendMessage({ type: 'HN_SHOW_OPTIONS', data: {} });
+            });
+            container.appendChild(providerLink);
         }
     }
 }
