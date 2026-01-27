@@ -125,7 +125,7 @@ export function getCommentsPageKeyboardShortcuts(handlers) {
             }
         },
         's': async () => {
-            handlers.summaryPanel.toggle();
+            await handlers.summaryPanel.toggle();
 
             // If the summary panel is visible, but content has not been populated (i.e., first time opening the panel), 
             //  trigger a single summarization so the shortcut feels immediate and avoids duplicate fetches.

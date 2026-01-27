@@ -82,6 +82,19 @@ class HNEnhancer {
             this.commentNavigator.setupCommentClickHandlers();
             this.commentNavigator.navigateToFirstComment(false);
             this.summaryPanel = new SummaryPanel();
+
+            // Wire up refresh button to force-refresh summary
+            if (this.summaryPanel) {
+                this.summaryPanel.onRefresh = () => this.summarizeAllComments(true);
+                this.summaryPanel.onHelp = () => this.toggleHelpModal(true);
+                this.summaryPanel.onVisibilityChange = (isVisible) => {
+                    // Hide floating help button when panel is open
+                    const helpIcon = document.querySelector('.help-icon');
+                    if (helpIcon) {
+                        helpIcon.style.display = isVisible ? 'none' : 'flex';
+                    }
+                };
+            }
         }
 
         // Set up all keyboard shortcuts
@@ -486,11 +499,10 @@ class HNEnhancer {
         const cacheConfigEnabled = await serverCacheConfigEnabled();
         if (cacheConfigEnabled && !skipCache) {
             this.summaryPanel.updateContent({
-                title: 'Discussion Summary',
-                metadata: 'Analyzing all threads in this post...',
                 text: createLoadingMessage([
                     'Looking for cached summary on HNCompanion server...'
-                ])
+                ]),
+                metadata: { state: 'loading', statusText: 'Checking cache...' }
             });
 
             const cacheResult = await getCachedSummary(itemId);
@@ -519,18 +531,16 @@ class HNEnhancer {
             }
             loadingParts.push('... This may take a few moments. ');
             this.summaryPanel.updateContent({
-                title: 'Discussion Summary',
-                metadata: `Analyzing all threads in this post...`,
-                text: createLoadingMessage(loadingParts)
+                text: createLoadingMessage(loadingParts),
+                metadata: { state: 'loading', statusText: 'Generating...', provider: aiProvider ? `${aiProvider}/${model || ''}` : undefined }
             });
 
             const threadData = await getHNThread(itemId);
             if (!threadData || !threadData.formattedComment) {
                 await Logger.error(`Could not get thread data for post summarization. item id: ${itemId}`);
                 this.summaryPanel.updateContent({
-                    title: 'Error',
-                    metadata: '',
-                    text: 'Failed to retrieve comments for summarization. Please try again.'
+                    text: 'Failed to retrieve comments for summarization. Please try again.',
+                    metadata: { state: 'error' }
                 });
                 return;
             }
@@ -539,9 +549,8 @@ class HNEnhancer {
         } catch (error) {
             await Logger.error('Error preparing for summarization:', error);
             this.summaryPanel.updateContent({
-                title: 'Summarization Error',
-                metadata: '',
-                text: `Error preparing for summarization: ${error.message}`
+                text: `Error preparing for summarization: ${error.message}`,
+                metadata: { state: 'error' }
             });
         }
     }
@@ -587,9 +596,8 @@ class HNEnhancer {
                         (error) => {
                             const errorFragment = createOllamaErrorMessage(error);
                             this.summaryPanel.updateContent({
-                                title: 'Error',
-                                metadata: '',
-                                text: errorFragment
+                                text: errorFragment,
+                                metadata: { state: 'error', provider: 'ollama' }
                             });
                         },
                         postTitle
@@ -618,9 +626,8 @@ class HNEnhancer {
     handleSummaryError(error) {
         const errorMessage = formatSummaryError(error);
         this.summaryPanel.updateContent({
-            title: 'Error',
-            metadata: '',
-            text: errorMessage
+            text: errorMessage,
+            metadata: { state: 'error' }
         });
     }
 
@@ -634,9 +641,8 @@ class HNEnhancer {
         ]);
 
         this.summaryPanel.updateContent({
-            title: 'LLM Provider Setup Required',
-            metadata: '',
-            text: message
+            text: message,
+            metadata: { state: 'setup-required' }
         });
 
         const optionsLink = this.summaryPanel.panel.querySelector('#options-page-link');
@@ -651,44 +657,24 @@ class HNEnhancer {
     async showSummaryInPanel(summary, fromCache, duration, commentPathToIdMap = null) {
         const formattedSummary = createSummaryFragment(summary, commentPathToIdMap);
 
-        const {aiProvider, model} = await getAIProviderModel();
-        let subtitle = null;
+        let metadata;
         if (fromCache) {
-            const durationText = duration || 'some time';
-            subtitle = buildFragment([
-                'Summary generated by ',
-                createStrong('HNCompanion'),
-                ' and cached ',
-                createStrong(durationText),
-                ' ago.',
-                document.createElement('br'),
-                createInternalLink('llm-summarize-link', 'Generate fresh summary'),
-                ' using LLM ',
-                createInternalLink('options-page-link', 'configured in settings'),
-                '.'
-            ]);
-        } else if (aiProvider) {
-            subtitle = buildFragment([
-                'Summarized using ',
-                createStrong(`${aiProvider}/${model || ''}`),
-                ' in ',
-                createStrong(`${duration || '0'} secs`),
-                '.'
-            ]);
+            metadata = {
+                state: 'cached',
+                statusText: duration ? `${duration} ago` : undefined,
+                provider: 'HN Companion',
+                providerUrl: 'https://hncompanion.com'
+            };
+        } else {
+            const {aiProvider, model} = await getAIProviderModel();
+            metadata = {
+                state: 'generated',
+                provider: aiProvider ? `${aiProvider}/${model || ''}` : undefined,
+                generationTime: duration ? `${duration}s` : undefined
+            };
         }
 
-        this.summaryPanel.updateContent({
-            metadata: subtitle,
-            text: formattedSummary
-        });
-
-        const llmSummarizeLink = this.summaryPanel.panel.querySelector('#llm-summarize-link');
-        if (llmSummarizeLink) {
-            llmSummarizeLink.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.summarizeAllComments(true);
-            });
-        }
+        this.summaryPanel.updateContent({ text: formattedSummary, metadata });
 
         const optionsLink = this.summaryPanel.panel.querySelector('#options-page-link');
         if (optionsLink) {

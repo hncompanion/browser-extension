@@ -332,42 +332,284 @@
 
 /* Summary panel */
 .summary-panel {
-    flex: 0 1 400px; /* grow :0, shrink: 1, basis: 400px */
+    flex: 0 1 400px;
     position: sticky;
-    top: 0;
+    top: 8px; /* Align with HN body margin */
     align-self: flex-start;
     background-color: #f6f6ef;
-    padding: 16px;
     box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
-    height: 100vh;
-
+    height: calc(100vh - 16px); /* Fit within viewport accounting for HN's 8px margins */
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
     transition: transform 0.3s ease;
 }
 
-/* Panel content styling */
+/* Panel header - sticky at top */
 .summary-panel-header {
-    margin-bottom: 20px;
-    text-align: left;
+    flex: 0 0 auto;
+    padding: 8px 16px 0;
+    background-color: #f0f0e8; /* Subtle tint for visual hierarchy */
+    border-bottom: 1px solid #e0e0e0;
 }
 
-.summary-panel-title {
+.summary-panel-header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+/* Branding: logo + keyboard badge */
+.summary-panel-branding {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.summary-panel-logo {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: #000;
+}
+
+.summary-panel-logo svg {
+    width: 20px;
+    height: 20px;
+    display: block;
+}
+
+
+/* Control buttons */
+.summary-panel-controls {
+    display: flex;
+    gap: 4px;
+}
+
+.summary-panel-icon-btn {
+    background: none;
+    border: none;
+    padding: 6px;
+    cursor: pointer;
+    color: #828282;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.summary-panel-icon-btn:hover {
+    background-color: rgba(255, 102, 0, 0.1);
     color: #ff6600;
-    font-size: 18px;
-    font-weight: bold;
-    margin-bottom: 12px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid #eee;
 }
 
+.summary-panel-icon-btn:active {
+    background-color: rgba(255, 102, 0, 0.2);
+}
+
+/* Tabs */
+.summary-panel-tabs {
+    display: flex;
+    gap: 0;
+    padding-bottom: 0;
+}
+
+.summary-panel-tab {
+    background: none;
+    border: none;
+    padding: 8px 16px;
+    cursor: pointer;
+    font-size: 13px;
+    color: #828282;
+    border-bottom: 2px solid transparent;
+    transition: color 0.15s ease, border-color 0.15s ease;
+    margin-bottom: -1px;
+}
+
+.summary-panel-tab:hover {
+    color: #ff6600;
+}
+
+.summary-panel-tab.active {
+    color: #ff6600;
+    border-bottom-color: #ff6600;
+    font-weight: 500;
+}
+
+/* Metadata row (single line: info + actions) */
+.summary-metadata-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e5e5e0;
+    margin-bottom: 12px;
+    gap: 8px;
+}
+
+.summary-metadata-info {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.summary-metadata-primary {
+    font-size: 12px;
+    color: #666;
+}
+
+.summary-metadata-secondary {
+    font-size: 11px;
+    color: #999;
+}
+
+.summary-metadata-separator {
+    color: #ccc;
+    font-size: 12px;
+}
+
+/* Metadata chip/badge for cache status */
+.summary-metadata-chip {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.summary-metadata-chip-cached {
+    background-color: #e8e8e0;
+    color: #666;
+}
+
+.summary-metadata-chip-generated {
+    background-color: #e0f0e0;
+    color: #4a7c4a;
+}
+
+.summary-metadata-provider-link,
+.summary-metadata-provider-link:link,
+.summary-metadata-provider-link:visited {
+    color: #000;
+    text-decoration: none;
+    font-size: 12px;
+}
+
+.summary-metadata-provider-link:hover {
+    color: #000;
+    text-decoration: underline;
+}
+
+.summary-metadata-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+/* Generate link (text link with icon) */
+.summary-panel .summary-generate-link,
+.summary-generate-link:link,
+.summary-generate-link:visited {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: #ff6600;
+    font-size: 12px;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.summary-generate-link:hover {
+    color: #ff6600;
+    text-decoration: underline;
+}
+
+.summary-generate-link svg {
+    width: 14px;
+    height: 14px;
+}
+
+/* Panel content - scrollable */
 .summary-panel-content {
+    flex: 1 1 auto;
+    min-height: 0; /* Required for overflow to work in flex container */
+    overflow-y: auto;
+    padding: 16px;
+    position: relative;
     text-align: left;
     font-family: Verdana, Geneva, sans-serif;
     color: #828282;
     font-size: 12px;
-    overflow-y: auto; /* Enable vertical scrolling within the content */
-    max-height: 95%; /* Ensure it takes the full height of the panel */
-    padding-bottom: 12px;
-    line-height: 1.5; /* Add more breathing room */
+    line-height: 1.5;
+}
+
+/* Scroll shadow effect when scrolled */
+.summary-panel-content.is-scrolled {
+    box-shadow: inset 0 8px 8px -8px rgba(0, 0, 0, 0.1);
+}
+
+/* Thin overlay scrollbar */
+.summary-panel-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.summary-panel-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.summary-panel-content::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 3px;
+}
+
+.summary-panel-content::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(0, 0, 0, 0.35);
+}
+
+/* Firefox scrollbar */
+.summary-panel-content {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+
+/* Panel footer - stays at bottom via flex layout */
+.summary-panel-footer {
+    flex: 0 0 auto;
+    padding: 8px 16px;
+    background-color: #f0f0e8;
+    border-top: 1px solid #dcdcdc;
+    font-size: 11px;
+    color: #828282;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.summary-footer-links {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.summary-footer-link,
+.summary-footer-link:link,
+.summary-footer-link:visited {
+    color: #666;
+    text-decoration: none;
+}
+
+.summary-footer-link:hover {
+    text-decoration: underline;
+}
+
+.summary-footer-separator {
+    color: #b0b0b0;
 }
 
 .summary-author {
@@ -377,34 +619,15 @@
     text-align: left;
 }
 
-.summary-metadata {
-    color: #666;
-    font-size: 12px;
-    margin-bottom: 8px;
-    text-align: left;
-    line-height: 1.4;
-}
-
 .summary-text {
-    margin-bottom: 20px;
+    margin-bottom: 12px;
     color: #000000;
     font-size: 12px;
     text-align: left;
     line-height: 1.4;
-    padding-bottom: 32px;
 }
 
-.summary-metadata strong {
-    font-weight: bold;
-    color: #333; /* Darken the color */
-}
-
-.summary-metadata a,
-.summary-metadata a:visited,
-.summary-metadata a:active {
-    color: #ff6600 !important;
-    text-decoration: underline !important;
-}
+/* Legacy: old metadata styles no longer used */
 
 .highlight-author {
     padding: 2px 4px;
