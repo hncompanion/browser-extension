@@ -286,6 +286,42 @@ export function createSummaryFragment(markdown, commentPathToIdMap) {
 }
 
 /**
+ * Convert comment references to fully qualified markdown links for clipboard copy.
+ *
+ * Handles two input formats:
+ * 1. User-generated (LLM): [1] (username) → [username](URL)
+ * 2. Server-cached: [comment #ID](URL) (username) → [username](URL)
+ *
+ * @param {string} markdown - Raw markdown content
+ * @param {Map|null} commentPathToIdMap - Map of path → comment ID (for user-generated)
+ * @param {string|null} postId - HN post ID (for user-generated URL construction)
+ * @returns {string} Markdown with clean [username](URL) links
+ */
+export function qualifyCommentLinks(markdown, commentPathToIdMap, postId) {
+    if (!markdown) return '';
+
+    let result = markdown;
+
+    // 1. Server-cached format: [comment #ID](URL) (username) → [username](URL)
+    const cachedLinkRegex = /\[comment #\d+\]\((https?:\/\/news\.ycombinator\.com\/item\?id=\d+#\d+)\)\s*\(([^)]+)\)/g;
+    result = result.replace(cachedLinkRegex, (_, url, author) => `[${author}](${url})`);
+
+    // 2. User-generated format: [1] (username) or [1.1] (username) → [username](URL)
+    if (commentPathToIdMap && postId) {
+        const pathRegex = /\[(\d+(?:\.\d+)*)\]\s*\(([^)]+)\)/g;
+        result = result.replace(pathRegex, (match, path, username) => {
+            const commentId = commentPathToIdMap.get(path);
+            if (commentId) {
+                return `[${username}](https://news.ycombinator.com/item?id=${postId}#${commentId})`;
+            }
+            return match; // Keep original if no mapping found
+        });
+    }
+
+    return result;
+}
+
+/**
  * Replaces comment references with interactive navigation anchors.
  * @param {DocumentFragment} fragment - The fragment to process
  * @param {Map} commentPathToIdMap - Map of path strings to comment IDs
