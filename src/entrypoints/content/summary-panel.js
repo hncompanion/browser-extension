@@ -277,17 +277,17 @@ class SummaryPanel {
         const createFooterSeparator = () => {
             const separator = document.createElement('span');
             separator.className = 'summary-footer-separator';
-            separator.textContent = '·';
+            separator.textContent = '|';
             return separator;
         };
 
-        footerLinks.appendChild(createFooterLink('Privacy', 'https://hncompanion.com/privacy'));
+        footerLinks.appendChild(createFooterLink('About', 'https://hncompanion.com'));
         footerLinks.appendChild(createFooterSeparator());
         footerLinks.appendChild(createFooterLink('FAQ', 'https://hncompanion.com/#faq'));
         footerLinks.appendChild(createFooterSeparator());
-        footerLinks.appendChild(createFooterLink('About', 'https://hncompanion.com'));
+        footerLinks.appendChild(createFooterLink('GitHub', 'https://github.com/hncompanion/browser-extension'));
         footerLinks.appendChild(createFooterSeparator());
-        footerLinks.appendChild(createFooterLink('Open Source', 'https://github.com/hncompanion/browser-extension'));
+        footerLinks.appendChild(createFooterLink('Privacy', 'https://hncompanion.com/privacy'));
         footer.appendChild(footerLinks);
 
         return footer;
