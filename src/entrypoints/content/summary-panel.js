@@ -1,5 +1,6 @@
 import {storage} from '#imports';
 import {browser} from 'wxt/browser';
+import {qualifyCommentLinks} from './comment-processor.js';
 
 // SVG Icon constants
 const ICONS = {
@@ -33,6 +34,11 @@ class SummaryPanel {
         this.onRefresh = null;  // Callback for refresh button
         this.onHelp = null;  // Callback for help button
         this.onVisibilityChange = null;  // Callback when panel visibility changes
+
+        // State for copy-to-clipboard with qualified links
+        this.rawMarkdown = null;
+        this.commentPathToIdMap = null;
+        this.postId = null;
 
         if (!this.panel) {
             this.resizer = null;
@@ -297,10 +303,14 @@ class SummaryPanel {
     }
 
     async copyToClipboard() {
-        const textElement = this.panel?.querySelector('.summary-text');
-        if (!textElement) return;
+        if (!this.rawMarkdown) return;
 
-        const text = textElement.innerText || textElement.textContent;
+        const text = qualifyCommentLinks(
+            this.rawMarkdown,
+            this.commentPathToIdMap,
+            this.postId
+        );
+
         try {
             await navigator.clipboard.writeText(text);
             // Brief visual feedback on summary copy button
@@ -498,9 +508,17 @@ class SummaryPanel {
      * @param {Object} params
      * @param {Node|string} params.text - The summary content
      * @param {SummaryMetadata} params.metadata - Structured metadata for the summary
+     * @param {string} [params.rawMarkdown] - Raw markdown for clipboard copy
+     * @param {Map} [params.commentPathToIdMap] - Map of path → comment ID
+     * @param {string} [params.postId] - HN post ID for URL construction
      */
-    updateContent({ text, metadata }) {
+    updateContent({ text, metadata, rawMarkdown, commentPathToIdMap, postId }) {
         if (!this.panel) return;
+
+        // Store for copy operation
+        this.rawMarkdown = rawMarkdown ?? null;
+        this.commentPathToIdMap = commentPathToIdMap ?? null;
+        this.postId = postId ?? null;
 
         this.contentUpdated = true;  // Mark that content has been updated
 

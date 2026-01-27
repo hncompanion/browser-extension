@@ -486,8 +486,8 @@ class HNEnhancer {
     // ==================== Summarization ====================
 
     async summarizeAllComments(skipCache = false) {
-        const itemId = this.getCurrentHNItemId();
-        if (!itemId) {
+        const postId = this.getCurrentHNItemId();
+        if (!postId) {
             await Logger.error(`Could not get item id of the current post to summarize all comments in it.`);
             return;
         }
@@ -505,15 +505,15 @@ class HNEnhancer {
                 metadata: { state: 'loading', statusText: 'Checking cache...' }
             });
 
-            const cacheResult = await getCachedSummary(itemId);
+            const cacheResult = await getCachedSummary(postId);
             const cachedSummary = cacheResult?.summary;
             if (cachedSummary && cachedSummary.length > 0) {
-                await Logger.info(`Using cached summary from HNCompanion server for post ${itemId}`);
+                await Logger.info(`Using cached summary from HNCompanion server for post ${postId}`);
                 const timeAgo = getTimeAgo(cacheResult.created_at);
-                await this.showSummaryInPanel(cachedSummary, true, timeAgo, null);
+                await this.showSummaryInPanel(cachedSummary, true, timeAgo, null, postId);
                 return;
             }
-            await Logger.info(`No cached summary found for post ID ${itemId}. Generating fresh summary using configured AI provider`);
+            await Logger.info(`No cached summary found for post ID ${postId}. Generating fresh summary using configured AI provider`);
         }
 
         try {
@@ -535,16 +535,16 @@ class HNEnhancer {
                 metadata: { state: 'loading', statusText: 'Generating...', provider: aiProvider ? `${aiProvider}/${model || ''}` : undefined }
             });
 
-            const threadData = await getHNThread(itemId);
+            const threadData = await getHNThread(postId);
             if (!threadData || !threadData.formattedComment) {
-                await Logger.error(`Could not get thread data for post summarization. item id: ${itemId}`);
+                await Logger.error(`Could not get thread data for post summarization. item id: ${postId}`);
                 this.summaryPanel.updateContent({
                     text: 'Failed to retrieve comments for summarization. Please try again.',
                     metadata: { state: 'error' }
                 });
                 return;
             }
-            await this.summarizeText(threadData.formattedComment, threadData.commentPathToIdMap);
+            await this.summarizeText(threadData.formattedComment, threadData.commentPathToIdMap, postId);
 
         } catch (error) {
             await Logger.error('Error preparing for summarization:', error);
@@ -555,7 +555,7 @@ class HNEnhancer {
         }
     }
 
-    async summarizeText(formattedComment, commentPathToIdMap) {
+    async summarizeText(formattedComment, commentPathToIdMap, itemId) {
         const settings = await storage.getItem('sync:settings');
         try {
             const aiProvider = settings?.providerSelection;
@@ -573,7 +573,7 @@ class HNEnhancer {
             const postTitle = this.getHNPostTitle();
 
             const onSuccess = (summary, duration, pathMap) => {
-                this.showSummaryInPanel(summary, false, duration, pathMap).catch(error => {
+                this.showSummaryInPanel(summary, false, duration, pathMap, itemId).catch(error => {
                     Logger.errorSync('Error showing summary:', error);
                 });
             };
@@ -584,7 +584,7 @@ class HNEnhancer {
 
             switch (aiProvider) {
                 case 'none':
-                    this.showSummaryInPanel(formattedComment, true, 0, commentPathToIdMap).catch(error => {
+                    this.showSummaryInPanel(formattedComment, true, 0, commentPathToIdMap, itemId).catch(error => {
                         Logger.errorSync('Error showing summary:', error);
                     });
                     break;
@@ -654,7 +654,7 @@ class HNEnhancer {
         }
     }
 
-    async showSummaryInPanel(summary, fromCache, duration, commentPathToIdMap = null) {
+    async showSummaryInPanel(summary, fromCache, duration, commentPathToIdMap = null, postId = null) {
         const formattedSummary = createSummaryFragment(summary, commentPathToIdMap);
 
         let metadata;
@@ -674,7 +674,13 @@ class HNEnhancer {
             };
         }
 
-        this.summaryPanel.updateContent({ text: formattedSummary, metadata });
+        this.summaryPanel.updateContent({
+            text: formattedSummary,
+            metadata,
+            rawMarkdown: summary,
+            commentPathToIdMap,
+            postId
+        });
 
         const optionsLink = this.summaryPanel.panel.querySelector('#options-page-link');
         if (optionsLink) {
