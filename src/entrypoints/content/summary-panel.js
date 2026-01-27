@@ -233,7 +233,7 @@ class SummaryPanel {
         generateLink.className = 'summary-generate-link';
         generateLink.href = '#';
         generateLink.title = 'Generate fresh summary using the LLM configured in settings';
-        generateLink.innerHTML = `${ICONS.refresh} Generate with your LLM`;
+        generateLink.innerHTML = `${ICONS.refresh} Regenerate with your LLM`;
         generateLink.addEventListener('click', (e) => {
             e.preventDefault();
             if (this.onRefresh) this.onRefresh();

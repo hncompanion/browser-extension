@@ -32,7 +32,7 @@ The metadata row displays summary status and actions in a single horizontal line
 
 **For cached summaries (from HN Companion server):**
 ```
-[CACHED] 1 hr ago | HN Companion     [Generate with your LLM] [Copy]
+[CACHED] 1 hr ago | HN Companion     [Regenerate with your LLM] [Copy]
 ```
 
 **For generated summaries (using user's LLM):**
@@ -47,7 +47,7 @@ Elements:
 - **Provider**: "HN Companion" or the user's configured LLM (e.g., "google/gemini-2.5-pro")
   - Provider is a clickable link (opens providerUrl for cached, or settings for generated)
 - **Actions** (right-aligned):
-  - "Generate with your LLM" link (orange) - generates fresh summary using user's configured LLM
+  - "Regenerate with your LLM" link (orange) - generates fresh summary using user's configured LLM
   - Copy button (icon) - copies summary text to clipboard
 
 ### Summary Text
@@ -95,5 +95,5 @@ Elements:
 - `.summary-metadata-provider-link` - Provider link styling (black, underline on hover)
 
 ### Action Classes
-- `.summary-generate-link` - "Generate with your LLM" link (orange)
+- `.summary-generate-link` - "Regenerate with your LLM" link (orange)
 - `.summary-panel-copy-btn` - Copy button (icon)
