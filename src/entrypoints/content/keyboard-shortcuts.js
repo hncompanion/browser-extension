@@ -81,10 +81,19 @@ export function getCommentsPageKeyboardShortcuts(handlers) {
         'h': () => handlers.navigateToChildComment(false),
         'r': () => {
             const currentComment = getCurrentComment();
+            // Try to go to root comment; if not found, go to parent
+            // For example, children of top level comments do not have a 'root' link in HN. So we fallback to 'parent'.
             const rootComment = handlers.getNavElementByName(currentComment, 'root')
                 || handlers.getNavElementByName(currentComment, 'parent');
             if (rootComment) {
                 handlers.setCurrentComment(rootComment);
+            }
+        },
+        'p': () => {
+            const currentComment = getCurrentComment();
+            const parentComment = handlers.getNavElementByName(currentComment, 'parent');
+            if (parentComment) {
+                handlers.setCurrentComment(parentComment);
             }
         },
         '[': () => {

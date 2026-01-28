@@ -31,6 +31,7 @@ export const shortcutGroups = {
             {key: '[ ]', description: 'Prev/next comment by author'},
             {key: 'u', description: 'Undo navigation (go back)'},
             {key: 's', description: 'Toggle summary panel'},
+            {key: 'p', description: 'Go to parent comment'},
             {key: 'r', description: 'Go to root comment'},
             {key: 'z', description: 'Scroll to current'},
             {key: 'c', description: 'Collapse/expand comment'}
