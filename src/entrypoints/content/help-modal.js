@@ -20,6 +20,7 @@ export const shortcutGroups = {
         shortcuts: [
             {key: 'j k', description: 'Next/previous post'},
             {key: 'c', description: 'Open comments page. Hold Shift to open in new tab'},
+            {key: 's', description: 'Sort posts (cycles: default / points / time / comments)'},
         ]
     },
     "comments": {
