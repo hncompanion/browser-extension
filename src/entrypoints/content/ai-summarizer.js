@@ -300,12 +300,13 @@ export function formatSummaryError(error) {
         return createConfigurationError();
     }
 
-    // API key issues
-    if (errorStr.includes('API key') || errorStr.includes('401') || errorStr.includes('Unauthorized')) {
+    // API key / authentication issues
+    if (errorStr.includes('API key') || errorStr.includes('401') || errorStr.includes('Unauthorized') ||
+        errorStr.includes('credentials') || errorStr.includes('authentication')) {
         return createErrorElement({
             type: 'api_key',
-            title: 'Invalid API Key',
-            description: 'Your API key appears to be invalid or expired. Please check your API key in the settings.',
+            title: 'Authentication Failed',
+            description: 'Your API key or credentials appear to be invalid. Please check your configuration in the settings.',
             action: { label: 'Open Settings', id: 'error-open-settings' },
             hint: 'Make sure the API key is entered correctly without extra spaces.'
         });
@@ -346,7 +347,8 @@ export function formatSummaryError(error) {
         type: 'generic',
         title: 'Summary Generation Failed',
         description: errorStr || 'An unexpected error occurred while generating the summary.',
-        hint: 'Try again or check the browser console for more details.'
+        action: { label: 'Open Settings', id: 'error-open-settings' },
+        hint: 'Check your configuration or try again later.'
     });
 }
 
