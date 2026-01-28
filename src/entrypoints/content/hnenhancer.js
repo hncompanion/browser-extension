@@ -270,40 +270,45 @@ class HNEnhancer {
         const authorCommentsList = this.authorComments.get(author) || [];
         const count = authorCommentsList.length;
 
+        // Add icon before author name (not clickable, just indicator)
         const authorIcon = document.createElement('span');
         authorIcon.className = 'post-author-icon';
+        authorIcon.setAttribute('role', 'img');
+        authorIcon.setAttribute('aria-label', 'Original poster');
+        authorIcon.title = 'Original poster (OP)';
         authorIcon.innerHTML = this.getAuthorIconSVG();
-
-        if (count > 0) {
-            const onActivate = (e) => {
-                e.preventDefault();
-                this.navigateToAuthorFirstComment(author);
-            };
-
-            authorIcon.classList.add('is-clickable');
-            authorIcon.setAttribute('role', 'button');
-            authorIcon.setAttribute('tabindex', '0');
-            authorIcon.setAttribute('aria-label', 'Jump to first comment by the original poster');
-            authorIcon.title = 'Jump to first comment by the original poster';
-            authorIcon.addEventListener('click', onActivate);
-            authorIcon.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    onActivate(e);
-                }
-            });
-        } else {
-            authorIcon.setAttribute('role', 'img');
-            authorIcon.setAttribute('aria-label', 'Post author');
-            authorIcon.title = 'Post author';
-        }
-
         authorElement.parentElement.insertBefore(authorIcon, authorElement);
 
         if (count > 0) {
+            // Create container for post author navigation
+            const navContainer = document.createElement('span');
+            navContainer.className = 'post-author-nav';
+
+            // Add comment count with tooltip
             const countSpan = document.createElement('span');
             countSpan.className = 'comment-count';
             countSpan.textContent = `(${count})`;
-            authorElement.parentElement.insertBefore(countSpan, authorElement.nextSibling);
+            countSpan.title = `${author} has ${count} comment${count !== 1 ? 's' : ''} in this discussion`;
+            navContainer.appendChild(countSpan);
+
+            // Add navigation triangle to jump to first OP comment
+            const navNext = document.createElement('span');
+            navNext.className = 'author-nav nav-triangle';
+            navNext.textContent = '\u25B6';  // ▶
+            navNext.title = 'Jump to first comment by OP';
+            navNext.onclick = (e) => {
+                e.preventDefault();
+                this.navigateToAuthorFirstComment(author);
+            };
+            navContainer.appendChild(navNext);
+
+            // Add pipe separator
+            const separator = document.createElement("span");
+            separator.className = "author-separator";
+            separator.textContent = "|";
+            navContainer.appendChild(separator);
+
+            authorElement.parentElement.insertBefore(navContainer, authorElement.nextSibling);
         }
     }
 
@@ -319,8 +324,8 @@ class HNEnhancer {
                 const authorIcon = document.createElement('span');
                 authorIcon.className = 'post-author-icon';
                 authorIcon.setAttribute('role', 'img');
-                authorIcon.setAttribute('aria-label', 'Post author');
-                authorIcon.title = 'Post author';
+                authorIcon.setAttribute('aria-label', 'Original poster');
+                authorIcon.title = 'Original poster (OP)';
                 authorIcon.innerHTML = this.getAuthorIconSVG();
                 authorElement.parentElement.insertBefore(authorIcon, authorElement);
             }
@@ -709,7 +714,7 @@ class HNEnhancer {
     }
 
     getAuthorIconSVG() {
-        return '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><path d="m26.97574 31.07234a12.44592 12.44592 0 1 0 -12.44519-12.44568 12.46036 12.46036 0 0 0 12.44519 12.44568zm0-22.89124a10.44532 10.44532 0 1 1 -10.44459 10.44556 10.45756 10.45756 0 0 1 10.44459-10.444556z"/><path d="m32.0681 50.19388h-24.31696a1.75266 1.75266 0 0 1 -1.75053-1.75054v-4.97123a8.61015 8.61015 0 0 1 5.88948-8.17436l7.02655-2.34837a16.38434 16.38434 0 0 0 16.11721.002l1.17715.39562a1.00056 1.00056 0 0 0 .63691-1.89706l-1.60991-.54025a1.00311 1.00311 0 0 0 -.83814.09378 14.37247 14.37247 0 0 1 -14.84534 0 1.03345 1.03345 0 0 0 -.84791-.09378l-7.45051 2.491a10.60639 10.60639 0 0 0 -7.2561 10.07142v4.97123a3.75587 3.75587 0 0 0 3.75114 3.75115h24.317a1.00031 1.00031 0 1 0 0-2.00061z"/><path d="m58.87313 23.32389a31.60233 31.60233 0 0 0 -13.96518 5.658 14.93016 14.93016 0 0 0 -1.30417 2.34642 1.00894 1.00894 0 0 0 -1.44765-.11381 28.88549 28.88549 0 0 0 -2.36888 2.39917c-.88143 1.18627-2.38262 2.23512-2.30832 3.82337-.9699-.015-1.24147 1.179-1.70859 1.83845-.1947.35161-4.57115 8.43268.35069 11.93679-.57854 1.64241-1.13407 3.42512-1.63715 5.35466a1.00033 1.00033 0 1 0 1.93612.50406c.49442-1.89657 1.03932-3.64668 1.6062-5.25288 2.51731.13853 8.99328-1.02766 10.08181-5.82.07094-.76323.96916-1.96055.42713-2.7907a1.07345 1.07345 0 0 0 .67-.64082c.30283-.85964.635-1.77105 1.01789-2.7313.33292-1.03779 1.0304-2.24519 1.34721-3.48348a.9967.9967 0 0 0 -.33519-.74828l1.17907-1.13218c.53032-.746 1.08078-2.074 1.59918-2.91983 2.84553-5.22864 4.60193-6.121 5.22419-6.26167a1.00147 1.00147 0 0 0 -.36436-1.96597zm-6.61236 7.26442c-.32725.58855-.97 1.78765-1.35686 2.56035l-2.531 2.42945a1.00665 1.00665 0 0 0 .28329 1.63428c.84773.11753-.26119 1.36412-.29581 1.89511-.33036.82642-.62635 1.62745-.89889 2.39037l-2.9345 1.33342a1.00712 1.00712 0 0 0 -.00678 1.81891 4.66681 4.66681 0 0 0 1.76513.43861 5.41589 5.41589 0 0 1 -.75707 1.80328c-1.54353 2.28335-4.85928 2.79431-6.74228 2.89691a46.33282 46.33282 0 0 1 5.65012-10.6014 1.00069 1.00069 0 0 0 -1.60012-1.20148 48.60443 48.60443 0 0 0 -5.96471 11.20745c-2.30368-2.40747-.18359-7.26356.47189-8.60124a1.26962 1.26962 0 0 0 1.43012.376.99841.99841 0 0 0 .549-.83417l.17877-2.995a30.69341 30.69341 0 0 1 3.04581-3.54116c.46449.72489 1.58843 1.089 2.05439.18548l1.69573-3.34073a29.61872 29.61872 0 0 1 8.77611-4.24494 30.61477 30.61477 0 0 0 -2.81234 4.3905z"/></svg>';
+        return '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"> <path d="M26,33.6c6.9,0,12.4-5.6,12.4-12.4s-5.6-12.4-12.4-12.4-12.4,5.6-12.4,12.4h0c0,6.9,5.6,12.4,12.4,12.4ZM26,10.7c5.8,0,10.4,4.7,10.4,10.4s-4.7,10.4-10.4,10.4c-5.8,0-10.4-4.7-10.4-10.4h0c0-5.8,4.7-10.4,10.4-10.4h0Z"/> <path d="M31.1,52.7H6.8c-1,0-1.7-.8-1.8-1.8v-5c0-3.7,2.4-7,5.9-8.2l7-2.3c5,2.8,11.1,2.8,16.1,0l1.2.4c.5.2,1.1-.1,1.3-.6.2-.5-.1-1.1-.6-1.3l-1.6-.5c-.3,0-.6,0-.8,0-4.6,2.8-10.3,2.8-14.8,0-.3-.2-.6-.2-.8,0l-7.5,2.5c-4.3,1.4-7.3,5.5-7.3,10.1v5c0,2.1,1.7,3.7,3.8,3.8h24.3c.6,0,1-.4,1-1,0-.6-.4-1-1-1,0,0,0,0,0,0h0Z"/> <path d="M59.9,20.8c-5,.7-9.8,2.7-14,5.7-.5.7-.9,1.5-1.3,2.3-.4-.4-1-.5-1.4-.1,0,0,0,0,0,0-.8.8-1.6,1.6-2.4,2.4-.9,1.2-2.4,2.2-2.3,3.8-1,0-1.2,1.2-1.7,1.8-.2.4-4.6,8.4.4,11.9-.6,1.6-1.1,3.4-1.6,5.4-.1.5.2,1.1.7,1.2.5.1,1.1-.2,1.2-.7,0,0,0,0,0,0,.5-1.9,1-3.6,1.6-5.3,2.5.1,9-1,10.1-5.8,0-.8,1-2,.4-2.8.3-.1.6-.3.7-.6.3-.9.6-1.8,1-2.7.3-1,1-2.2,1.3-3.5,0-.3-.1-.6-.3-.7l1.2-1.1c.5-.7,1.1-2.1,1.6-2.9,2.8-5.2,4.6-6.1,5.2-6.3.5-.1.9-.7.7-1.2-.1-.5-.6-.8-1.1-.8ZM53.3,28.1c-.3.6-1,1.8-1.4,2.6l-2.5,2.4c-.4.4-.4,1,0,1.4,0,0,.2.2.3.2.8.1-.3,1.4-.3,1.9-.3.8-.6,1.6-.9,2.4l-2.9,1.3c-.5.2-.7.8-.5,1.3,0,.2.3.4.5.5.6.3,1.2.4,1.8.4-.1.6-.4,1.3-.8,1.8-1.5,2.3-4.9,2.8-6.7,2.9,1.4-3.8,3.3-7.3,5.7-10.6.3-.4.2-1.1-.2-1.4-.4-.3-1-.2-1.4.2-2.5,3.5-4.5,7.2-6,11.2-2.3-2.4-.2-7.3.5-8.6.3.4.9.6,1.4.4.3-.2.5-.5.5-.8l.2-3c.9-1.3,1.9-2.4,3-3.5.5.7,1.6,1.1,2.1.2l1.7-3.3c2.7-1.9,5.6-3.3,8.8-4.2-1.1,1.4-2,2.8-2.8,4.4Z"/></svg>';
     }
 }
 

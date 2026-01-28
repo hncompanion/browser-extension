@@ -25,6 +25,20 @@
     color: #ff6600;
 }
 
+/* Post author navigation in top row (subtext) */
+.post-author-nav {
+    font-size: inherit;
+}
+
+.post-author-nav .comment-count {
+    cursor: default;
+}
+
+.post-author-nav .nav-triangle {
+    font-size: 10px;
+    vertical-align: middle;
+}
+
 .post-author {
     padding: 0 2px;
 }
@@ -33,12 +47,11 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    vertical-align: middle;
-    width: 0.9em;
-    height: 0.9em;
+    vertical-align: text-bottom;
+    width: 1.2em;
+    height: 1.2em;
     margin-left: 0;
     margin-right: 2px;
-    color: #c75a1a;
     position: relative;
 }
 
@@ -64,7 +77,7 @@
 }
 
 .author-separator {
-    padding: 0 4px 0 2px;
+    padding: 0 2px 0 2px;
 }
 
 .nav-triangle {
