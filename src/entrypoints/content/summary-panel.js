@@ -531,8 +531,9 @@ class SummaryPanel {
         const textElement = this.panel.querySelector('.summary-text');
         if (textElement && text !== undefined) {
             this.setElementContent(textElement, text);
-            // Show copy button when there's actual content (not just loading or placeholder text)
-            const hasContent = text && (text instanceof Node || String(text).length > 0);
+            // Show copy button only for actual summary content, not for error/setup states
+            const isErrorState = metadata?.state === 'error' || metadata?.state === 'setup-required';
+            const hasContent = !isErrorState && text && (text instanceof Node || String(text).length > 0);
             this.updateCopyButtonVisibility(hasContent);
         }
 

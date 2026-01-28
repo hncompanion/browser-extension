@@ -33,6 +33,7 @@ import {getHNThread, createSummaryFragment} from './comment-processor.js';
 import {
     getAIProviderModel,
     formatSummaryError,
+    createConfigurationError,
     summarizeTextWithLLM,
     summarizeUsingOllama,
     createOllamaErrorMessage,
@@ -604,6 +605,7 @@ class HNEnhancer {
                                 text: errorFragment,
                                 metadata: { state: 'error', provider: 'ollama' }
                             });
+                            this.attachErrorActionListeners();
                         },
                         postTitle
                     );
@@ -629,30 +631,30 @@ class HNEnhancer {
     }
 
     handleSummaryError(error) {
-        const errorMessage = formatSummaryError(error);
+        const errorElement = formatSummaryError(error);
         this.summaryPanel.updateContent({
-            text: errorMessage,
+            text: errorElement,
             metadata: { state: 'error' }
         });
+        this.attachErrorActionListeners();
     }
 
     showConfigureAIMessage() {
-        const message = buildFragment([
-            'To use the summarization feature, you need to configure an AI provider.',
-            document.createElement('br'),
-            document.createElement('br'),
-            createInternalLink('options-page-link', 'Open settings page'),
-            ' to select your preferred LLM provider and configure your API key.'
-        ]);
-
+        const errorElement = createConfigurationError();
         this.summaryPanel.updateContent({
-            text: message,
+            text: errorElement,
             metadata: { state: 'setup-required' }
         });
+        this.attachErrorActionListeners();
+    }
 
-        const optionsLink = this.summaryPanel.panel.querySelector('#options-page-link');
-        if (optionsLink) {
-            optionsLink.addEventListener('click', (e) => {
+    /**
+     * Attaches click listeners to error action buttons.
+     */
+    attachErrorActionListeners() {
+        const settingsBtn = this.summaryPanel.panel.querySelector('#error-open-settings');
+        if (settingsBtn) {
+            settingsBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 this.openOptionsPage();
             });
