@@ -14,10 +14,10 @@
                  style="min-width: 550px">
                 <fieldset>
                     <legend class="text-base font-semibold text-gray-900 dark:text-white">Hacker News Companion Settings</legend>
-                    <p class="mt-1 text-sm/6 text-gray-600 dark:text-gray-400 border-b border-gray-200 pb-2 dark:border-white/10">Select the LLM provider for summarization.</p>
+                    <p class="mt-1 text-sm/6 text-gray-600 dark:text-gray-400 border-b border-gray-200 pb-2 dark:border-white/10">Configure your AI providers and select which one to use.</p>
                     <div class="mt-6 space-y-6">
 
-                        <!--HN Companion Backend id="hn-companion-server-enabled" -->
+                                                <!--HN Companion Backend id="hn-companion-server-enabled" -->
                         <fieldset>
                             <legend class="sr-only">Hacker News Companion Settings</legend>
                             <div class="space-y-5">
@@ -63,6 +63,30 @@
                                 </div>
                             </div>
                         </fieldset>
+                        
+                        <!-- Active Provider Selection -->
+                        <div class="rounded-xl border border-indigo-200 bg-indigo-50/50 px-5 py-4 dark:border-indigo-500/30 dark:bg-indigo-950/30">
+                            <div class="flex items-center justify-between gap-4">
+                                <div>
+                                    <label for="active-provider" class="block text-sm font-medium text-gray-900 dark:text-white">Active Provider</label>
+                                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Choose which configured provider to use for summarization</p>
+                                </div>
+                                <div class="grid grid-cols-1">
+                                    <select id="active-provider" name="active-provider"
+                                            class="col-start-1 row-start-1 w-48 appearance-none rounded-md bg-white py-1.5 pl-3 pr-8 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:*:bg-gray-800 dark:focus-visible:outline-indigo-500">
+                                        <option value="" selected>None</option>
+                                        <option value="ollama">Ollama (Local)</option>
+                                        <option value="google">Google Gemini</option>
+                                        <option value="anthropic">Anthropic</option>
+                                        <option value="openai">OpenAI</option>
+                                        <option value="openrouter">OpenRouter</option>
+                                    </select>
+                                    <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" class="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-gray-500 sm:size-4 dark:text-gray-400">
+                                        <path d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" fill-rule="evenodd" />
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
 
                         <div class="flex items-center">
                             <div aria-hidden="true" class="w-full border-t border-gray-300/70 dark:border-white/15"></div>
@@ -73,14 +97,12 @@
                         </div>
 
                         <div class="space-y-4">
-                            <!-- Ollama id="ollama" -->
-                            <div class="rounded-xl border border-gray-200/70 bg-white/60 px-5 py-4 shadow-sm dark:border-white/10 dark:bg-gray-900/60 cursor-pointer" data-provider-card="ollama">
+                            <!-- Ollama -->
+                            <div class="rounded-xl border border-gray-200/70 bg-white/60 px-5 py-4 shadow-sm cursor-pointer hover:bg-white/80 dark:border-white/10 dark:bg-gray-900/60 dark:hover:bg-gray-900/80" data-provider-card="ollama" role="button">
                                 <div class="flex items-center justify-between gap-4">
                                     <div class="flex items-center gap-2">
-                                        <input id="ollama" name="provider-selection" type="radio"
-                                               class="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 dark:border-white/10 dark:bg-white/5 dark:checked:border-indigo-500 dark:checked:bg-indigo-500 dark:focus-visible:outline-indigo-500 dark:disabled:border-white/5 dark:disabled:bg-white/10 dark:disabled:before:bg-white/20 forced-colors:appearance-auto forced-colors:before:hidden [&:not(:checked)]:before:hidden">
-                                        <label for="ollama" class="ml-1 block text-sm/6 font-medium text-gray-900 dark:text-white">Ollama</label>
-                                        <span class="ml-2 hidden items-center rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-semibold text-indigo-700 ring-1 ring-inset ring-indigo-500/20 dark:bg-indigo-500/20 dark:text-indigo-200" data-provider-chip="ollama">Selected</span>
+                                        <span class="block text-sm/6 font-medium text-gray-900 dark:text-white">Ollama</span>
+                                        <span class="ml-2 hidden items-center rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-semibold text-indigo-700 ring-1 ring-inset ring-indigo-500/20 dark:bg-indigo-500/20 dark:text-indigo-200" data-provider-chip="ollama">Active</span>
 
                                         <details class="ml-1 inline-block relative">
                                             <summary class="list-none text-gray-400 hover:text-gray-500 cursor-pointer">
@@ -167,19 +189,17 @@
                         </div>
 
                         <div class="space-y-4">
-                            <!-- Google AI id="google" -->
-                            <div class="rounded-xl border border-gray-200/70 bg-white/60 px-5 py-4 shadow-sm dark:border-white/10 dark:bg-gray-900/60 cursor-pointer" data-provider-card="google">
+                            <!-- Google Gemini -->
+                            <div class="rounded-xl border border-gray-200/70 bg-white/60 px-5 py-4 shadow-sm cursor-pointer hover:bg-white/80 dark:border-white/10 dark:bg-gray-900/60 dark:hover:bg-gray-900/80" data-provider-card="google" role="button">
                                 <div class="flex items-center justify-between gap-4">
                                     <div class="flex items-center gap-2">
-                                        <input id="google" name="provider-selection" type="radio" checked
-                                               class="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 dark:border-white/10 dark:bg-white/5 dark:checked:border-indigo-500 dark:checked:bg-indigo-500 dark:focus-visible:outline-indigo-500 dark:disabled:border-white/5 dark:disabled:bg-white/10 dark:disabled:before:bg-white/20 forced-colors:appearance-auto forced-colors:before:hidden [&:not(:checked)]:before:hidden">
-                                        <label for="google" class="ml-1 block text-sm/6 font-medium text-gray-900 dark:text-white">Google AI</label>
-                                        <span class="ml-2 hidden items-center rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-semibold text-indigo-700 ring-1 ring-inset ring-indigo-500/20 dark:bg-indigo-500/20 dark:text-indigo-200" data-provider-chip="google">Selected</span>
+                                        <span class="block text-sm/6 font-medium text-gray-900 dark:text-white">Google Gemini</span>
+                                        <span class="ml-2 hidden items-center rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-semibold text-indigo-700 ring-1 ring-inset ring-indigo-500/20 dark:bg-indigo-500/20 dark:text-indigo-200" data-provider-chip="google">Active</span>
                                         <span class="ml-2 inline-flex items-center rounded-md bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20">Recommended</span>
                                     </div>
                                     <button type="button"
                                             class="flex size-8 items-center justify-center rounded-md border border-gray-300 bg-white/70 text-gray-500 shadow-sm hover:bg-white dark:border-gray-600 dark:bg-white/5 dark:text-gray-300" data-provider-toggle="google" aria-controls="google-body" aria-expanded="false">
-                                        <span class="sr-only">Show Google AI settings</span>
+                                        <span class="sr-only">Show Google Gemini settings</span>
                                         <svg viewBox="0 0 16 16" fill="currentColor" class="size-4 transition-transform"
                                              data-provider-chevron="google" aria-hidden="true">
                                             <path d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z"
@@ -191,12 +211,12 @@
                                 <div class="mt-4 ml-7 space-y-4 hidden" id="google-body" data-provider-body="google">
                                     <div class="mt-2 flex items-center gap-3">
                                         <div class="relative grow">
-                                            <label for="google-key" class="sr-only">Enter Google AI API Key</label>
+                                            <label for="google-key" class="sr-only">Enter Gemini API Key</label>
                                             <input type="password"
                                                    id="google-key"
                                                    name="google-key"
                                                    class="block w-full rounded-md bg-white px-3 py-1.5 pr-16 text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500 dark:focus:outline-indigo-500"
-                                                   placeholder="Enter Google AI API Key">
+                                                   placeholder="Enter Gemini API Key">
                                             <button type="button" class="absolute inset-y-0 right-2 my-auto rounded-md px-2 text-xs font-semibold text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200" data-toggle-visibility="google-key" aria-pressed="false">Show</button>
                                         </div>
                                         <details class="relative">
@@ -217,7 +237,7 @@
                                         </details>
                                     </div>
                                     <div>
-                                        <label for="google-model" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-100">Select Google AI Model</label>
+                                        <label for="google-model" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-100">Select Gemini Model</label>
                                         <div class="mt-2 grid grid-cols-1">
                                             <select id="google-model" name="google-model"
                                                     class="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white py-1.5 pl-3 pr-8 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:*:bg-gray-800 dark:focus-visible:outline-indigo-500">
@@ -237,15 +257,12 @@
                                 </div>
                             </div>
 
-                            <!-- Anthropic id="anthropic" -->
-                            <div class="rounded-xl border border-gray-200/70 bg-white/60 px-5 py-4 shadow-sm dark:border-white/10 dark:bg-gray-900/60 cursor-pointer" data-provider-card="anthropic">
+                            <!-- Anthropic -->
+                            <div class="rounded-xl border border-gray-200/70 bg-white/60 px-5 py-4 shadow-sm cursor-pointer hover:bg-white/80 dark:border-white/10 dark:bg-gray-900/60 dark:hover:bg-gray-900/80" data-provider-card="anthropic" role="button">
                                 <div class="flex items-center justify-between gap-4">
                                     <div class="flex items-center gap-2">
-                                        <input id="anthropic" name="provider-selection" type="radio"
-                                               class="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 dark:border-white/10 dark:bg-white/5 dark:checked:border-indigo-500 dark:checked:bg-indigo-500 dark:focus-visible:outline-indigo-500 dark:disabled:border-white/5 dark:disabled:bg-white/10 dark:disabled:before:bg-white/20 forced-colors:appearance-auto forced-colors:before:hidden [&:not(:checked)]:before:hidden">
-                                        <label for="anthropic"
-                                               class="ml-1 block text-sm/6 font-medium text-gray-900 dark:text-white">Anthropic</label>
-                                        <span class="ml-2 hidden items-center rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-semibold text-indigo-700 ring-1 ring-inset ring-indigo-500/20 dark:bg-indigo-500/20 dark:text-indigo-200" data-provider-chip="anthropic">Selected</span>
+                                        <span class="block text-sm/6 font-medium text-gray-900 dark:text-white">Anthropic</span>
+                                        <span class="ml-2 hidden items-center rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-semibold text-indigo-700 ring-1 ring-inset ring-indigo-500/20 dark:bg-indigo-500/20 dark:text-indigo-200" data-provider-chip="anthropic">Active</span>
                                     </div>
                                     <button type="button" class="flex size-8 items-center justify-center rounded-md border border-gray-300 bg-white/70 text-gray-500 shadow-sm hover:bg-white dark:border-gray-600 dark:bg-white/5 dark:text-gray-300" data-provider-toggle="anthropic" aria-controls="anthropic-body" aria-expanded="false">
                                         <span class="sr-only">Show Anthropic settings</span>
@@ -306,14 +323,12 @@
                                 </div>
                             </div>
 
-                            <!-- OpenAI id="openai" -->
-                            <div class="rounded-xl border border-gray-200/70 bg-white/60 px-5 py-4 shadow-sm dark:border-white/10 dark:bg-gray-900/60 cursor-pointer" data-provider-card="openai">
+                            <!-- OpenAI -->
+                            <div class="rounded-xl border border-gray-200/70 bg-white/60 px-5 py-4 shadow-sm cursor-pointer hover:bg-white/80 dark:border-white/10 dark:bg-gray-900/60 dark:hover:bg-gray-900/80" data-provider-card="openai" role="button">
                                 <div class="flex items-center justify-between gap-4">
                                     <div class="flex items-center gap-2">
-                                        <input id="openai" name="provider-selection" type="radio"
-                                               class="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 dark:border-white/10 dark:bg-white/5 dark:checked:border-indigo-500 dark:checked:bg-indigo-500 dark:focus-visible:outline-indigo-500 dark:disabled:border-white/5 dark:disabled:bg-white/10 dark:disabled:before:bg-white/20 forced-colors:appearance-auto forced-colors:before:hidden [&:not(:checked)]:before:hidden">
-                                        <label for="openai" class="ml-1 block text-sm/6 font-medium text-gray-900 dark:text-white">OpenAI</label>
-                                        <span class="ml-2 hidden items-center rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-semibold text-indigo-700 ring-1 ring-inset ring-indigo-500/20 dark:bg-indigo-500/20 dark:text-indigo-200" data-provider-chip="openai">Selected</span>
+                                        <span class="block text-sm/6 font-medium text-gray-900 dark:text-white">OpenAI</span>
+                                        <span class="ml-2 hidden items-center rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-semibold text-indigo-700 ring-1 ring-inset ring-indigo-500/20 dark:bg-indigo-500/20 dark:text-indigo-200" data-provider-chip="openai">Active</span>
                                     </div>
                                     <button type="button" class="flex size-8 items-center justify-center rounded-md border border-gray-300 bg-white/70 text-gray-500 shadow-sm hover:bg-white dark:border-gray-600 dark:bg-white/5 dark:text-gray-300" data-provider-toggle="openai" aria-controls="openai-body" aria-expanded="false">
                                         <span class="sr-only">Show OpenAI settings</span>
@@ -373,15 +388,12 @@
                                 </div>
                             </div>
 
-                            <!-- OpenRouter id="openrouter" -->
-                            <div class="rounded-xl border border-gray-200/70 bg-white/60 px-5 py-4 shadow-sm dark:border-white/10 dark:bg-gray-900/60 cursor-pointer" data-provider-card="openrouter">
+                            <!-- OpenRouter -->
+                            <div class="rounded-xl border border-gray-200/70 bg-white/60 px-5 py-4 shadow-sm cursor-pointer hover:bg-white/80 dark:border-white/10 dark:bg-gray-900/60 dark:hover:bg-gray-900/80" data-provider-card="openrouter" role="button">
                                 <div class="flex items-center justify-between gap-4">
                                     <div class="flex items-center gap-2">
-                                        <input id="openrouter" name="provider-selection" type="radio"
-                                               class="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 dark:border-white/10 dark:bg-white/5 dark:checked:border-indigo-500 dark:checked:bg-indigo-500 dark:focus-visible:outline-indigo-500 dark:disabled:border-white/5 dark:disabled:bg-white/10 dark:disabled:before:bg-white/20 forced-colors:appearance-auto forced-colors:before:hidden [&:not(:checked)]:before:hidden">
-                                        <label for="openrouter"
-                                               class="ml-1 block text-sm/6 font-medium text-gray-900 dark:text-white">OpenRouter</label>
-                                        <span class="ml-2 hidden items-center rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-semibold text-indigo-700 ring-1 ring-inset ring-indigo-500/20 dark:bg-indigo-500/20 dark:text-indigo-200" data-provider-chip="openrouter">Selected</span>
+                                        <span class="block text-sm/6 font-medium text-gray-900 dark:text-white">OpenRouter</span>
+                                        <span class="ml-2 hidden items-center rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-semibold text-indigo-700 ring-1 ring-inset ring-indigo-500/20 dark:bg-indigo-500/20 dark:text-indigo-200" data-provider-chip="openrouter">Active</span>
                                     </div>
                                     <button type="button" class="flex size-8 items-center justify-center rounded-md border border-gray-300 bg-white/70 text-gray-500 shadow-sm hover:bg-white dark:border-gray-600 dark:bg-white/5 dark:text-gray-300" data-provider-toggle="openrouter" aria-controls="openrouter-body" aria-expanded="false">
                                         <span class="sr-only">Show OpenRouter settings</span>

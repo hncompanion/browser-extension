@@ -82,49 +82,51 @@ function setPromptCustomizationState(isEnabled) {
     }
 }
 
-async function updateProviderSelection(providerId) {
-    const activeProvider = PROVIDER_INPUT_SELECTORS[providerId] ? providerId : 'google';
+// Update the "Active" badge to show on the currently selected provider
+function updateActiveProviderBadge(providerId) {
+    // Allow empty string (None) as a valid selection
+    const activeProvider = PROVIDER_INPUT_SELECTORS[providerId] ? providerId : '';
 
-    Object.entries(PROVIDER_INPUT_SELECTORS).forEach(([provider, selectors]) => {
+    Object.keys(PROVIDER_INPUT_SELECTORS).forEach((provider) => {
         const isActive = provider === activeProvider;
-        selectors.forEach((selector) => {
-            const input = document.querySelector(selector);
-            if (input) {
-                input.disabled = !isActive;
-            }
-        });
-
-        const card = document.querySelector(`[data-provider-card="${provider}"]`);
-        const body = document.querySelector(`[data-provider-body="${provider}"]`);
         const chip = document.querySelector(`[data-provider-chip="${provider}"]`);
-        const toggle = document.querySelector(`[data-provider-toggle="${provider}"]`);
-        const chevron = document.querySelector(`[data-provider-chevron="${provider}"]`);
-
-        if (card) {
-            card.classList.toggle('ring-2', isActive);
-            card.classList.toggle('ring-indigo-500/40', isActive);
-            card.classList.toggle('bg-white/90', isActive);
-            card.classList.toggle('dark:bg-gray-900/90', isActive);
-        }
-
-        if (body) {
-            body.classList.toggle('hidden', !isActive);
-        }
+        const card = document.querySelector(`[data-provider-card="${provider}"]`);
 
         if (chip) {
             chip.classList.toggle('hidden', !isActive);
+            chip.classList.toggle('inline-flex', isActive);
         }
 
-        if (toggle) {
-            toggle.setAttribute('aria-expanded', isActive ? 'true' : 'false');
-        }
-
-        if (chevron) {
-            chevron.classList.toggle('rotate-180', isActive);
+        // Highlight the active provider's card
+        if (card) {
+            card.classList.toggle('ring-2', isActive);
+            card.classList.toggle('ring-indigo-500/40', isActive);
         }
     });
+}
 
-    if (activeProvider === 'ollama') {
+// Toggle a provider card's expanded/collapsed state
+async function toggleProviderCard(providerId) {
+    const body = document.querySelector(`[data-provider-body="${providerId}"]`);
+    const toggle = document.querySelector(`[data-provider-toggle="${providerId}"]`);
+    const chevron = document.querySelector(`[data-provider-chevron="${providerId}"]`);
+
+    if (!body) return;
+
+    const isCurrentlyHidden = body.classList.contains('hidden');
+
+    body.classList.toggle('hidden', !isCurrentlyHidden);
+
+    if (toggle) {
+        toggle.setAttribute('aria-expanded', isCurrentlyHidden ? 'true' : 'false');
+    }
+
+    if (chevron) {
+        chevron.classList.toggle('rotate-180', isCurrentlyHidden);
+    }
+
+    // If expanding Ollama, fetch models
+    if (providerId === 'ollama' && isCurrentlyHidden) {
         const origins = OPTIONAL_HOST_PERMISSIONS.ollama;
         let granted = await hasOptionalHostPermissions(origins);
         if (!granted) {
@@ -135,6 +137,17 @@ async function updateProviderSelection(providerId) {
             return;
         }
         await fetchOllamaModels();
+    }
+}
+
+// Handle active provider dropdown change
+async function handleActiveProviderChange(providerId) {
+    updateActiveProviderBadge(providerId);
+
+    // Expand the selected provider's card if it's collapsed
+    const body = document.querySelector(`[data-provider-body="${providerId}"]`);
+    if (body && body.classList.contains('hidden')) {
+        await toggleProviderCard(providerId);
     }
 }
 
@@ -156,10 +169,7 @@ function setupKeyVisibilityToggles() {
 
 // Save settings to Browser storage
 async function saveSettings() {
-    let providerSelection = 'google';
-    if(document.querySelector('input[name="provider-selection"]:checked')?.id) {
-        providerSelection = document.querySelector('input[name="provider-selection"]:checked').id;
-    }
+    const providerSelection = document.getElementById('active-provider').value; // Can be empty string for "None"
     // Prompt customization
     const promptCustomization = document.getElementById('prompt-customization').checked;
     const systemPrompt = document.getElementById('system-prompt').value;
@@ -283,10 +293,12 @@ async function loadSettings() {
             if(settings.serverCacheEnabled !== undefined) {
                 document.getElementById('hn-companion-server-enabled').checked = settings.serverCacheEnabled;
             }
-            // Set provider selection
-            const providerRadio = document.getElementById(settings.providerSelection);
-            if (providerRadio)
-                providerRadio.checked = true;
+            // Set provider selection in dropdown (can be empty string for "None")
+            const providerDropdown = document.getElementById('active-provider');
+            if (providerDropdown && settings.providerSelection !== undefined) {
+                providerDropdown.value = settings.providerSelection;
+            }
+            updateActiveProviderBadge(settings.providerSelection ?? '');
 
             // Set Ollama settings
             if (settings.ollama) {
@@ -332,6 +344,13 @@ async function loadSettings() {
             }
             setPromptCustomizationState(promptCustomization);
         } else {
+            // First-time user: set defaults explicitly
+            const providerDropdown = document.getElementById('active-provider');
+            if (providerDropdown) {
+                providerDropdown.value = ''; // None
+            }
+            updateActiveProviderBadge('');
+
             systemPromptTextarea.value = AI_SYSTEM_PROMPT;
             userPromptTextarea.value = AI_USER_PROMPT_STRING;
             promptCustomizationCheckbox.checked = false;
@@ -351,7 +370,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (await hasOptionalHostPermissions(OPTIONAL_HOST_PERMISSIONS.ollama)) {
         await fetchOllamaModels();
     } else {
-        setOllamaModelSelectStatus('Select Ollama to load models');
+        setOllamaModelSelectStatus('Expand to load models');
     }
 
     // Add save button event listener
@@ -364,11 +383,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // See: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/User_actions
 
         // 1. Determine provider selection SYNCHRONOUSLY (no await before permissions.request)
-        let providerSelection = 'google';
-        const checkedRadio = document.querySelector('input[name="provider-selection"]:checked');
-        if (checkedRadio?.id) {
-            providerSelection = checkedRadio.id;
-        }
+        const providerSelection = document.getElementById('active-provider').value; // Can be empty for "None"
 
         // 2. Request permission FIRST (MUST be first await to preserve user gesture in Firefox)
         const origins = OPTIONAL_HOST_PERMISSIONS[providerSelection] || [];
@@ -391,41 +406,33 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // Add radio button change listeners to enable/disable corresponding inputs
-    const radioButtons = document.querySelectorAll('input[name="provider-selection"]');
-    radioButtons.forEach(radio => {
-        radio.addEventListener('change', async () => {
-            await updateProviderSelection(radio.id);
+    // Add dropdown change listener for active provider selection
+    const activeProviderDropdown = document.getElementById('active-provider');
+    if (activeProviderDropdown) {
+        activeProviderDropdown.addEventListener('change', async () => {
+            await handleActiveProviderChange(activeProviderDropdown.value);
         });
-    });
+    }
 
-    // Add provider toggle buttons to select and expand providers
+    // Add provider toggle buttons to expand/collapse provider settings
     const providerToggles = document.querySelectorAll('[data-provider-toggle]');
     providerToggles.forEach((toggle) => {
         toggle.addEventListener('click', async () => {
             const providerId = toggle.getAttribute('data-provider-toggle');
-            const radio = document.getElementById(providerId);
-            if (radio) {
-                radio.checked = true;
-                await updateProviderSelection(providerId);
-            }
+            await toggleProviderCard(providerId);
         });
     });
 
-    // Add click listeners to provider cards to select that provider
+    // Add click listeners to provider card headers to expand/collapse
     const providerCards = document.querySelectorAll('[data-provider-card]');
     providerCards.forEach((card) => {
         card.addEventListener('click', async (e) => {
-            // Prevent triggering if clicking on inputs, buttons, links, or details
-            if (e.target.closest('input, button, a, details, summary')) {
+            // Prevent triggering if clicking on inputs, buttons, links, details, or the body
+            if (e.target.closest('input, button, a, details, summary, select, textarea, [data-provider-body]')) {
                 return;
             }
             const providerId = card.getAttribute('data-provider-card');
-            const radio = document.getElementById(providerId);
-            if (radio) {
-                radio.checked = true;
-                await updateProviderSelection(providerId);
-            }
+            await toggleProviderCard(providerId);
         });
     });
 
@@ -437,9 +444,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     setupKeyVisibilityToggles();
 
-    // Initial trigger of radio button change event to set initial state
-    const checkedRadio = document.querySelector('input[name="provider-selection"]:checked');
-    if (checkedRadio) {
-        await updateProviderSelection(checkedRadio.id);
-    }
+    // Set initial active provider badge state (can be empty for "None")
+    const activeProvider = document.getElementById('active-provider').value;
+    updateActiveProviderBadge(activeProvider);
 });
