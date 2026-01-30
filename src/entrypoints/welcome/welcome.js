@@ -26,4 +26,18 @@ document.addEventListener('DOMContentLoaded', () => {
             window.close();
         });
     }
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            window.close();
+            return;
+        }
+
+        if (event.key === 'Enter') {
+            const primaryAction = document.getElementById('go-to-hn');
+            if (primaryAction) {
+                primaryAction.click();
+            }
+        }
+    });
 });
