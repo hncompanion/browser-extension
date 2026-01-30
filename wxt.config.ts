@@ -10,7 +10,7 @@ export default defineConfig({
             name: "Hacker News Companion",
             description: "Get the gist of lengthy Hacker News discussions with AI summaries tuned to HN semantics. Navigate seamlessly with Vim keybindings.",
             homepage_url: "https://hncompanion.com",
-            version: "1.6.0",
+            version: "2.0.0",
             permissions: ['storage'],
             host_permissions: [
                 "https://news.ycombinator.com/*",
