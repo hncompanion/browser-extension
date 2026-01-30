@@ -14,7 +14,9 @@
             <!-- Header -->
             <header class="text-center border-b border-gray-200 dark:border-white/10 pb-6 mb-8">
                 <div class="flex justify-center mb-4">
-                    <img src="/icon/icon-128.png" alt="HN Companion" class="w-20 h-20">
+                    <a href="https://hncompanion.com/" class="inline-flex" aria-label="HN Companion website" target="_blank" rel="noreferrer">
+                        <img src="/icon/icon-128.png" alt="HN Companion" class="w-16 h-16">
+                    </a>
                 </div>
                 <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
                     Welcome to HN Companion
@@ -40,8 +42,7 @@
                     <div>
                         <h3 class="font-medium text-gray-900 dark:text-white">Summaries tailored for Hacker News</h3>
                         <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                            Use <kbd class="px-1.5 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600">s</kbd> key on the discussion page to open the HN Companion panel and see cached summaries from our server. 
-                        </p>
+                            On any HN thread, press <kbd class="px-1.5 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600">s</kbd> to see summaries in the HN Companion panel: cached on our servers, or generate fresh ones with LLM of your choice.
                     </div>
                 </div>
 
@@ -57,10 +58,10 @@
                     <div>
                         <h3 class="font-medium text-gray-900 dark:text-white">Keyboard-first Navigation</h3>
                         <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                            Use
-                            <kbd class="px-1.5 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600">j</kbd> / <kbd class="px-1.5 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600">k</kbd> to move between items,
-                            <kbd class="px-1.5 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600">h</kbd> / <kbd class="px-1.5 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600">l</kbd> to navigate the comment tree,
-                            <kbd class="px-1.5 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600">?</kbd> to view all shortcuts.
+                            Press
+                            <kbd class="px-1.5 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600">j</kbd> / <kbd class="px-1.5 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600">k</kbd> for next / previous post or comment, use 
+                            <kbd class="px-1.5 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600">h</kbd> / <kbd class="px-1.5 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600">l</kbd> to move through all comments. Hit
+                            <kbd class="px-1.5 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600">?</kbd> anytime to open the full shortcuts panel.
                         </p>
                     </div>
                 </div>
@@ -77,7 +78,11 @@
                     <div>
                         <h3 class="font-medium text-gray-900 dark:text-white">Follow the conversation</h3>
                         <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                            Hover over any username to see their profile. Use <kbd class="px-1.5 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600">[</kbd> / <kbd class="px-1.5 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600">]</kbd> to view comments by that user.
+                            Hover any username for a quick profile preview, then use 
+                            <kbd class="px-1.5 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600">[</kbd> / 
+                            <kbd class="px-1.5 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600">]</kbd> 
+                            to jump through that author’s comments.
+                            Click an author in the summary panel to jump to their comment.
                         </p>
                     </div>
                 </div>
@@ -108,8 +113,8 @@
                         </svg>
                     </a>
                     <button type="button" id="close-tab"
-                       class="inline-flex items-center justify-center px-5 py-2.5 rounded-md text-sm font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
-                        Got it
+                       class="inline-flex items-center justify-center px-5 py-2.5 rounded-md text-sm font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white cursor-pointer">
+                        Dismiss
                     </button>
                 </div>
             </section>
