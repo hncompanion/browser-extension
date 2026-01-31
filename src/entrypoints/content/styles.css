@@ -677,31 +677,30 @@
 
 .summary-text ul,
 .summary-text ol {
-    ul,
-    ol {
-        padding-left: 0;
-        margin: 0;
-        line-height: 1.5;
-    }
+  padding-left: 20px;
+}
 
-    li {
-        margin-bottom: 0.1rem;
-    }
+.summary-text ul ul,
+.summary-text ol ol,
+.summary-text ul ol,
+.summary-text ol ul {
+  padding-left: 0;
+  margin: 0;
+  line-height: 1.5;
+}
 
-    ul {
-        list-style: disc;
-    }
+.summary-text ul,
+.summary-text ul ul {
+  list-style: disc;
+}
 
-    ol {
-        list-style: decimal;
-    }
+.summary-text ol,
+.summary-text ol ol {
+  list-style: decimal;
+}
 
-    ul ul,
-    ol ol,
-    ul ol,
-    ol ul {
-        margin: 0.25rem 0 0.25rem 1.25rem;
-    }
+.summary-text li {
+  margin-bottom: 0.1rem;
 }
 
 .summary-text a,
