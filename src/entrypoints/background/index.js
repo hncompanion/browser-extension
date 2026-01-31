@@ -43,28 +43,31 @@ export default defineBackground(() => {
         browser.runtime.openOptionsPage();
     });
 
-    async function onInstalled() {
+    async function onInstalled(details) {
         await Logger.disableLogging();
-        await Logger.info('Installed');
+        await Logger.info(`Installed: ${details.reason}`);
+        
         const existingSettings = await storage.getItem('sync:settings');
         if (!existingSettings) {
             await setDefaultSettings();
         }
 
-        try {
-            // Check if we've already shown the welcome page before
-            const hasShownWelcomePage = await storage.getItem('local:hasShownWelcomePage');
+        if (details.reason === 'install') {
+            try {
+                // Check if we've already shown the welcome page before (redundant but safe)
+                const hasShownWelcomePage = await storage.getItem('local:hasShownWelcomePage');
 
-            // Only open welcome page if we haven't shown it before
-            if (!hasShownWelcomePage) {
-                // Set flag that we've shown the welcome page
-                await storage.setItem('local:hasShownWelcomePage', true);
-                await browser.tabs.create({
-                    url: browser.runtime.getURL('/welcome.html')
-                });
+                // Only open welcome page if we haven't shown it before
+                if (!hasShownWelcomePage) {
+                    // Set flag that we've shown the welcome page
+                    await storage.setItem('local:hasShownWelcomePage', true);
+                    await browser.tabs.create({
+                        url: browser.runtime.getURL('/welcome.html')
+                    });
+                }
+            } catch (e) {
+                await Logger.error('Error during welcome page handling:', e);
             }
-        } catch (e) {
-            await Logger.error('Error during welcome page handling:', e);
         }
     }
 
