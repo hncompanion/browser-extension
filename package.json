@@ -15,7 +15,7 @@
     "jsdom": "^26.0.0",
     "marked": "^17.0.1",
     "tailwindcss": "^4.1.18",
-    "wxt": "^0.20.13"
+    "wxt": "^0.20.14"
   },
   "scripts": {
     "dev": "NODE_OPTIONS=\"--localstorage-file=$(pwd)/.wxt/node-localstorage\" wxt",
