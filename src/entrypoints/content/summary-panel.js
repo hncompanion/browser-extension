@@ -28,6 +28,7 @@ const ICONS = {
 };
 
 const STORAGE_KEY_PANEL_WIDTH = 'local:panelWidth';
+const STORAGE_KEY_PANEL_HEIGHT = 'local:panelHeight';
 
 class SummaryPanel {
     constructor() {
@@ -42,6 +43,14 @@ class SummaryPanel {
         this.commentPathToIdMap = null;
         this.postId = null;
 
+        // Mobile detection
+        this.mobileQuery = window.matchMedia('(max-width: 768px)');
+        this.isMobile = this.mobileQuery.matches;
+        this.mobileQuery.addEventListener('change', (e) => {
+            this.isMobile = e.matches;
+            this.onMobileChange();
+        });
+
         if (!this.panel) {
             this.resizer = null;
             this.mainWrapper = null;
@@ -49,10 +58,13 @@ class SummaryPanel {
         }
 
         this.resizer = this.createResizer();
+        this.mobileChip = this.createMobileChip();
 
         this.isResizing = false;
         this.startX = 0;
+        this.startY = 0;
         this.startWidth = 0;
+        this.startHeight = 0;
         this.resizerWidth = 8;
 
         // Attach panel and resizer to mainWrapper (created in createPanel)
@@ -61,6 +73,7 @@ class SummaryPanel {
 
         this.mainWrapper.appendChild(this.resizer);
         this.mainWrapper.appendChild(this.panel);
+        document.body.appendChild(this.mobileChip);
 
         // set up resize handlers at the resizer and at the window level
         this.setupResizeHandlers();
@@ -343,46 +356,140 @@ class SummaryPanel {
         return resizer;
     }
 
+    createMobileChip() {
+        const container = document.createElement('div');
+        container.className = 'mobile-pane-actions';
+
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'summary-reopen-chip';
+        chip.textContent = 'Summary';
+        chip.setAttribute('aria-label', 'Open summary panel');
+        chip.addEventListener('click', () => this.toggle());
+        container.appendChild(chip);
+
+        return container;
+    }
+
+    onMobileChange() {
+        if (!this.panel || !this.resizer) return;
+        const hnContentContainer = document.querySelector('.hn-content-container');
+        if (this.isVisible) {
+            if (this.isMobile) {
+                this.panel.style.flexBasis = '';
+                this.panel.style.height = '40vh';
+                this.updateResizerPosition();
+                if (hnContentContainer) hnContentContainer.classList.add('has-bottom-panel');
+            } else {
+                this.panel.style.height = '';
+                if (hnContentContainer) hnContentContainer.classList.remove('has-bottom-panel');
+                const maxAvailableWidth = this.mainWrapper.offsetWidth - this.resizerWidth;
+                const {minWidth} = this.calculatePanelConstraints(maxAvailableWidth);
+                this.panel.style.flexBasis = `${minWidth}px`;
+            }
+        } else {
+            if (hnContentContainer) hnContentContainer.classList.remove('has-bottom-panel');
+        }
+        this.updateMobileChipVisibility();
+    }
+
+    updateResizerPosition() {
+        if (!this.isMobile || !this.resizer) return;
+        const panelHeight = this.panel.offsetHeight;
+        this.resizer.style.bottom = `${panelHeight}px`;
+    }
+
+    updateMobileChipVisibility() {
+        if (!this.mobileChip) return;
+        // Show chip only on mobile when panel is closed and content has been loaded
+        if (this.isMobile && !this.isVisible && this.contentUpdated) {
+            this.mobileChip.classList.add('visible');
+        } else {
+            this.mobileChip.classList.remove('visible');
+        }
+    }
+
     setupResizeHandlers() {
         if (!this.resizer || !this.panel || !this.mainWrapper) return;
 
-        this.resizer.addEventListener('mousedown', (e) => {
+        const onPointerDown = (e) => {
             this.isResizing = true;
             this.startX = e.clientX;
+            this.startY = e.clientY;
             this.startWidth = this.panel.offsetWidth;
+            this.startHeight = this.panel.offsetHeight;
             document.body.style.userSelect = 'none';
             e.preventDefault();
-        });
+        };
 
-        document.addEventListener('mousemove', (e) => {
+        const onPointerMove = (e) => {
             if (!this.isResizing) return;
 
-            const maxAvailableWidth = this.mainWrapper.offsetWidth - this.resizerWidth;
-            const {minWidth, maxWidth} = this.calculatePanelConstraints(maxAvailableWidth);
+            if (this.isMobile) {
+                // Vertical resize for bottom panel
+                const viewportHeight = window.innerHeight;
+                const minHeight = viewportHeight * 0.2;
+                const maxHeight = viewportHeight * 0.7;
+                const deltaY = this.startY - e.clientY;
+                const newHeight = Math.max(minHeight, Math.min(maxHeight, this.startHeight + deltaY));
+                this.panel.style.height = `${newHeight}px`;
+                this.resizer.style.bottom = `${newHeight}px`;
+            } else {
+                // Horizontal resize for side panel
+                const maxAvailableWidth = this.mainWrapper.offsetWidth - this.resizerWidth;
+                const {minWidth, maxWidth} = this.calculatePanelConstraints(maxAvailableWidth);
+                const deltaX = this.startX - e.clientX;
+                const newPanelWidth = Math.max(minWidth, Math.min(maxWidth, this.startWidth + deltaX));
+                this.panel.style.flexBasis = `${newPanelWidth}px`;
+                this.adjustMainContentWidth(newPanelWidth, e.clientX);
+            }
+        };
 
-            const deltaX = this.startX - e.clientX;
-            const newPanelWidth = Math.max(minWidth, Math.min(maxWidth, this.startWidth + deltaX));
-
-            this.panel.style.flexBasis = `${newPanelWidth}px`;
-            this.adjustMainContentWidth(newPanelWidth, e.clientX);
-        });
-
-        document.addEventListener('mouseup', () => {
+        const onPointerUp = () => {
             if (this.isResizing) {
                 this.isResizing = false;
                 document.body.style.userSelect = '';
-                // Save the current width
-                const currentWidth = this.panel.offsetWidth;
-                this.saveWidth(currentWidth);
+                if (this.isMobile) {
+                    this.saveHeight(this.panel.offsetHeight);
+                } else {
+                    this.saveWidth(this.panel.offsetWidth);
+                }
             }
-        });
+        };
+
+        // Mouse events
+        this.resizer.addEventListener('mousedown', onPointerDown);
+        document.addEventListener('mousemove', onPointerMove);
+        document.addEventListener('mouseup', onPointerUp);
+
+        // Touch events for mobile
+        this.resizer.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                onPointerDown({
+                    clientX: e.touches[0].clientX,
+                    clientY: e.touches[0].clientY,
+                    preventDefault: () => e.preventDefault()
+                });
+            }
+        }, { passive: false });
+
+        document.addEventListener('touchmove', (e) => {
+            if (this.isResizing && e.touches.length === 1) {
+                onPointerMove({
+                    clientX: e.touches[0].clientX,
+                    clientY: e.touches[0].clientY
+                });
+            }
+        }, { passive: false });
+
+        document.addEventListener('touchend', onPointerUp);
     }
 
     setupWindowResizeHandler() {
         if (!this.panel || !this.mainWrapper) return;
 
         window.addEventListener('resize', () => {
-            if (this.isVisible) {
+            if (this.isVisible && !this.isMobile) {
                 const maxAvailableWidth = this.mainWrapper.offsetWidth - this.resizerWidth;
                 const {minWidth, maxWidth} = this.calculatePanelConstraints(maxAvailableWidth);
                 const currentWidth = this.panel.offsetWidth;
@@ -434,27 +541,47 @@ class SummaryPanel {
         if (!this.panel || !this.resizer || !this.mainWrapper) return;
 
         const hnTable = document.querySelector('#hnmain');
+        const hnContentContainer = document.querySelector('.hn-content-container');
         if (!this.isVisible) {
-            const maxAvailableWidth = this.mainWrapper.offsetWidth - this.resizerWidth;
-            const {minWidth, maxWidth} = this.calculatePanelConstraints(maxAvailableWidth);
-
-            // Load saved width or use minWidth as default
-            const savedWidth = await this.loadSavedWidth();
-            const width = savedWidth
-                ? Math.max(minWidth, Math.min(maxWidth, savedWidth))
-                : minWidth;
-            this.panel.style.flexBasis = `${width}px`;
+            if (this.isMobile) {
+                // Mobile: bottom panel with height
+                const savedHeight = await this.loadSavedHeight();
+                const viewportHeight = window.innerHeight;
+                const height = savedHeight
+                    ? Math.max(viewportHeight * 0.2, Math.min(viewportHeight * 0.7, savedHeight))
+                    : viewportHeight * 0.4;
+                this.panel.style.height = `${height}px`;
+                this.panel.style.flexBasis = '';
+                if (hnContentContainer) hnContentContainer.classList.add('has-bottom-panel');
+            } else {
+                // Desktop: side panel with width
+                const maxAvailableWidth = this.mainWrapper.offsetWidth - this.resizerWidth;
+                const {minWidth, maxWidth} = this.calculatePanelConstraints(maxAvailableWidth);
+                const savedWidth = await this.loadSavedWidth();
+                const width = savedWidth
+                    ? Math.max(minWidth, Math.min(maxWidth, savedWidth))
+                    : minWidth;
+                this.panel.style.flexBasis = `${width}px`;
+                this.panel.style.height = '';
+            }
 
             this.panel.style.display = 'flex';
-            this.resizer.style.display = 'block';
+            this.resizer.style.display = this.isMobile ? 'flex' : 'block';
 
-            if (hnTable) hnTable.style.minWidth = '0';
+            if (hnTable && !this.isMobile) hnTable.style.minWidth = '0';
+
+            // Position resizer above panel on mobile
+            if (this.isMobile) {
+                requestAnimationFrame(() => this.updateResizerPosition());
+            }
 
             // Notify visibility change
             if (this.onVisibilityChange) this.onVisibilityChange(true);
         } else {
             this.panel.style.display = 'none';
             this.resizer.style.display = 'none';
+
+            if (hnContentContainer) hnContentContainer.classList.remove('has-bottom-panel');
 
             if (hnTable) {
                 hnTable.style.removeProperty('min-width');
@@ -464,6 +591,8 @@ class SummaryPanel {
             // Notify visibility change
             if (this.onVisibilityChange) this.onVisibilityChange(false);
         }
+
+        this.updateMobileChipVisibility();
     }
 
     async saveWidth(width) {
@@ -479,6 +608,23 @@ class SummaryPanel {
             return await storage.getItem(STORAGE_KEY_PANEL_WIDTH);
         } catch (err) {
             console.error('Failed to load panel width:', err);
+            return null;
+        }
+    }
+
+    async saveHeight(height) {
+        try {
+            await storage.setItem(STORAGE_KEY_PANEL_HEIGHT, height);
+        } catch (err) {
+            console.error('Failed to save panel height:', err);
+        }
+    }
+
+    async loadSavedHeight() {
+        try {
+            return await storage.getItem(STORAGE_KEY_PANEL_HEIGHT);
+        } catch (err) {
+            console.error('Failed to load panel height:', err);
             return null;
         }
     }

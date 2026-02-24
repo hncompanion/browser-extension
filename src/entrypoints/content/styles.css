@@ -851,3 +851,141 @@
     text-decoration: underline;
 }
 
+/* ==================== Mobile Responsive ==================== */
+
+/* Mobile reopen chip (shown when panel is closed on mobile) */
+.mobile-pane-actions {
+    position: fixed;
+    right: calc(16px + env(safe-area-inset-right));
+    bottom: calc(16px + env(safe-area-inset-bottom));
+    display: none;
+    gap: 8px;
+    z-index: 1002;
+}
+
+.summary-reopen-chip {
+    border: 1px solid #d85800;
+    border-radius: 999px;
+    padding: 8px 14px;
+    background-color: #ff6600;
+    color: #ffffff;
+    font-family: Verdana, Geneva, sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+}
+
+.summary-reopen-chip:active {
+    background-color: #e55b00;
+}
+
+@media only screen and (max-width: 768px) {
+    /* On mobile, HN content needs bottom padding to avoid being hidden behind panel */
+    .hn-content-container {
+        padding-bottom: 0;
+        transition: padding-bottom 0.3s ease;
+    }
+
+    .hn-content-container.has-bottom-panel {
+        padding-bottom: 42vh;
+    }
+
+    /* Horizontal resizer for bottom panel — fixed to viewport */
+    .panel-resizer {
+        position: fixed;
+        bottom: 40vh;
+        left: 0;
+        right: 0;
+        flex: none;
+        width: 100% !important;
+        height: 16px !important;
+        top: auto;
+        cursor: row-resize;
+        touch-action: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1001;
+    }
+
+    .panel-resizer::after {
+        position: static;
+        left: auto;
+        top: auto;
+        width: 40px;
+        height: 4px;
+        border-radius: 2px;
+        transform: none;
+        opacity: 1;
+    }
+
+    /* Bottom panel — fixed to viewport bottom */
+    .summary-panel {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        top: auto;
+        flex: none;
+        width: 100% !important;
+        height: 40vh !important;
+        min-height: 200px;
+        align-self: stretch;
+        box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+        z-index: 1001;
+    }
+
+    /* Hide branding on mobile, keep controls right-aligned */
+    .summary-panel-branding {
+        display: none;
+    }
+
+    .summary-panel-header {
+        padding: 0 12px;
+    }
+
+    .summary-panel-header-top {
+        justify-content: flex-end;
+        margin-bottom: 4px;
+    }
+
+    /* Larger font for readability */
+    .summary-panel-content {
+        padding: 12px;
+    }
+
+    .summary-text {
+        font-size: 14px;
+    }
+
+    /* Larger touch targets */
+    .summary-panel-icon-btn {
+        min-width: 40px;
+        min-height: 40px;
+        padding: 8px;
+    }
+
+    /* Safe area for footer */
+    .summary-panel-footer {
+        padding-bottom: calc(8px + env(safe-area-inset-bottom));
+    }
+
+    /* Show mobile actions when panel is closed */
+    .mobile-pane-actions.visible {
+        display: flex;
+    }
+
+    /* Help icon: avoid overlap with mobile chip */
+    .help-icon {
+        bottom: 60px;
+    }
+}
+
+/* Tablet adjustments */
+@media only screen and (min-width: 769px) and (max-width: 1024px) {
+    .summary-panel {
+        flex: 0 1 300px;
+    }
+}
+
