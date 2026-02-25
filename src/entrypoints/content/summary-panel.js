@@ -377,32 +377,65 @@ class SummaryPanel {
         return container;
     }
 
+    getMobileHeightConstraints() {
+        const viewportHeight = window.innerHeight;
+        return {
+            minHeight: viewportHeight * 0.2,
+            maxHeight: viewportHeight * 0.7,
+            defaultHeight: viewportHeight * 0.4
+        };
+    }
+
+    clampMobileHeight(height) {
+        const { minHeight, maxHeight } = this.getMobileHeightConstraints();
+        return Math.max(minHeight, Math.min(maxHeight, height));
+    }
+
+    applyMobilePanelHeight(height) {
+        if (!this.panel || !this.resizer) return;
+        const clampedHeight = this.clampMobileHeight(height);
+        const hnContentContainer = document.querySelector('.hn-content-container');
+
+        this.panel.style.height = `${clampedHeight}px`;
+        this.resizer.style.bottom = `${clampedHeight}px`;
+
+        if (hnContentContainer) {
+            hnContentContainer.classList.add('has-bottom-panel');
+            hnContentContainer.style.setProperty('--hnc-panel-height', `${clampedHeight}px`);
+        }
+    }
+
+    clearMobileLayoutState() {
+        const hnContentContainer = document.querySelector('.hn-content-container');
+        if (!hnContentContainer) return;
+        hnContentContainer.classList.remove('has-bottom-panel');
+        hnContentContainer.style.removeProperty('--hnc-panel-height');
+    }
+
     onMobileChange() {
         if (!this.panel || !this.resizer) return;
-        const hnContentContainer = document.querySelector('.hn-content-container');
+
         if (this.isVisible) {
             if (this.isMobile) {
                 this.panel.style.flexBasis = '';
-                this.panel.style.height = '40vh';
-                this.updateResizerPosition();
-                if (hnContentContainer) hnContentContainer.classList.add('has-bottom-panel');
+                const height = this.panel.offsetHeight || this.getMobileHeightConstraints().defaultHeight;
+                this.applyMobilePanelHeight(height);
             } else {
                 this.panel.style.height = '';
-                if (hnContentContainer) hnContentContainer.classList.remove('has-bottom-panel');
+                this.clearMobileLayoutState();
                 const maxAvailableWidth = this.mainWrapper.offsetWidth - this.resizerWidth;
                 const {minWidth} = this.calculatePanelConstraints(maxAvailableWidth);
                 this.panel.style.flexBasis = `${minWidth}px`;
             }
         } else {
-            if (hnContentContainer) hnContentContainer.classList.remove('has-bottom-panel');
+            this.clearMobileLayoutState();
         }
         this.updateMobileChipVisibility();
     }
 
     updateResizerPosition() {
         if (!this.isMobile || !this.resizer) return;
-        const panelHeight = this.panel.offsetHeight;
-        this.resizer.style.bottom = `${panelHeight}px`;
+        this.applyMobilePanelHeight(this.panel.offsetHeight);
     }
 
     updateMobileChipVisibility() {
@@ -433,13 +466,9 @@ class SummaryPanel {
 
             if (this.isMobile) {
                 // Vertical resize for bottom panel
-                const viewportHeight = window.innerHeight;
-                const minHeight = viewportHeight * 0.2;
-                const maxHeight = viewportHeight * 0.7;
                 const deltaY = this.startY - e.clientY;
-                const newHeight = Math.max(minHeight, Math.min(maxHeight, this.startHeight + deltaY));
-                this.panel.style.height = `${newHeight}px`;
-                this.resizer.style.bottom = `${newHeight}px`;
+                const newHeight = this.startHeight + deltaY;
+                this.applyMobilePanelHeight(newHeight);
             } else {
                 // Horizontal resize for side panel
                 const maxAvailableWidth = this.mainWrapper.offsetWidth - this.resizerWidth;
@@ -505,6 +534,8 @@ class SummaryPanel {
                 } else if (currentWidth > maxWidth) {
                     this.panel.style.flexBasis = `${maxWidth}px`;
                 }
+            } else if (this.isVisible && this.isMobile) {
+                this.applyMobilePanelHeight(this.panel.offsetHeight);
             }
         });
     }
@@ -547,20 +578,17 @@ class SummaryPanel {
         if (!this.panel || !this.resizer || !this.mainWrapper) return;
 
         const hnTable = document.querySelector('#hnmain');
-        const hnContentContainer = document.querySelector('.hn-content-container');
         if (!this.isVisible) {
             if (this.isMobile) {
                 // Mobile: bottom panel with height
                 const savedHeight = await this.loadSavedHeight();
-                const viewportHeight = window.innerHeight;
-                const height = savedHeight
-                    ? Math.max(viewportHeight * 0.2, Math.min(viewportHeight * 0.7, savedHeight))
-                    : viewportHeight * 0.4;
-                this.panel.style.height = `${height}px`;
+                const {defaultHeight} = this.getMobileHeightConstraints();
+                const height = savedHeight ?? defaultHeight;
                 this.panel.style.flexBasis = '';
-                if (hnContentContainer) hnContentContainer.classList.add('has-bottom-panel');
+                this.applyMobilePanelHeight(height);
             } else {
                 // Desktop: side panel with width
+                this.clearMobileLayoutState();
                 const maxAvailableWidth = this.mainWrapper.offsetWidth - this.resizerWidth;
                 const {minWidth, maxWidth} = this.calculatePanelConstraints(maxAvailableWidth);
                 const savedWidth = await this.loadSavedWidth();
@@ -586,8 +614,7 @@ class SummaryPanel {
         } else {
             this.panel.style.display = 'none';
             this.resizer.style.display = 'none';
-
-            if (hnContentContainer) hnContentContainer.classList.remove('has-bottom-panel');
+            this.clearMobileLayoutState();
 
             if (hnTable) {
                 hnTable.style.removeProperty('min-width');
