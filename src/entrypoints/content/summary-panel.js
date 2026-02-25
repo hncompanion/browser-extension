@@ -254,7 +254,7 @@ class SummaryPanel {
         generateLink.className = 'summary-generate-link';
         generateLink.href = '#';
         generateLink.title = 'Generate fresh summary using the LLM configured in settings';
-        generateLink.innerHTML = `${ICONS.refresh} Regenerate with your LLM`;
+        generateLink.innerHTML = `${ICONS.refresh} Regenerate`;
         generateLink.addEventListener('click', (e) => {
             e.preventDefault();
             if (this.onRefresh) this.onRefresh();
@@ -758,7 +758,7 @@ class SummaryPanel {
         if (metadata.provider) {
             if (metadata.statusText) {
                 const sep = document.createElement('span');
-                sep.className = 'summary-metadata-separator';
+                sep.className = 'summary-metadata-separator summary-metadata-provider-separator';
                 sep.textContent = ' | ';
                 container.appendChild(sep);
             }
@@ -767,11 +767,11 @@ class SummaryPanel {
                 link.href = metadata.providerUrl;
                 link.target = '_blank';
                 link.textContent = metadata.provider;
-                link.className = 'summary-metadata-provider-link';
+                link.className = 'summary-metadata-provider-link summary-metadata-provider';
                 container.appendChild(link);
             } else {
                 const span = document.createElement('span');
-                span.className = 'summary-metadata-primary';
+                span.className = 'summary-metadata-primary summary-metadata-provider';
                 span.textContent = metadata.provider;
                 container.appendChild(span);
             }
@@ -794,14 +794,14 @@ class SummaryPanel {
         if (metadata.provider) {
             if (metadata.generationTime) {
                 const sep = document.createElement('span');
-                sep.className = 'summary-metadata-separator';
+                sep.className = 'summary-metadata-separator summary-metadata-provider-separator';
                 sep.textContent = ' | ';
                 container.appendChild(sep);
             }
             // Render provider as a link that opens settings
             const providerLink = document.createElement('a');
             providerLink.href = '#';
-            providerLink.className = 'summary-metadata-provider-link';
+            providerLink.className = 'summary-metadata-provider-link summary-metadata-provider';
             providerLink.textContent = metadata.provider;
             providerLink.title = 'Open settings to configure LLM provider';
             providerLink.addEventListener('click', (e) => {

@@ -991,3 +991,10 @@
         flex: 0 1 300px;
     }
 }
+
+@media only screen and (max-width: 420px) {
+    .summary-metadata-provider,
+    .summary-metadata-provider-separator {
+        display: none;
+    }
+}
