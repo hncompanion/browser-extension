@@ -116,6 +116,12 @@ class SummaryPanel {
         panel.appendChild(content);
         panel.appendChild(footer);
 
+        // HN's inline click handler assumes `event.target.className` is a string.
+        // Our SVG icons expose `className` as an object, so keep panel clicks local.
+        panel.addEventListener('click', (event) => {
+            event.stopPropagation();
+        });
+
         return panel;
     }
 
