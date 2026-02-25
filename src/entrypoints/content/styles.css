@@ -945,12 +945,35 @@
     }
 
     .summary-panel-header {
+        position: relative;
         padding: 0 12px;
     }
 
     .summary-panel-header-top {
-        justify-content: flex-end;
-        margin-bottom: 4px;
+        position: absolute;
+        top: 2px;
+        right: 8px;
+        margin-bottom: 0;
+        pointer-events: none;
+    }
+
+    .summary-panel-controls {
+        pointer-events: auto;
+    }
+
+    .summary-panel-settings-btn,
+    .summary-panel-help-btn {
+        display: none;
+    }
+
+    .summary-panel-icon-btn.summary-panel-close-btn {
+        min-width: 32px;
+        min-height: 32px;
+        padding: 6px;
+    }
+
+    .summary-panel-tabs {
+        padding-right: 36px;
     }
 
     /* Larger font for readability */
