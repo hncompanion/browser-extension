@@ -1006,9 +1006,9 @@
         display: flex;
     }
 
-    /* Help icon: avoid overlap with mobile chip */
+    /* Hide keyboard-shortcut help icon on mobile */
     .help-icon {
-        bottom: 60px;
+        display: none !important;
     }
 }
 
