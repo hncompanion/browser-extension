@@ -1,21 +1,21 @@
 {
   "type": "module",
   "devDependencies": {
-    "@ai-sdk/anthropic": "^2.0.56",
-    "@ai-sdk/google": "^2.0.51",
-    "@ai-sdk/openai": "^2.0.88",
+    "@ai-sdk/anthropic": "^3.0.66",
+    "@ai-sdk/google": "^3.0.58",
+    "@ai-sdk/openai": "^3.0.50",
     "@google/generative-ai": "^0.24.1",
-    "@openrouter/ai-sdk-provider": "^1.5.4",
+    "@openrouter/ai-sdk-provider": "^2.3.3",
     "@tailwindcss/aspect-ratio": "^0.4.2",
     "@tailwindcss/forms": "^0.5.11",
-    "@tailwindcss/vite": "^4.1.18",
-    "@tailwindplus/elements": "^1.0.21",
-    "ai": "^5.0.116",
-    "dompurify": "^3.3.1",
-    "jsdom": "^26.0.0",
-    "marked": "^17.0.1",
-    "tailwindcss": "^4.1.18",
-    "wxt": "^0.20.14"
+    "@tailwindcss/vite": "^4.2.2",
+    "@tailwindplus/elements": "^1.0.22",
+    "ai": "^6.0.146",
+    "dompurify": "^3.3.3",
+    "jsdom": "^29.0.1",
+    "marked": "^17.0.6",
+    "tailwindcss": "^4.2.2",
+    "wxt": "^0.20.20"
   },
   "scripts": {
     "dev": "NODE_OPTIONS=\"--localstorage-file=$(pwd)/.wxt/node-localstorage\" wxt",
@@ -26,5 +26,10 @@
     "zip:firefox": "NODE_OPTIONS=\"--localstorage-file=$(pwd)/.wxt/node-localstorage\" wxt zip -b firefox --mv3",
     "test": "node --test 'tests/**/*.test.js'"
   },
-  "packageManager": "pnpm@10.2.0+sha512.0d27364e0139c6aadeed65ada153135e0ca96c8da42123bd50047f961339dc7a758fc2e944b428f52be570d1bd3372455c1c65fa2e7aa0bfbf931190f9552001"
+  "packageManager": "pnpm@10.2.0+sha512.0d27364e0139c6aadeed65ada153135e0ca96c8da42123bd50047f961339dc7a758fc2e944b428f52be570d1bd3372455c1c65fa2e7aa0bfbf931190f9552001",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
 }
