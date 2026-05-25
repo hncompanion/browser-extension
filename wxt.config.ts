@@ -22,6 +22,7 @@ export default defineConfig({
                 "https://api.anthropic.com/*",
                 "https://openrouter.ai/*",
                 "https://generativelanguage.googleapis.com/*",
+                "http://localhost:11434/*",
                 "https://ollama.com/*"
             ],
             icons: {
