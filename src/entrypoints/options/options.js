@@ -36,6 +36,9 @@ function getOllamaCardId(providerId) {
 }
 
 async function hasOptionalHostPermissions(origins) {
+    if (!origins || origins.length === 0) {
+        return true;
+    }
     if (!browser.permissions?.contains) {
         return true;
     }
