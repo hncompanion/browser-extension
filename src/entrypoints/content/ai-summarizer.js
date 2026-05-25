@@ -5,7 +5,7 @@
 
 import {storage} from '#imports';
 import {Logger} from "../../lib/utils.js";
-import {sendBackgroundMessage} from "../../lib/messaging.js";
+import {sendBackgroundMessage, sendStreamingMessage} from "../../lib/messaging.js";
 import {AI_SYSTEM_PROMPT, AI_USER_PROMPT_TEMPLATE} from './constants.js';
 // Import generic utilities from lib
 import {buildFragment, createStrong, createInternalLink, createExternalLink} from '../../lib/dom-utils.js';
@@ -366,7 +366,7 @@ export function formatSummaryError(error) {
  * @param {Function} onError - Error callback (error)
  * @param {string} postTitle - Title of the post
  */
-export async function summarizeTextWithLLM(aiProvider, modelId, apiKey, text, commentPathToIdMap, onSuccess, onError, postTitle) {
+export async function summarizeTextWithLLM(aiProvider, modelId, apiKey, text, commentPathToIdMap, onSuccess, onError, postTitle, onChunk) {
     if (!text || !aiProvider || !modelId || !apiKey) {
         await Logger.error('Missing required parameters for AI summarization');
         onError(new Error('Missing AI configuration'));
@@ -398,16 +398,29 @@ export async function summarizeTextWithLLM(aiProvider, modelId, apiKey, text, co
         parameters,
     };
 
-    sendBackgroundMessage('HN_SUMMARIZE', llmInput).then(data => {
-        const summary = data?.summary;
-        if (!summary) {
-            throw new Error('Empty summary returned from background message HN_SUMMARIZE. data: ' + JSON.stringify(data));
-        }
-        onSuccess(summary, data.duration, commentPathToIdMap);
-    }).catch(error => {
-        Logger.errorSync('LLM summarization failed in summarizeTextWithLLM(). Error:', error.message);
-        onError(error);
-    });
+    if (onChunk) {
+        sendStreamingMessage('HN_STREAM_SUMMARIZE', llmInput, onChunk).then(data => {
+            const summary = data?.summary;
+            if (!summary) {
+                throw new Error('Empty summary returned from streaming');
+            }
+            onSuccess(summary, data.duration, commentPathToIdMap);
+        }).catch(error => {
+            Logger.errorSync('LLM streaming failed:', error.message);
+            onError(error);
+        });
+    } else {
+        sendBackgroundMessage('HN_SUMMARIZE', llmInput).then(data => {
+            const summary = data?.summary;
+            if (!summary) {
+                throw new Error('Empty summary returned from background message HN_SUMMARIZE. data: ' + JSON.stringify(data));
+            }
+            onSuccess(summary, data.duration, commentPathToIdMap);
+        }).catch(error => {
+            Logger.errorSync('LLM summarization failed in summarizeTextWithLLM(). Error:', error.message);
+            onError(error);
+        });
+    }
 }
 
 /**
@@ -420,7 +433,7 @@ export async function summarizeTextWithLLM(aiProvider, modelId, apiKey, text, co
  * @param {Function} onError - Error callback (error)
  * @param {string} postTitle - Title of the post
  */
-export async function summarizeUsingOllama(text, model, ollamaUrl, commentPathToIdMap, onSuccess, onError, postTitle, apiKey) {
+export async function summarizeUsingOllama(text, model, ollamaUrl, commentPathToIdMap, onSuccess, onError, postTitle, apiKey, onChunk) {
     if (!text || !model) {
         await Logger.error('Missing required parameters for Ollama summarization');
         onError(new Error('Missing Ollama configuration'));
@@ -431,17 +444,32 @@ export async function summarizeUsingOllama(text, model, ollamaUrl, commentPathTo
     const systemMessage = await getSystemMessage();
     const userMessage = await getUserMessage(postTitle, text);
 
-    const payload = {
-        model: model,
-        system: systemMessage,
-        prompt: userMessage,
-        stream: false
-    };
-
     const headers = { 'Content-Type': 'application/json' };
     if (apiKey) {
         headers['Authorization'] = `Bearer ${apiKey}`;
     }
+
+    // Ollama Cloud: stream via port
+    if (apiKey && onChunk) {
+        const payload = { model, system: systemMessage, prompt: userMessage, stream: true };
+        sendStreamingMessage('HN_STREAM_OLLAMA', {
+            url: endpoint, method: 'POST', headers,
+            body: JSON.stringify(payload), timeout: 180_000
+        }, onChunk).then(data => {
+            const summary = data?.summary;
+            if (!summary) {
+                throw new Error('No summary generated from streaming Ollama response');
+            }
+            onSuccess(summary, data.duration, commentPathToIdMap);
+        }).catch(error => {
+            Logger.errorSync('Ollama Cloud streaming failed:', error.message);
+            onError(error);
+        });
+        return;
+    }
+
+    // Ollama Local: single-shot fetch
+    const payload = { model, system: systemMessage, prompt: userMessage, stream: false };
 
     sendBackgroundMessage('FETCH_API_REQUEST', {
         url: endpoint,

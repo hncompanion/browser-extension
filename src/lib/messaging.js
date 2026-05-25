@@ -41,3 +41,38 @@ export async function sendBackgroundMessage(type, data) {
     responseData.duration = duration;
     return responseData;
 }
+
+export function sendStreamingMessage(type, data, onChunk) {
+    return new Promise((resolve, reject) => {
+        const startTime = performance.now();
+        const port = browser.runtime.connect({ name: 'HN_STREAM' });
+
+        port.onMessage.addListener((message) => {
+            switch (message.type) {
+                case 'chunk':
+                    onChunk(message.delta);
+                    break;
+                case 'done': {
+                    const duration = Math.round((performance.now() - startTime) / 1000);
+                    port.disconnect();
+                    resolve({ summary: message.text, duration });
+                    break;
+                }
+                case 'error': {
+                    port.disconnect();
+                    reject(new Error(message.error));
+                    break;
+                }
+            }
+        });
+
+        port.onDisconnect.addListener(() => {
+            const error = browser.runtime.lastError;
+            if (error) {
+                reject(new Error(error.message || 'Port disconnected'));
+            }
+        });
+
+        port.postMessage({ type, data });
+    });
+}

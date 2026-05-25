@@ -578,13 +578,27 @@ class HNEnhancer {
             formattedComment = stripAnchors(formattedComment);
             const postTitle = this.getHNPostTitle();
 
+            let streamingStarted = false;
+            const onChunk = (delta) => {
+                if (!streamingStarted) {
+                    streamingStarted = true;
+                    this.summaryPanel.updateMetadataRow({
+                        state: 'streaming',
+                        provider: `${aiProvider}/${model || ''}`
+                    });
+                }
+                this.summaryPanel.appendStreamingText(delta);
+            };
+
             const onSuccess = (summary, duration, pathMap) => {
+                this.summaryPanel.finishStreaming();
                 this.showSummaryInPanel(summary, false, duration, pathMap, itemId).catch(error => {
                     Logger.errorSync('Error showing summary:', error);
                 });
             };
 
             const onError = (error) => {
+                this.summaryPanel.finishStreaming();
                 this.handleSummaryError(error);
             };
 
@@ -604,6 +618,7 @@ class HNEnhancer {
                         formattedComment, model, ollamaUrl, commentPathToIdMap,
                         onSuccess,
                         (error) => {
+                            this.summaryPanel.finishStreaming();
                             const errorFragment = createOllamaErrorMessage(error);
                             this.summaryPanel.updateContent({
                                 text: errorFragment,
@@ -612,7 +627,8 @@ class HNEnhancer {
                             this.attachErrorActionListeners();
                         },
                         postTitle,
-                        ollamaApiKey
+                        ollamaApiKey,
+                        ollamaCloud ? onChunk : undefined
                     );
                     break;
                 case 'openai':
@@ -622,7 +638,8 @@ class HNEnhancer {
                     const apiKey = settings?.[aiProvider]?.apiKey;
                     await summarizeTextWithLLM(
                         aiProvider, model, apiKey, formattedComment, commentPathToIdMap,
-                        onSuccess, onError, postTitle
+                        onSuccess, onError, postTitle,
+                        onChunk
                     );
                     break;
                 default:
