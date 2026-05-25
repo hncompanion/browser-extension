@@ -383,16 +383,15 @@ async function fetchOllamaModels() {
             }
         }
     } catch (error) {
-        // Ollama not running is expected - user may not have started it yet
-        // Only log at debug level to avoid noise
-        await Logger.debug('Could not fetch Ollama models (Ollama may not be running):', error.message);
-        // Handle error by adding a helpful status option
+        await Logger.debug('Could not fetch Ollama models:', error.message);
         const selectElement = document.getElementById('ollama-model');
-        selectElement.options.length = 0
+        selectElement.options.length = 0;
 
         const option = document.createElement('option');
         option.value = '';
-        option.textContent = 'Ollama not running';
+        option.textContent = error.message?.includes('403')
+            ? 'CORS blocked — see setup guide above'
+            : 'Ollama not running';
         selectElement.appendChild(option);
     }
 }

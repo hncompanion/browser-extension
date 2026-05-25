@@ -496,21 +496,14 @@ export async function summarizeUsingOllama(text, model, ollamaUrl, commentPathTo
  * @returns {DocumentFragment|string}
  */
 export function createOllamaErrorMessage(error) {
-    // For 403 errors, show detailed CORS instructions using markdown
     if (error.message?.includes('403')) {
-        const errorMarkdown = `Ollama blocked the request (likely a CORS or server configuration issue).
-
-**To fix:**
-
-1. Restart Ollama with CORS enabled:
-   \`\`\`
-   OLLAMA_ORIGINS="chrome-extension://*,moz-extension://*" ollama serve
-   \`\`\`
-
-2. Verify the Ollama URL in the extension settings and ensure Ollama is running.
-
-*If the problem continues, check Ollama logs or the extension settings for more details.*`;
-        return createSummaryFragment(errorMarkdown, new Map());
+        return createErrorElement({
+            type: 'network',
+            title: 'Ollama Blocked the Request',
+            description: 'Ollama rejected the request because the browser extension origin is not allowed. You need to start Ollama with CORS enabled.',
+            action: { label: 'Open Settings', id: 'error-open-settings' },
+            hint: 'Run: <code>OLLAMA_ORIGINS="chrome-extension://*,moz-extension://*" ollama serve</code><br>See the setup guide in extension settings for Windows instructions.'
+        });
     }
 
     // For network errors, use the styled error element
