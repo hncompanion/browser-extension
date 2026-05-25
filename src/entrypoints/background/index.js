@@ -9,6 +9,8 @@ export default defineBackground(() => {
         serverCacheEnabled: true,
         providerSelection: 'google',
         ollama: {
+            cloud: false,
+            apiKey: '',
             model: ''
         },
         google: {

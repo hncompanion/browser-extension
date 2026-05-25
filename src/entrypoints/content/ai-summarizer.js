@@ -420,7 +420,7 @@ export async function summarizeTextWithLLM(aiProvider, modelId, apiKey, text, co
  * @param {Function} onError - Error callback (error)
  * @param {string} postTitle - Title of the post
  */
-export async function summarizeUsingOllama(text, model, ollamaUrl, commentPathToIdMap, onSuccess, onError, postTitle) {
+export async function summarizeUsingOllama(text, model, ollamaUrl, commentPathToIdMap, onSuccess, onError, postTitle, apiKey) {
     if (!text || !model) {
         await Logger.error('Missing required parameters for Ollama summarization');
         onError(new Error('Missing Ollama configuration'));
@@ -438,12 +438,15 @@ export async function summarizeUsingOllama(text, model, ollamaUrl, commentPathTo
         stream: false
     };
 
+    const headers = { 'Content-Type': 'application/json' };
+    if (apiKey) {
+        headers['Authorization'] = `Bearer ${apiKey}`;
+    }
+
     sendBackgroundMessage('FETCH_API_REQUEST', {
         url: endpoint,
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify(payload),
         timeout: 180_000
     })
