@@ -628,7 +628,7 @@ class HNEnhancer {
                         },
                         postTitle,
                         ollamaApiKey,
-                        ollamaCloud ? onChunk : undefined
+                        onChunk
                     );
                     break;
                 case 'openai':

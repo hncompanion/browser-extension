@@ -449,8 +449,7 @@ export async function summarizeUsingOllama(text, model, ollamaUrl, commentPathTo
         headers['Authorization'] = `Bearer ${apiKey}`;
     }
 
-    // Ollama Cloud: stream via port
-    if (apiKey && onChunk) {
+    if (onChunk) {
         const payload = { model, system: systemMessage, prompt: userMessage, stream: true };
         sendStreamingMessage('HN_STREAM_OLLAMA', {
             url: endpoint, method: 'POST', headers,
@@ -462,29 +461,26 @@ export async function summarizeUsingOllama(text, model, ollamaUrl, commentPathTo
             }
             onSuccess(summary, data.duration, commentPathToIdMap);
         }).catch(error => {
-            Logger.errorSync('Ollama Cloud streaming failed:', error.message);
+            Logger.errorSync('Ollama streaming failed:', error.message);
             onError(error);
         });
         return;
     }
 
-    // Ollama Local: single-shot fetch
     const payload = { model, system: systemMessage, prompt: userMessage, stream: false };
-
     sendBackgroundMessage('FETCH_API_REQUEST', {
         url: endpoint,
         method: 'POST',
         headers,
         body: JSON.stringify(payload),
         timeout: 180_000
-    })
-        .then(data => {
-            const summary = data.response;
-            if (!summary) {
-                throw new Error('No summary generated from API response');
-            }
-            onSuccess(summary, data.duration, commentPathToIdMap);
-        }).catch(error => {
+    }).then(data => {
+        const summary = data.response;
+        if (!summary) {
+            throw new Error('No summary generated from API response');
+        }
+        onSuccess(summary, data.duration, commentPathToIdMap);
+    }).catch(error => {
         Logger.errorSync('Error in Ollama summarization:', error);
         onError(error);
     });
