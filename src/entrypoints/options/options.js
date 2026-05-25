@@ -14,7 +14,7 @@ const OPTIONAL_HOST_PERMISSIONS = {
     anthropic: ['https://api.anthropic.com/*'],
     openrouter: ['https://openrouter.ai/*'],
     google: ['https://generativelanguage.googleapis.com/*'],
-    ollama: ['http://localhost:11434/*'],
+    ollama: [],
     'ollama-cloud': ['https://ollama.com/*'],
 };
 
