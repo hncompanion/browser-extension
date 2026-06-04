@@ -75,7 +75,8 @@
                                     <select id="active-provider" name="active-provider"
                                             class="col-start-1 row-start-1 w-48 appearance-none rounded-md bg-white py-1.5 pl-3 pr-8 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:*:bg-gray-800 dark:focus-visible:outline-indigo-500">
                                         <option value="" selected>None</option>
-                                        <option value="ollama">Ollama (Local)</option>
+                                        <option value="ollama">Ollama [Local]</option>
+                                        <option value="ollama-cloud">Ollama [Cloud]</option>
                                         <option value="google">Google Gemini</option>
                                         <option value="anthropic">Anthropic</option>
                                         <option value="openai">OpenAI</option>
@@ -91,7 +92,7 @@
                         <div class="flex items-center">
                             <div aria-hidden="true" class="w-full border-t border-gray-300/70 dark:border-white/15"></div>
                             <div class="relative flex justify-center">
-                                <span class="px-2 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:bg-gray-900 dark:text-gray-400 whitespace-nowrap">LOCAL AI PROVIDER (Free Option)</span>
+                                <span id="ollama-section-label" class="px-2 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:bg-gray-900 dark:text-gray-400 whitespace-nowrap">LOCAL AI PROVIDER (Free Option)</span>
                             </div>
                             <div aria-hidden="true" class="w-full border-t border-gray-300/70 dark:border-white/15"></div>
                         </div>
@@ -151,19 +152,63 @@
                                         </svg>
                                     </button>
                                 </div>
-                                <p class="mt-2 ml-7 text-xs text-gray-500 dark:text-gray-400">Local models running on your machine. No API key required.</p>
+                                <p class="mt-2 ml-7 text-xs text-gray-500 dark:text-gray-400" id="ollama-subtitle">Local models running on your machine. No API key required.</p>
                                 <div class="mt-4 ml-7 space-y-4 hidden" id="ollama-body" data-provider-body="ollama">
-                                    <div>
-                                        <label for="ollama-url" class="block text-sm/6 font-medium text-gray-900 dark:text-white">Ollama Server URL</label>
-                                        <div class="mt-2">
-                                            <input type="url" name="ollama-url" id="ollama-url" value="http://localhost:11434" placeholder="http://localhost:11434"
-                                                   class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500 dark:focus-visible:outline-indigo-500">
+                                    <!-- Local / Cloud toggle -->
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-sm font-medium text-gray-900 dark:text-white">Mode</span>
+                                        <div class="inline-flex rounded-md shadow-sm" role="group">
+                                            <button type="button" id="ollama-mode-local"
+                                                    class="px-3 py-1 text-xs font-semibold rounded-l-md border border-gray-300 bg-indigo-600 text-white dark:border-gray-600"
+                                                    data-ollama-mode="local">Local</button>
+                                            <button type="button" id="ollama-mode-cloud"
+                                                    class="px-3 py-1 text-xs font-semibold rounded-r-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10"
+                                                    data-ollama-mode="cloud">Cloud</button>
                                         </div>
-                                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">The base URL of your Ollama server (default: http://localhost:11434)</p>
+                                        <input type="hidden" id="ollama-cloud" name="ollama-cloud" value="false">
                                     </div>
+
+                                    <!-- Local mode fields -->
+                                    <div id="ollama-local-fields">
+                                        <div>
+                                            <label for="ollama-url" class="block text-sm/6 font-medium text-gray-900 dark:text-white">Ollama Server URL</label>
+                                            <div class="mt-2">
+                                                <input type="url" name="ollama-url" id="ollama-url" value="http://localhost:11434" placeholder="http://localhost:11434"
+                                                       class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500 dark:focus-visible:outline-indigo-500">
+                                            </div>
+                                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">The base URL of your Ollama server (default: http://localhost:11434)</p>
+                                        </div>
+                                    </div>
+
+                                    <!-- Cloud mode fields -->
+                                    <div id="ollama-cloud-fields" class="hidden">
+                                        <div class="flex items-center gap-3">
+                                            <div class="relative grow">
+                                                <label for="ollama-key" class="sr-only">Enter Ollama API Key</label>
+                                                <input type="password"
+                                                       id="ollama-key"
+                                                       name="ollama-key"
+                                                       class="block w-full rounded-md bg-white px-3 py-1.5 pr-16 text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500 dark:focus:outline-indigo-500"
+                                                       placeholder="Enter Ollama API Key">
+                                                <button type="button" class="absolute inset-y-0 right-2 my-auto rounded-md px-2 text-xs font-semibold text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200" data-toggle-visibility="ollama-key" aria-pressed="false">Show</button>
+                                            </div>
+                                            <details class="relative">
+                                                <summary class="list-none text-gray-400 hover:text-gray-500 cursor-pointer">
+                                                    <svg class="size-5 sm:size-4" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                                                        <path fill-rule="evenodd" d="M15 8A7 7 0 1 1 1 8a7 7 0 0 1 14 0Zm-6 3.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM7.293 5.293a1 1 0 1 1 .99 1.667c-.459.134-1.033.566-1.033 1.29v.25a.75.75 0 1 0 1.5 0v-.115a2.5 2 0 1 0-2.518-4.153.75.75 0 1 0 1.061 1.06Z" clip-rule="evenodd"/>
+                                                    </svg>
+                                                </summary>
+                                                <div class="absolute right-0 mt-2 w-72 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-10 p-4 text-sm text-gray-600 dark:bg-gray-800 dark:text-white dark:outline-white/10 dark:focus:outline-indigo-500">
+                                                    🔑 Get your API key from <a href="https://ollama.com/settings/keys" target="_blank" class="underline">ollama.com/settings/keys</a>.
+                                                    <p class="pt-3">API key is securely stored in your browser's local storage and can sync across your devices with browser sync.</p>
+                                                </div>
+                                            </details>
+                                        </div>
+                                    </div>
+
                                     <div>
                                         <label for="ollama-model" class="block text-sm/6 font-medium text-gray-900 dark:text-white">Select Ollama Model
-                                            <span class="ml-3 inline-flex items-center rounded-md bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-800 ring-1 ring-inset ring-yellow-600/20">Make sure Ollama is running with CORS enabled</span>
+                                            <span id="ollama-cors-hint" class="ml-3 inline-flex items-center rounded-md bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-800 ring-1 ring-inset ring-yellow-600/20">Make sure Ollama is running with CORS enabled</span>
                                         </label>
                                         <div class="mt-3 grid grid-cols-1">
                                             <select id="ollama-model"

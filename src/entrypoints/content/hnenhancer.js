@@ -595,7 +595,11 @@ class HNEnhancer {
                     });
                     break;
                 case 'ollama':
-                    const ollamaUrl = settings?.ollama?.url || 'http://localhost:11434';
+                    const ollamaCloud = settings?.ollama?.cloud || false;
+                    const ollamaUrl = ollamaCloud
+                        ? 'https://ollama.com'
+                        : (settings?.ollama?.url || 'http://localhost:11434');
+                    const ollamaApiKey = ollamaCloud ? settings?.ollama?.apiKey : null;
                     await summarizeUsingOllama(
                         formattedComment, model, ollamaUrl, commentPathToIdMap,
                         onSuccess,
@@ -607,7 +611,8 @@ class HNEnhancer {
                             });
                             this.attachErrorActionListeners();
                         },
-                        postTitle
+                        postTitle,
+                        ollamaApiKey
                     );
                     break;
                 case 'openai':

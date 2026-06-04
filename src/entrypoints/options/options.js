@@ -7,6 +7,7 @@ import {Logger} from "../../lib/utils.js";
 import {sendBackgroundMessage} from "../../lib/messaging.js";
 
 const DEFAULT_OLLAMA_URL = 'http://localhost:11434';
+const OLLAMA_CLOUD_URL = 'https://ollama.com';
 
 const OPTIONAL_HOST_PERMISSIONS = {
     openai: ['https://api.openai.com/*'],
@@ -14,6 +15,7 @@ const OPTIONAL_HOST_PERMISSIONS = {
     openrouter: ['https://openrouter.ai/*'],
     google: ['https://generativelanguage.googleapis.com/*'],
     ollama: ['http://localhost:11434/*'],
+    'ollama-cloud': ['https://ollama.com/*'],
 };
 
 const PROVIDER_INPUT_SELECTORS = {
@@ -21,8 +23,17 @@ const PROVIDER_INPUT_SELECTORS = {
     anthropic: ['#anthropic-key', '#anthropic-model'],
     openai: ['#openai-key', '#openai-model'],
     openrouter: ['#openrouter-key', '#openrouter-model'],
-    ollama: ['#ollama-url', '#ollama-model'],
+    ollama: ['#ollama-url', '#ollama-model', '#ollama-key', '#ollama-cloud'],
+    'ollama-cloud': ['#ollama-url', '#ollama-model', '#ollama-key', '#ollama-cloud'],
 };
+
+function resolveOllamaProvider(providerId) {
+    return providerId === 'ollama-cloud' ? 'ollama' : providerId;
+}
+
+function getOllamaCardId(providerId) {
+    return (providerId === 'ollama' || providerId === 'ollama-cloud') ? 'ollama' : providerId;
+}
 
 async function hasOptionalHostPermissions(origins) {
     if (!browser.permissions?.contains) {
@@ -58,6 +69,69 @@ function setOllamaModelSelectStatus(text) {
     selectElement.appendChild(option);
 }
 
+function isOllamaCloudMode() {
+    return document.getElementById('ollama-cloud').value === 'true';
+}
+
+function setOllamaMode(isCloud) {
+    const localFields = document.getElementById('ollama-local-fields');
+    const cloudFields = document.getElementById('ollama-cloud-fields');
+    const corsHint = document.getElementById('ollama-cors-hint');
+    const subtitle = document.getElementById('ollama-subtitle');
+    const hiddenInput = document.getElementById('ollama-cloud');
+    const localBtn = document.getElementById('ollama-mode-local');
+    const cloudBtn = document.getElementById('ollama-mode-cloud');
+
+    hiddenInput.value = isCloud ? 'true' : 'false';
+
+    localFields.classList.toggle('hidden', isCloud);
+    cloudFields.classList.toggle('hidden', !isCloud);
+    if (corsHint) {
+        corsHint.style.display = isCloud ? 'none' : '';
+    }
+
+    if (subtitle) {
+        subtitle.textContent = isCloud
+            ? 'Run models on Ollama\'s cloud. API key required.'
+            : 'Local models running on your machine. No API key required.';
+    }
+
+    const sectionLabel = document.getElementById('ollama-section-label');
+    if (sectionLabel) {
+        sectionLabel.textContent = isCloud
+            ? 'OLLAMA CLOUD PROVIDER (API key required)'
+            : 'LOCAL AI PROVIDER (Free Option)';
+    }
+
+    const activeClasses = 'bg-indigo-600 text-white';
+    const inactiveClasses = 'bg-white text-gray-700 hover:bg-gray-50 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10';
+
+    [localBtn, cloudBtn].forEach(btn => {
+        btn.className = btn.className.replace(/bg-indigo-600|text-white|bg-white|text-gray-700|hover:bg-gray-50|dark:bg-white\/5|dark:text-gray-300|dark:hover:bg-white\/10/g, '').trim();
+    });
+
+    if (isCloud) {
+        cloudBtn.classList.add(...activeClasses.split(' '));
+        localBtn.classList.add(...inactiveClasses.split(' '));
+    } else {
+        localBtn.classList.add(...activeClasses.split(' '));
+        cloudBtn.classList.add(...inactiveClasses.split(' '));
+    }
+}
+
+function getOllamaEffectiveUrl() {
+    return isOllamaCloudMode()
+        ? OLLAMA_CLOUD_URL
+        : (document.getElementById('ollama-url').value.replace(/\/+$/, '') || DEFAULT_OLLAMA_URL);
+}
+
+function getOllamaFetchHeaders() {
+    if (!isOllamaCloudMode()) return {};
+    const apiKey = document.getElementById('ollama-key').value;
+    if (!apiKey) return {};
+    return { 'Authorization': `Bearer ${apiKey}` };
+}
+
 function setPromptCustomizationState(isEnabled) {
     const systemPromptTextarea = document.getElementById('system-prompt');
     const userPromptTextarea = document.getElementById('user-prompt');
@@ -86,9 +160,11 @@ function setPromptCustomizationState(isEnabled) {
 function updateActiveProviderBadge(providerId) {
     // Allow empty string (None) as a valid selection
     const activeProvider = PROVIDER_INPUT_SELECTORS[providerId] ? providerId : '';
+    const activeCardId = getOllamaCardId(activeProvider);
 
-    Object.keys(PROVIDER_INPUT_SELECTORS).forEach((provider) => {
-        const isActive = provider === activeProvider;
+    const cardProviders = ['ollama', 'google', 'anthropic', 'openai', 'openrouter'];
+    cardProviders.forEach((provider) => {
+        const isActive = provider === activeCardId;
         const chip = document.querySelector(`[data-provider-chip="${provider}"]`);
         const card = document.querySelector(`[data-provider-card="${provider}"]`);
 
@@ -97,7 +173,6 @@ function updateActiveProviderBadge(providerId) {
             chip.classList.toggle('inline-flex', isActive);
         }
 
-        // Highlight the active provider's card
         if (card) {
             card.classList.toggle('ring-2', isActive);
             card.classList.toggle('ring-indigo-500/40', isActive);
@@ -127,7 +202,8 @@ async function toggleProviderCard(providerId) {
 
     // If expanding Ollama, fetch models
     if (providerId === 'ollama' && isCurrentlyHidden) {
-        const origins = OPTIONAL_HOST_PERMISSIONS.ollama;
+        const permKey = isOllamaCloudMode() ? 'ollama-cloud' : 'ollama';
+        const origins = OPTIONAL_HOST_PERMISSIONS[permKey];
         let granted = await hasOptionalHostPermissions(origins);
         if (!granted) {
             granted = await requestOptionalHostPermissions(origins);
@@ -142,12 +218,18 @@ async function toggleProviderCard(providerId) {
 
 // Handle active provider dropdown change
 async function handleActiveProviderChange(providerId) {
+    // Sync the Ollama mode toggle when the dropdown changes
+    if (providerId === 'ollama' || providerId === 'ollama-cloud') {
+        setOllamaMode(providerId === 'ollama-cloud');
+    }
+
     updateActiveProviderBadge(providerId);
 
     // Expand the selected provider's card if it's collapsed
-    const body = document.querySelector(`[data-provider-body="${providerId}"]`);
+    const cardId = getOllamaCardId(providerId);
+    const body = document.querySelector(`[data-provider-body="${cardId}"]`);
     if (body && body.classList.contains('hidden')) {
-        await toggleProviderCard(providerId);
+        await toggleProviderCard(cardId);
     }
 }
 
@@ -169,7 +251,8 @@ function setupKeyVisibilityToggles() {
 
 // Save settings to Browser storage
 async function saveSettings() {
-    const providerSelection = document.getElementById('active-provider').value; // Can be empty string for "None"
+    const rawProviderSelection = document.getElementById('active-provider').value; // Can be empty string for "None"
+    const providerSelection = resolveOllamaProvider(rawProviderSelection);
     // Prompt customization
     const promptCustomization = document.getElementById('prompt-customization').checked;
     const systemPrompt = document.getElementById('system-prompt').value;
@@ -178,7 +261,9 @@ async function saveSettings() {
         serverCacheEnabled: document.getElementById('hn-companion-server-enabled').checked,
         providerSelection,
         ollama: {
+            cloud: isOllamaCloudMode(),
             url: document.getElementById('ollama-url').value.replace(/\/+$/, '') || DEFAULT_OLLAMA_URL,
+            apiKey: document.getElementById('ollama-key').value,
             model: document.getElementById('ollama-model').value
         },
         google: {
@@ -221,17 +306,23 @@ async function saveSettings() {
 // Fetch Ollama models from API
 async function fetchOllamaModels() {
     try {
-        const ollamaUrl = document.getElementById('ollama-url').value.replace(/\/+$/, '') || DEFAULT_OLLAMA_URL;
+        const ollamaUrl = getOllamaEffectiveUrl();
         const selectElement = document.getElementById('ollama-model');
-        
+
         // Remember current selection before clearing
         const currentSelection = selectElement.value;
-        
-        const data = await sendBackgroundMessage('FETCH_API_REQUEST', {
+
+        const fetchOptions = {
             url: `${ollamaUrl}/api/tags`,
             method: 'GET',
-            isErrorExpected: true  // Ollama not running is expected, suppress error logs
-        });
+            isErrorExpected: true
+        };
+        const extraHeaders = getOllamaFetchHeaders();
+        if (Object.keys(extraHeaders).length > 0) {
+            fetchOptions.headers = extraHeaders;
+        }
+
+        const data = await sendBackgroundMessage('FETCH_API_REQUEST', fetchOptions);
 
         // Clear existing options
         selectElement.options.length = 0
@@ -244,21 +335,44 @@ async function fetchOllamaModels() {
             selectElement.appendChild(option);
         }
         else {
-            // Add models to select element
-            data.models.forEach(model => {
-                const option = document.createElement('option');
-                option.value = model.name;
-                option.textContent = model.name;
-                selectElement.appendChild(option);
-            });
+            const models = data.models.map(m => m.name).sort();
+
+            if (isOllamaCloudMode()) {
+                const grouped = new Map();
+                for (const name of models) {
+                    const slashIdx = name.indexOf('/');
+                    const provider = slashIdx > 0 ? name.substring(0, slashIdx) : 'ollama';
+                    const modelName = slashIdx > 0 ? name.substring(slashIdx + 1) : name;
+                    if (!grouped.has(provider)) grouped.set(provider, []);
+                    grouped.get(provider).push({ value: name, label: modelName });
+                }
+                const sortedProviders = [...grouped.keys()].sort();
+                for (const provider of sortedProviders) {
+                    const optgroup = document.createElement('optgroup');
+                    optgroup.label = provider;
+                    for (const model of grouped.get(provider)) {
+                        const option = document.createElement('option');
+                        option.value = model.value;
+                        option.textContent = model.label;
+                        optgroup.appendChild(option);
+                    }
+                    selectElement.appendChild(optgroup);
+                }
+            } else {
+                for (const name of models) {
+                    const option = document.createElement('option');
+                    option.value = name;
+                    option.textContent = name;
+                    selectElement.appendChild(option);
+                }
+            }
 
             // Restore selection: prefer current selection, fall back to saved settings
             const settings = await storage.getItem('sync:settings');
             const savedModel = settings?.ollama?.model;
             const modelToSelect = currentSelection || savedModel;
-            
+
             if (modelToSelect) {
-                // Check if the model exists in the options
                 const optionExists = Array.from(selectElement.options).some(opt => opt.value === modelToSelect);
                 if (optionExists) {
                     selectElement.value = modelToSelect;
@@ -296,13 +410,21 @@ async function loadSettings() {
             // Set provider selection in dropdown (can be empty string for "None")
             const providerDropdown = document.getElementById('active-provider');
             if (providerDropdown && settings.providerSelection !== undefined) {
-                providerDropdown.value = settings.providerSelection;
+                const dropdownValue = (settings.providerSelection === 'ollama' && settings.ollama?.cloud)
+                    ? 'ollama-cloud'
+                    : settings.providerSelection;
+                providerDropdown.value = dropdownValue;
             }
-            updateActiveProviderBadge(settings.providerSelection ?? '');
+            const badgeValue = (settings.providerSelection === 'ollama' && settings.ollama?.cloud)
+                ? 'ollama-cloud'
+                : (settings.providerSelection ?? '');
+            updateActiveProviderBadge(badgeValue);
 
             // Set Ollama settings
             if (settings.ollama) {
+                setOllamaMode(settings.ollama.cloud || false);
                 document.getElementById('ollama-url').value = settings.ollama.url || DEFAULT_OLLAMA_URL;
+                document.getElementById('ollama-key').value = settings.ollama.apiKey || '';
                 if (settings.ollama.model) {
                     document.getElementById('ollama-model').value = settings.ollama.model;
                 }
@@ -367,7 +489,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadSettings();
 
     // Only attempt to load Ollama models if permission is already granted
-    if (await hasOptionalHostPermissions(OPTIONAL_HOST_PERMISSIONS.ollama)) {
+    const ollamaPermKey = isOllamaCloudMode() ? 'ollama-cloud' : 'ollama';
+    if (await hasOptionalHostPermissions(OPTIONAL_HOST_PERMISSIONS[ollamaPermKey])) {
         await fetchOllamaModels();
     } else {
         setOllamaModelSelectStatus('Expand to load models');
@@ -386,7 +509,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const providerSelection = document.getElementById('active-provider').value; // Can be empty for "None"
 
         // 2. Request permission FIRST (MUST be first await to preserve user gesture in Firefox)
-        const origins = OPTIONAL_HOST_PERMISSIONS[providerSelection] || [];
+        const permKey = providerSelection === 'ollama-cloud' ? 'ollama-cloud' : providerSelection;
+        const origins = OPTIONAL_HOST_PERMISSIONS[permKey] || [];
         if (origins.length > 0) {
             const permissionGranted = await requestOptionalHostPermissions(origins);
             if (!permissionGranted) {
@@ -440,6 +564,36 @@ document.addEventListener('DOMContentLoaded', async () => {
     const promptCustomizationCheckbox = document.getElementById('prompt-customization');
     promptCustomizationCheckbox.addEventListener('change', (e) => {
         setPromptCustomizationState(e.target.checked);
+    });
+
+    // Ollama local/cloud mode toggle buttons — sync with active provider dropdown
+    const syncDropdownToOllamaMode = (isCloud) => {
+        const dropdown = document.getElementById('active-provider');
+        const currentIsOllama = dropdown.value === 'ollama' || dropdown.value === 'ollama-cloud';
+        if (currentIsOllama) {
+            dropdown.value = isCloud ? 'ollama-cloud' : 'ollama';
+            updateActiveProviderBadge(dropdown.value);
+        }
+    };
+
+    document.getElementById('ollama-mode-local').addEventListener('click', () => {
+        setOllamaMode(false);
+        syncDropdownToOllamaMode(false);
+        fetchOllamaModels();
+    });
+    document.getElementById('ollama-mode-cloud').addEventListener('click', async () => {
+        setOllamaMode(true);
+        syncDropdownToOllamaMode(true);
+        const origins = OPTIONAL_HOST_PERMISSIONS['ollama-cloud'];
+        let granted = await hasOptionalHostPermissions(origins);
+        if (!granted) {
+            granted = await requestOptionalHostPermissions(origins);
+        }
+        if (granted) {
+            await fetchOllamaModels();
+        } else {
+            setOllamaModelSelectStatus('Permission required to load models');
+        }
     });
 
     setupKeyVisibilityToggles();
