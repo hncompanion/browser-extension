@@ -1,8 +1,6 @@
 import {storage} from '#imports';
 import {browser} from 'wxt/browser';
-import {qualifyCommentLinks} from './comment-processor.js';
-import {marked} from 'marked';
-import {sanitizeHtmlToFragment, enforceSafeLinks} from '../../lib/sanitize.js';
+import {qualifyCommentLinks, createSummaryFragment} from './comment-processor.js';
 
 // SVG Icon constants
 const ICONS = {
@@ -815,6 +813,15 @@ class SummaryPanel {
             container.appendChild(providerLink);
         }
     }
+    /**
+     * Prepares the panel for a streaming render pass.
+     * @param {Map} [commentPathToIdMap] - Map of path → comment ID so backlinks
+     *        can be rendered live, identical to the final summary render.
+     */
+    beginStreaming(commentPathToIdMap) {
+        this._streamCommentMap = commentPathToIdMap ?? null;
+    }
+
     appendStreamingText(delta) {
         if (!this.panel) return;
         const textElement = this.panel.querySelector('.summary-text');
@@ -838,17 +845,24 @@ class SummaryPanel {
 
     _renderStreamedMarkdown(textElement) {
         if (!this._streamBuffer) return;
+
+        // Preserve the reader's scroll position: only auto-scroll if they're
+        // already pinned near the bottom, so scrolling up mid-stream sticks.
+        const content = this.panel?.querySelector('.summary-panel-content');
+        const wasNearBottom = content
+            ? content.scrollHeight - content.scrollTop - content.clientHeight < 50
+            : true;
+
         try {
-            const html = marked.parse(this._streamBuffer);
-            const fragment = sanitizeHtmlToFragment(html);
-            enforceSafeLinks(fragment);
+            // Reuse the same pipeline as the final render so comment backlinks
+            // appear live and the completed summary is visually identical.
+            const fragment = createSummaryFragment(this._streamBuffer, this._streamCommentMap);
             this.setElementContent(textElement, fragment);
         } catch (_) {
             textElement.textContent = this._streamBuffer;
         }
 
-        const content = this.panel?.querySelector('.summary-panel-content');
-        if (content) {
+        if (content && wasNearBottom) {
             content.scrollTop = content.scrollHeight;
         }
     }
@@ -860,6 +874,7 @@ class SummaryPanel {
         }
         this._isStreaming = false;
         this._streamBuffer = '';
+        this._streamCommentMap = null;
     }
 
     renderStreamingMetadata(container, metadata) {
