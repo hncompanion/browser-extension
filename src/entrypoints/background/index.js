@@ -131,14 +131,19 @@ export default defineBackground(() => {
                 );
             } else if (message.type === 'HN_STREAM_OLLAMA') {
                 abortController = new AbortController();
+                let timedOut = false;
+                let timeoutId = null;
+                const timeoutMs = message.data.timeout || 180_000;
                 try {
-                    const { url, method, headers, body, timeout } = message.data;
-                    const id = setTimeout(() => abortController.abort(), timeout || 180_000);
+                    const { url, method, headers, body } = message.data;
+                    timeoutId = setTimeout(() => {
+                        timedOut = true;
+                        abortController.abort();
+                    }, timeoutMs);
                     const response = await fetch(url, {
                         method, headers, body,
                         signal: abortController.signal
                     });
-                    clearTimeout(id);
 
                     if (!response.ok) {
                         const errorText = await response.text();
@@ -149,34 +154,62 @@ export default defineBackground(() => {
                     const reader = response.body.getReader();
                     const decoder = new TextDecoder();
                     let fullText = '';
+                    let buffer = '';
+
+                    // Process one complete NDJSON line. Returns true when the
+                    // stream signalled done so the caller can stop early.
+                    const handleLine = (line) => {
+                        if (!line.trim()) return false;
+                        try {
+                            const parsed = JSON.parse(line);
+                            if (parsed.response) {
+                                fullText += parsed.response;
+                                safeSend({ type: 'chunk', delta: parsed.response });
+                            }
+                            if (parsed.done) {
+                                safeSend({ type: 'done', text: fullText });
+                                return true;
+                            }
+                        } catch (_) { /* skip malformed lines */ }
+                        return false;
+                    };
 
                     while (true) {
                         const { done, value } = await reader.read();
                         if (done) break;
                         if (abortController.signal.aborted) break;
 
-                        const chunk = decoder.decode(value, { stream: true });
-                        for (const line of chunk.split('\n')) {
-                            if (!line.trim()) continue;
-                            try {
-                                const parsed = JSON.parse(line);
-                                if (parsed.response) {
-                                    fullText += parsed.response;
-                                    safeSend({ type: 'chunk', delta: parsed.response });
-                                }
-                                if (parsed.done) {
-                                    safeSend({ type: 'done', text: fullText });
-                                    return;
-                                }
-                            } catch (_) { /* skip malformed lines */ }
+                        // Buffer across reads: a JSON object may be split over
+                        // two chunks, so only the trailing partial line is held
+                        // back until its newline arrives.
+                        buffer += decoder.decode(value, { stream: true });
+                        const lines = buffer.split('\n');
+                        buffer = lines.pop() ?? '';
+                        for (const line of lines) {
+                            if (handleLine(line)) return;
                         }
                     }
 
+                    if (abortController.signal.aborted) {
+                        if (timedOut) {
+                            safeSend({ type: 'error', error: `Request timed out after ${Math.round(timeoutMs / 1000)}s` });
+                        }
+                        return;
+                    }
+
+                    // Flush any final line left without a trailing newline.
+                    buffer += decoder.decode();
+                    if (handleLine(buffer)) return;
+
                     safeSend({ type: 'done', text: fullText });
                 } catch (error) {
-                    if (!abortController.signal.aborted) {
+                    if (timedOut) {
+                        safeSend({ type: 'error', error: `Request timed out after ${Math.round(timeoutMs / 1000)}s` });
+                    } else if (!abortController.signal.aborted) {
                         safeSend({ type: 'error', error: error.toString() });
                     }
+                } finally {
+                    if (timeoutId) clearTimeout(timeoutId);
                 }
             }
         });

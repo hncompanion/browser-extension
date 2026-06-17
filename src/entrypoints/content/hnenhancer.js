@@ -83,6 +83,7 @@ class HNEnhancer {
             this.commentNavigator.setupCommentClickHandlers();
             this.commentNavigator.navigateToFirstComment(false);
             this.summaryPanel = new SummaryPanel();
+            this.setupSummaryPanelCommentLinks();
 
             // Wire up refresh button to force-refresh summary
             if (this.summaryPanel) {
@@ -586,6 +587,7 @@ class HNEnhancer {
                         state: 'streaming',
                         provider: `${aiProvider}/${model || ''}`
                     });
+                    this.summaryPanel.beginStreaming(commentPathToIdMap);
                 }
                 this.summaryPanel.appendStreamingText(delta);
             };
@@ -719,17 +721,22 @@ class HNEnhancer {
             });
         }
 
-        document.querySelectorAll('[data-comment-link="true"]').forEach(link => {
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                const id = link.dataset.commentId;
-                const comment = document.getElementById(id);
-                if (comment) {
-                    this.setCurrentComment(comment);
-                } else {
-                    Logger.infoSync('Failed to find DOM element for comment id:', id);
-                }
-            });
+    }
+
+    setupSummaryPanelCommentLinks() {
+        this.summaryPanel?.panel?.addEventListener('click', (e) => {
+            if (!(e.target instanceof Element)) return;
+            const link = e.target.closest('[data-comment-link="true"]');
+            if (!link || !this.summaryPanel.panel.contains(link)) return;
+
+            e.preventDefault();
+            const id = link.dataset.commentId;
+            const comment = document.getElementById(id);
+            if (comment) {
+                this.setCurrentComment(comment);
+            } else {
+                Logger.infoSync('Failed to find DOM element for comment id:', id);
+            }
         });
     }
 
