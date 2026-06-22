@@ -9,12 +9,62 @@ import {sendBackgroundMessage} from "../../lib/messaging.js";
 const DEFAULT_OLLAMA_URL = 'http://localhost:11434';
 const OLLAMA_CLOUD_URL = 'https://ollama.com';
 
+const OPENAI_COMPATIBLE_OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
+
+// OpenAI-compatible service presets. Selecting one pre-fills the base URL and
+// whether an API key is expected. 'custom' lets the user point at a supported
+// local or hosted endpoint from OPENAI_COMPATIBLE_PERMISSION_ORIGINS.
+const OPENAI_COMPATIBLE_PRESETS = {
+    openrouter: {
+        baseURL: OPENAI_COMPATIBLE_OPENROUTER_BASE_URL,
+        keyRequired: true,
+        modelPlaceholder: 'e.g. deepseek/deepseek-chat',
+        keyHelp: '🔑 Get your API key from <a href="https://openrouter.ai/settings/keys" target="_blank" class="underline">openrouter.ai</a> and browse models <a href="https://openrouter.ai/models" target="_blank" class="underline">here</a>.',
+    },
+    groq: {
+        baseURL: 'https://api.groq.com/openai/v1',
+        keyRequired: true,
+        modelPlaceholder: 'e.g. llama-3.3-70b-versatile',
+        keyHelp: '🔑 Get your API key from <a href="https://console.groq.com/keys" target="_blank" class="underline">console.groq.com</a>.',
+    },
+    together: {
+        baseURL: 'https://api.together.ai/v1',
+        keyRequired: true,
+        modelPlaceholder: 'e.g. meta-llama/Llama-3.3-70B-Instruct-Turbo',
+        keyHelp: '🔑 Get your API key from <a href="https://api.together.ai/settings/api-keys" target="_blank" class="underline">together.ai</a>.',
+    },
+    custom: {
+        baseURL: '',
+        keyRequired: false,
+        modelPlaceholder: 'model identifier',
+        keyHelp: '🔑 Enter the API key if your endpoint requires one. Local servers (llama.cpp, LM Studio) usually need none.',
+    },
+};
+
+const OPENAI_COMPATIBLE_PERMISSION_ORIGINS = [
+    'https://openrouter.ai/*',
+    'https://api.groq.com/*',
+    'https://api.together.ai/*',
+    'https://api.together.xyz/*',
+    'https://api.fireworks.ai/*',
+    'https://api.deepinfra.com/*',
+    'https://api.mistral.ai/*',
+    'https://api.cerebras.ai/*',
+    'https://api.perplexity.ai/*',
+    'https://api.x.ai/*',
+    'https://api.novita.ai/*',
+    'https://api.sambanova.ai/*',
+    'https://api.z.ai/*',
+    'https://api.tokenrouter.com/*',
+    'http://localhost/*',
+    'http://127.0.0.1/*',
+];
+
 const OPTIONAL_HOST_PERMISSIONS = {
     openai: ['https://api.openai.com/*'],
     anthropic: ['https://api.anthropic.com/*'],
-    openrouter: ['https://openrouter.ai/*'],
     google: ['https://generativelanguage.googleapis.com/*'],
-    ollama: ['http://localhost:11434/*'],
+    ollama: ['http://localhost/*'],
     'ollama-cloud': ['https://ollama.com/*'],
 };
 
@@ -22,10 +72,44 @@ const PROVIDER_INPUT_SELECTORS = {
     google: ['#google-key', '#google-model'],
     anthropic: ['#anthropic-key', '#anthropic-model'],
     openai: ['#openai-key', '#openai-model'],
-    openrouter: ['#openrouter-key', '#openrouter-model'],
+    'openai-compatible': ['#oaicompat-preset', '#oaicompat-url', '#oaicompat-key', '#oaicompat-model'],
     ollama: ['#ollama-url', '#ollama-model', '#ollama-key', '#ollama-cloud'],
     'ollama-cloud': ['#ollama-url', '#ollama-model', '#ollama-key', '#ollama-cloud'],
 };
+
+// Derive an optional-permission origin pattern (e.g. "https://api.groq.com/*")
+// from a base URL. Returns null if the URL can't be parsed.
+function originPatternFromUrl(url) {
+    try {
+        const parsed = new URL(url);
+        if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+            return null;
+        }
+        // Extension match patterns don't include ports; omitting the port also
+        // lets one localhost permission cover LM Studio, llama.cpp, vLLM, etc.
+        return `${parsed.protocol}//${parsed.hostname}/*`;
+    } catch {
+        return null;
+    }
+}
+
+function getOpenAICompatibleOriginPattern() {
+    return originPatternFromUrl(document.getElementById('oaicompat-url').value.trim());
+}
+
+function isSupportedOpenAICompatibleOrigin(pattern) {
+    return OPENAI_COMPATIBLE_PERMISSION_ORIGINS.includes(pattern);
+}
+
+// Resolve the host-permission origins needed for the active provider, including
+// the dynamic origin for a user-supplied OpenAI-compatible base URL.
+function getProviderPermissionOrigins(providerId) {
+    if (providerId === 'openai-compatible') {
+        const pattern = getOpenAICompatibleOriginPattern();
+        return pattern && isSupportedOpenAICompatibleOrigin(pattern) ? [pattern] : [];
+    }
+    return OPTIONAL_HOST_PERMISSIONS[providerId] || [];
+}
 
 function resolveOllamaProvider(providerId) {
     return providerId === 'ollama-cloud' ? 'ollama' : providerId;
@@ -56,6 +140,17 @@ async function requestOptionalHostPermissions(origins) {
     } catch (error) {
         await Logger.error('Error requesting optional host permissions:', error);
         return false;
+    }
+}
+
+// Set a <select> to a saved value, falling back to `fallback` when the saved
+// value is no longer an available option (e.g. a now-deprecated model ID).
+function setSelectValueWithFallback(selectId, savedValue, fallback) {
+    const select = document.getElementById(selectId);
+    if (!select) return;
+    select.value = savedValue || fallback;
+    if (select.selectedIndex === -1) {
+        select.value = fallback;
     }
 }
 
@@ -132,6 +227,40 @@ function getOllamaFetchHeaders() {
     return { 'Authorization': `Bearer ${apiKey}` };
 }
 
+// Apply an OpenAI-compatible preset to the form: fill the base URL (and lock it
+// for known services), update the key hint, and refresh the model placeholder.
+// When `fillUrl` is false the existing URL value is preserved (used on load).
+function applyOpenAICompatiblePreset(presetId, fillUrl = true) {
+    const preset = OPENAI_COMPATIBLE_PRESETS[presetId] || OPENAI_COMPATIBLE_PRESETS.custom;
+    const isCustom = presetId === 'custom';
+
+    const urlInput = document.getElementById('oaicompat-url');
+    const modelInput = document.getElementById('oaicompat-model');
+    const keyInput = document.getElementById('oaicompat-key');
+    const keyHelp = document.getElementById('oaicompat-key-help');
+    const urlHint = document.getElementById('oaicompat-url-hint');
+
+    if (urlInput) {
+        if (fillUrl && !isCustom) {
+            urlInput.value = preset.baseURL;
+        }
+        // Known services have a fixed endpoint; only Custom is editable.
+        urlInput.disabled = !isCustom;
+    }
+    if (urlHint) {
+        urlHint.classList.toggle('hidden', !isCustom);
+    }
+    if (modelInput) {
+        modelInput.placeholder = preset.modelPlaceholder;
+    }
+    if (keyInput) {
+        keyInput.placeholder = preset.keyRequired ? 'Enter API key' : 'API key (optional for local servers)';
+    }
+    if (keyHelp) {
+        keyHelp.innerHTML = preset.keyHelp;
+    }
+}
+
 function setPromptCustomizationState(isEnabled) {
     const systemPromptTextarea = document.getElementById('system-prompt');
     const userPromptTextarea = document.getElementById('user-prompt');
@@ -162,7 +291,7 @@ function updateActiveProviderBadge(providerId) {
     const activeProvider = PROVIDER_INPUT_SELECTORS[providerId] ? providerId : '';
     const activeCardId = getOllamaCardId(activeProvider);
 
-    const cardProviders = ['ollama', 'google', 'anthropic', 'openai', 'openrouter'];
+    const cardProviders = ['ollama', 'google', 'anthropic', 'openai', 'openai-compatible'];
     cardProviders.forEach((provider) => {
         const isActive = provider === activeCardId;
         const chip = document.querySelector(`[data-provider-chip="${provider}"]`);
@@ -252,7 +381,15 @@ function setupKeyVisibilityToggles() {
 // Save settings to Browser storage
 async function saveSettings() {
     const rawProviderSelection = document.getElementById('active-provider').value; // Can be empty string for "None"
-    const providerSelection = resolveOllamaProvider(rawProviderSelection);
+    const openAICompatibleSettings = {
+        preset: document.getElementById('oaicompat-preset').value,
+        baseURL: document.getElementById('oaicompat-url').value.trim().replace(/\/+$/, ''),
+        apiKey: document.getElementById('oaicompat-key').value,
+        model: document.getElementById('oaicompat-model').value.trim()
+    };
+    const providerSelection = (rawProviderSelection === 'openai-compatible' && openAICompatibleSettings.preset === 'openrouter')
+        ? 'openrouter'
+        : resolveOllamaProvider(rawProviderSelection);
     // Prompt customization
     const promptCustomization = document.getElementById('prompt-customization').checked;
     const systemPrompt = document.getElementById('system-prompt').value;
@@ -278,14 +415,21 @@ async function saveSettings() {
             apiKey: document.getElementById('openai-key').value,
             model: document.getElementById('openai-model').value
         },
-        openrouter: {
-            apiKey: document.getElementById('openrouter-key').value,
-            model: document.getElementById('openrouter-model').value
-        },
+        'openai-compatible': openAICompatibleSettings,
         promptCustomization,
         systemPrompt: promptCustomization ? systemPrompt : undefined,
         userPrompt: promptCustomization ? userPrompt : undefined
     };
+
+    // Transitional compatibility for synced settings: older builds only know
+    // the OpenRouter provider id and settings key. This is only correct for the
+    // OpenRouter preset; other OpenAI-compatible endpoints cannot work on old builds.
+    if (openAICompatibleSettings.preset === 'openrouter') {
+        settings.openrouter = {
+            apiKey: openAICompatibleSettings.apiKey,
+            model: openAICompatibleSettings.model
+        };
+    }
 
     try {
         // Note: Permission request is now handled in the form submit handler
@@ -407,18 +551,20 @@ async function loadSettings() {
             if(settings.serverCacheEnabled !== undefined) {
                 document.getElementById('hn-companion-server-enabled').checked = settings.serverCacheEnabled;
             }
+            // Map a stored providerSelection to the dropdown's option value.
+            // 'openrouter' is the legacy id that is now folded into 'openai-compatible'.
+            const toDropdownValue = (selection) => {
+                if (selection === 'ollama' && settings.ollama?.cloud) return 'ollama-cloud';
+                if (selection === 'openrouter') return 'openai-compatible';
+                return selection ?? '';
+            };
+
             // Set provider selection in dropdown (can be empty string for "None")
             const providerDropdown = document.getElementById('active-provider');
             if (providerDropdown && settings.providerSelection !== undefined) {
-                const dropdownValue = (settings.providerSelection === 'ollama' && settings.ollama?.cloud)
-                    ? 'ollama-cloud'
-                    : settings.providerSelection;
-                providerDropdown.value = dropdownValue;
+                providerDropdown.value = toDropdownValue(settings.providerSelection);
             }
-            const badgeValue = (settings.providerSelection === 'ollama' && settings.ollama?.cloud)
-                ? 'ollama-cloud'
-                : (settings.providerSelection ?? '');
-            updateActiveProviderBadge(badgeValue);
+            updateActiveProviderBadge(toDropdownValue(settings.providerSelection));
 
             // Set Ollama settings
             if (settings.ollama) {
@@ -433,25 +579,40 @@ async function loadSettings() {
             // Set Google settings
             if (settings.google) {
                 document.getElementById('google-key').value = settings.google.apiKey || '';
-                document.getElementById('google-model').value = settings.google.model || 'gemini-2.5-pro';
+                setSelectValueWithFallback('google-model', settings.google.model, 'gemini-3.5-flash');
             }
 
             // Set Anthropic settings
             if (settings.anthropic) {
                 document.getElementById('anthropic-key').value = settings.anthropic.apiKey || '';
-                document.getElementById('anthropic-model').value = settings.anthropic.model || 'claude-opus-4-1';
+                setSelectValueWithFallback('anthropic-model', settings.anthropic.model, 'claude-opus-4-8');
             }
 
             // Set OpenAI settings
             if (settings.openai) {
                 document.getElementById('openai-key').value = settings.openai.apiKey || '';
-                document.getElementById('openai-model').value = settings.openai.model || 'gpt-5';
+                setSelectValueWithFallback('openai-model', settings.openai.model, 'gpt-5.5');
             }
 
-            // Set OpenRouter settings
-            if (settings.openrouter) {
-                document.getElementById('openrouter-key').value = settings.openrouter.apiKey || '';
-                document.getElementById('openrouter-model').value = settings.openrouter.model || 'deepseek/deepseek-chat';
+            // Set OpenAI-compatible settings, migrating from the legacy 'openrouter'
+            // settings shape if the new key isn't present yet.
+            const compat = settings['openai-compatible']
+                || (settings.openrouter
+                    ? {
+                        preset: 'openrouter',
+                        baseURL: OPENAI_COMPATIBLE_PRESETS.openrouter.baseURL,
+                        apiKey: settings.openrouter.apiKey,
+                        model: settings.openrouter.model,
+                    }
+                    : null);
+            if (compat) {
+                const presetId = OPENAI_COMPATIBLE_PRESETS[compat.preset] ? compat.preset : 'custom';
+                document.getElementById('oaicompat-preset').value = presetId;
+                document.getElementById('oaicompat-url').value = compat.baseURL || OPENAI_COMPATIBLE_PRESETS[presetId].baseURL || '';
+                document.getElementById('oaicompat-key').value = compat.apiKey || '';
+                document.getElementById('oaicompat-model').value = compat.model || '';
+                // Refresh placeholders/hints/lock state without overwriting the saved URL.
+                applyOpenAICompatiblePreset(presetId, false);
             }
 
             // Prompt customization
@@ -508,9 +669,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         // 1. Determine provider selection SYNCHRONOUSLY (no await before permissions.request)
         const providerSelection = document.getElementById('active-provider').value; // Can be empty for "None"
 
+        if (providerSelection === 'openai-compatible') {
+            const pattern = getOpenAICompatibleOriginPattern();
+            if (!pattern) {
+                window.alert('Enter a valid http(s) Base URL for the OpenAI-compatible provider before saving.');
+                return;
+            }
+            if (!isSupportedOpenAICompatibleOrigin(pattern)) {
+                window.alert('That OpenAI-compatible endpoint is not in HN Companion’s supported endpoint list. Use a supported hosted provider or a localhost / 127.0.0.1 endpoint.');
+                return;
+            }
+        }
+
         // 2. Request permission FIRST (MUST be first await to preserve user gesture in Firefox)
-        const permKey = providerSelection === 'ollama-cloud' ? 'ollama-cloud' : providerSelection;
-        const origins = OPTIONAL_HOST_PERMISSIONS[permKey] || [];
+        const origins = getProviderPermissionOrigins(providerSelection);
         if (origins.length > 0) {
             const permissionGranted = await requestOptionalHostPermissions(origins);
             if (!permissionGranted) {
@@ -596,9 +768,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
+    // OpenAI-compatible preset selector — fill base URL and update hints on change.
+    const oaiCompatPreset = document.getElementById('oaicompat-preset');
+    if (oaiCompatPreset) {
+        oaiCompatPreset.addEventListener('change', () => {
+            applyOpenAICompatiblePreset(oaiCompatPreset.value, true);
+        });
+    }
+
     setupKeyVisibilityToggles();
 
     // Set initial active provider badge state (can be empty for "None")
     const activeProvider = document.getElementById('active-provider').value;
     updateActiveProviderBadge(activeProvider);
+
+    // Ensure the OpenAI-compatible card has correct URL/lock/placeholder state.
+    // Fill the preset's base URL only when nothing was loaded (first-time users).
+    const oaiPresetEl = document.getElementById('oaicompat-preset');
+    if (oaiPresetEl) {
+        const urlEmpty = !document.getElementById('oaicompat-url').value;
+        applyOpenAICompatiblePreset(oaiPresetEl.value, urlEmpty);
+    }
 });

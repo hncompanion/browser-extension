@@ -80,7 +80,7 @@
                                         <option value="google">Google Gemini</option>
                                         <option value="anthropic">Anthropic</option>
                                         <option value="openai">OpenAI</option>
-                                        <option value="openrouter">OpenRouter</option>
+                                        <option value="openai-compatible">OpenAI-compatible</option>
                                     </select>
                                     <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" class="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-gray-500 sm:size-4 dark:text-gray-400">
                                         <path d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" fill-rule="evenodd" />
@@ -286,14 +286,10 @@
                                         <div class="mt-2 grid grid-cols-1">
                                             <select id="google-model" name="google-model"
                                                     class="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white py-1.5 pl-3 pr-8 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:*:bg-gray-800 dark:focus-visible:outline-indigo-500">
-                                                <option value="gemini-pro-latest">Gemini Pro Latest</option>
-                                                <option value="gemini-flash-latest">Gemini Flash Latest</option>
-                                                <option value="gemini-flash-lite-latest">Gemini Flash Lite Latest</option>
-                                                <option value="gemini-3.1-pro-preview">Gemini 3.1 Pro Preview</option>
-                                                <option value="gemini-3-flash-preview">Gemini 3 Flash Preview</option>
-                                                <option value="gemini-3.1-flash-lite-preview">Gemini 3.1 Flash Lite Preview</option>
-                                                <option value="gemini-3-pro-preview">Gemini 3 Pro Preview</option>
-                                                <option value="gemini-2.5-pro" selected>Gemini 2.5 Pro</option>
+                                                <option value="gemini-3.5-flash" selected>Gemini 3.5 Flash</option>
+                                                <option value="gemini-3.1-pro-preview">Gemini 3.1 Pro</option>
+                                                <option value="gemini-3.1-flash-lite">Gemini 3.1 Flash-Lite</option>
+                                                <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
                                                 <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
                                                 <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash-Lite</option>
                                             </select>
@@ -356,12 +352,10 @@
                                             <select id="anthropic-model"
                                                     name="anthropic-model"
                                                     class="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white py-1.5 pl-3 pr-8 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:*:bg-gray-800 dark:focus-visible:outline-indigo-500">
-                                                <option value="claude-opus-4-1" selected>Claude Opus 4.1</option>
-                                                <option value="claude-sonnet-4-0">Claude Sonnet 4</option>
-                                                <option value="claude-3-7-sonnet-latest">Claude 3.7 Sonnet</option>
-                                                <option value="claude-3-5-sonnet-latest">Claude 3.5 Sonnet</option>
-                                                <option value="claude-3-5-haiku-latest">Claude 3.5 Haiku</option>
-                                                <option value="claude-3-opus-latest">Claude 3 Opus</option>
+                                                <option value="claude-opus-4-8" selected>Claude Opus 4.8</option>
+                                                <option value="claude-opus-4-7">Claude Opus 4.7</option>
+                                                <option value="claude-sonnet-4-6">Claude Sonnet 4.6</option>
+                                                <option value="claude-haiku-4-5">Claude Haiku 4.5</option>
                                             </select>
                                             <svg viewBox="0 0 16 16" fill="currentColor" data-slot="icon" aria-hidden="true" class="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-gray-500 sm:size-4 dark:text-gray-400">
                                                 <path d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" fill-rule="evenodd" />
@@ -421,12 +415,9 @@
                                             <select id="openai-model"
                                                     name="openai-model"
                                                     class="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white py-1.5 pl-3 pr-8 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:*:bg-gray-800 dark:focus-visible:outline-indigo-500">
-                                                <option value="gpt-5" selected>GPT-5</option>
-                                                <option value="gpt-5-mini">GPT-5 mini</option>
-                                                <option value="gpt-5-nano">GPT-5 nano</option>
-                                                <option value="gpt-4.1-nano">GPT-4.1 nano</option>
-                                                <option value="gpt-4">GPT-4</option>
-                                                <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                                                <option value="gpt-5.5" selected>GPT-5.5</option>
+                                                <option value="gpt-5.4">GPT-5.4</option>
+                                                <option value="gpt-5.4-mini">GPT-5.4 mini</option>
                                             </select>
                                             <svg viewBox="0 0 16 16" fill="currentColor" data-slot="icon" aria-hidden="true" class="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-gray-500 sm:size-4 dark:text-gray-400">
                                                 <path d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" fill-rule="evenodd" />
@@ -436,31 +427,58 @@
                                 </div>
                             </div>
 
-                            <!-- OpenRouter -->
-                            <div class="rounded-xl border border-gray-200/70 bg-white/60 px-5 py-4 shadow-sm cursor-pointer hover:bg-white/80 dark:border-white/10 dark:bg-gray-900/60 dark:hover:bg-gray-900/80" data-provider-card="openrouter" role="button">
+                            <!-- OpenAI-compatible -->
+                            <div class="rounded-xl border border-gray-200/70 bg-white/60 px-5 py-4 shadow-sm cursor-pointer hover:bg-white/80 dark:border-white/10 dark:bg-gray-900/60 dark:hover:bg-gray-900/80" data-provider-card="openai-compatible" role="button">
                                 <div class="flex items-center justify-between gap-4">
                                     <div class="flex items-center gap-2">
-                                        <span class="block text-sm/6 font-medium text-gray-900 dark:text-white">OpenRouter</span>
-                                        <span class="ml-2 hidden items-center rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-semibold text-indigo-700 ring-1 ring-inset ring-indigo-500/20 dark:bg-indigo-500/20 dark:text-indigo-200" data-provider-chip="openrouter">Active</span>
+                                        <span class="block text-sm/6 font-medium text-gray-900 dark:text-white">OpenAI-compatible</span>
+                                        <span class="ml-2 hidden items-center rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-semibold text-indigo-700 ring-1 ring-inset ring-indigo-500/20 dark:bg-indigo-500/20 dark:text-indigo-200" data-provider-chip="openai-compatible">Active</span>
                                     </div>
-                                    <button type="button" class="flex size-8 items-center justify-center rounded-md border border-gray-300 bg-white/70 text-gray-500 shadow-sm hover:bg-white dark:border-gray-600 dark:bg-white/5 dark:text-gray-300" data-provider-toggle="openrouter" aria-controls="openrouter-body" aria-expanded="false">
-                                        <span class="sr-only">Show OpenRouter settings</span>
-                                        <svg viewBox="0 0 16 16" fill="currentColor" class="size-4 transition-transform" data-provider-chevron="openrouter" aria-hidden="true">
+                                    <button type="button" class="flex size-8 items-center justify-center rounded-md border border-gray-300 bg-white/70 text-gray-500 shadow-sm hover:bg-white dark:border-gray-600 dark:bg-white/5 dark:text-gray-300" data-provider-toggle="openai-compatible" aria-controls="openai-compatible-body" aria-expanded="false">
+                                        <span class="sr-only">Show OpenAI-compatible settings</span>
+                                        <svg viewBox="0 0 16 16" fill="currentColor" class="size-4 transition-transform" data-provider-chevron="openai-compatible" aria-hidden="true">
                                             <path d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" fill-rule="evenodd" />
                                         </svg>
                                     </button>
                                 </div>
-                                <p class="mt-2 ml-7 text-xs text-gray-500 dark:text-gray-400">Bring your own model identifier from OpenRouter.</p>
-                                <div class="mt-4 ml-7 space-y-4 hidden" id="openrouter-body" data-provider-body="openrouter">
+                                <p class="mt-2 ml-7 text-xs text-gray-500 dark:text-gray-400">OpenRouter, Groq, Together, or another supported OpenAI-compatible endpoint.</p>
+                                <div class="mt-4 ml-7 space-y-4 hidden" id="openai-compatible-body" data-provider-body="openai-compatible">
+                                    <div>
+                                        <label for="oaicompat-preset" class="block text-sm font-medium text-gray-900 dark:text-gray-100">Service</label>
+                                        <div class="mt-2 grid grid-cols-1">
+                                            <select id="oaicompat-preset"
+                                                    name="oaicompat-preset"
+                                                    class="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white py-1.5 pl-3 pr-8 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:*:bg-gray-800 dark:focus-visible:outline-indigo-500">
+                                                <option value="openrouter">OpenRouter</option>
+                                                <option value="groq">Groq</option>
+                                                <option value="together">Together</option>
+                                                <option value="custom">Custom…</option>
+                                            </select>
+                                            <svg viewBox="0 0 16 16" fill="currentColor" data-slot="icon" aria-hidden="true" class="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-gray-500 sm:size-4 dark:text-gray-400">
+                                                <path d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" fill-rule="evenodd" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label for="oaicompat-url" class="block text-sm font-medium text-gray-900 dark:text-gray-100">Base URL</label>
+                                        <div class="mt-2 grid grid-cols-1">
+                                            <input type="url"
+                                                   id="oaicompat-url"
+                                                   name="oaicompat-url"
+                                                   placeholder="http://localhost:1234/v1"
+                                                   class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 disabled:opacity-60 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500 dark:focus:outline-indigo-500">
+                                        </div>
+                                        <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400" id="oaicompat-url-hint">Works with supported OpenAI-compatible servers, including local LM Studio, llama.cpp, and vLLM on localhost. Use its <code>/v1</code> base URL.</p>
+                                    </div>
                                     <div class="mt-2 flex items-center gap-3">
                                         <div class="relative grow">
-                                            <label for="openrouter-key" class="sr-only">Enter OpenRouter API Key</label>
+                                            <label for="oaicompat-key" class="sr-only">API key</label>
                                             <input type="password"
-                                                   id="openrouter-key"
-                                                   name="openrouter-key"
-                                                   placeholder="Enter OpenRouter API Key"
+                                                   id="oaicompat-key"
+                                                   name="oaicompat-key"
+                                                   placeholder="Enter API key"
                                                    class="block w-full rounded-md bg-white px-3 py-1.5 pr-16 text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500 dark:focus:outline-indigo-500">
-                                            <button type="button" class="absolute inset-y-0 right-2 my-auto rounded-md px-2 text-xs font-semibold text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200" data-toggle-visibility="openrouter-key" aria-pressed="false">Show</button>
+                                            <button type="button" class="absolute inset-y-0 right-2 my-auto rounded-md px-2 text-xs font-semibold text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200" data-toggle-visibility="oaicompat-key" aria-pressed="false">Show</button>
                                         </div>
                                         <details class="relative">
                                             <summary class="list-none text-gray-400 hover:text-gray-500 cursor-pointer">
@@ -472,24 +490,20 @@
                                                 </svg>
                                             </summary>
                                             <div class="absolute right-0 mt-2 w-72 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-10 p-4 text-sm text-gray-600 dark:bg-gray-800 dark:text-white dark:outline-white/10 dark:focus:outline-indigo-500">
-                                                🔑 Get your API key from <a href="https://openrouter.ai/settings/keys"
-                                                                           target="_blank" class="underline">here</a>
-                                                and select a model <a href="https://openrouter.ai/models" class="underline"
-                                                                      target="_blank">here</a>.
+                                                <span id="oaicompat-key-help">🔑 Enter the API key for the selected service.</span>
                                                 <p class="pt-3"> API key is securely stored in your browser's local storage
                                                     and can sync across your devices with browser sync. The key is transmitted only to the
-                                                    selected LLM provider when making requests.</p>
+                                                    selected endpoint when making requests. Local servers (e.g. llama.cpp, LM Studio) usually need no key.</p>
                                             </div>
                                         </details>
                                     </div>
                                     <div>
-                                        <label for="openrouter-model" class="block text-sm font-medium text-gray-900 dark:text-gray-100">Enter OpenRouter Model</label>
+                                        <label for="oaicompat-model" class="block text-sm font-medium text-gray-900 dark:text-gray-100">Model identifier</label>
                                         <div class="mt-2 grid grid-cols-1">
                                             <input type="text"
-                                                   id="openrouter-model"
-                                                   name="openrouter-model"
-                                                   value="deepseek/deepseek-chat"
-                                                   placeholder="Enter model identifier. e.g. deepseek/deepseek-chat"
+                                                   id="oaicompat-model"
+                                                   name="oaicompat-model"
+                                                   placeholder="e.g. deepseek/deepseek-chat"
                                                    class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500 dark:focus:outline-indigo-500">
                                         </div>
                                     </div>

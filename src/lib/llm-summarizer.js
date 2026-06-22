@@ -3,13 +3,14 @@ import {generateText} from 'ai';
 import {createOpenAI} from '@ai-sdk/openai';
 import {createAnthropic} from '@ai-sdk/anthropic';
 import {createGoogleGenerativeAI} from '@ai-sdk/google';
-import {createOpenRouter} from '@openrouter/ai-sdk-provider';
 import {Logger} from "./utils.js";
+
+const OPENAI_COMPATIBLE_OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
 
 export async function summarizeText(data) {
     try {
 
-        const { aiProvider, modelId, apiKey, systemPrompt, userPrompt, parameters = {} } = data;
+        const { aiProvider, modelId, apiKey, baseURL, systemPrompt, userPrompt, parameters = {} } = data;
 
         let model;
         switch (aiProvider) {
@@ -38,11 +39,23 @@ export async function summarizeText(data) {
                 model = google(modelId);
                 break;
 
+            // 'openai-compatible' covers supported OpenAI Chat Completions
+            // endpoints (OpenRouter, Groq, Together, or localhost /v1 servers).
+            // 'openrouter' is kept as a legacy alias for settings saved before
+            // the providers were unified.
+            case 'openai-compatible':
             case 'openrouter':
-                const openRouter = createOpenRouter({
-                    apiKey: apiKey,
+                const compatibleBaseURL = baseURL || (aiProvider === 'openrouter' ? OPENAI_COMPATIBLE_OPENROUTER_BASE_URL : '');
+                if (!compatibleBaseURL) {
+                    throw new Error('Missing Base URL for OpenAI-compatible provider');
+                }
+                const compatible = createOpenAI({
+                    // Some local servers (llama.cpp, LM Studio) don't require a key;
+                    // the SDK still needs a non-empty value, so fall back to a placeholder.
+                    apiKey: apiKey || 'not-needed',
+                    baseURL: compatibleBaseURL,
                 });
-                model = openRouter.chat(modelId);
+                model = compatible.chat(modelId);
                 break;
 
             default:

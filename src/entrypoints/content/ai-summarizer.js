@@ -22,6 +22,10 @@ import {getHNThread, createSummaryFragment} from './comment-processor.js';
 export async function getAIProviderModel() {
     const settings = await storage.getItem('sync:settings');
     const aiProvider = settings?.providerSelection;
+    if (aiProvider === 'openrouter') {
+        const compatSettings = settings?.['openai-compatible'] || settings?.openrouter || {};
+        return {aiProvider: 'openai-compatible', model: compatSettings.model};
+    }
     const model = settings?.[aiProvider]?.model;
     return {aiProvider, model};
 }
@@ -70,35 +74,25 @@ export function getModelConfiguration(provider, modelId) {
 
     const modelConfigs = {
         'openai': {
-            'gpt-5': {inputTokenLimit: 25000, temperature: 0.7},
-            'gpt-5-mini': {inputTokenLimit: 20000, temperature: 0.7},
-            'gpt-5-nano': {inputTokenLimit: 16000, temperature: 0.7},
-            'gpt-4.1-nano': {inputTokenLimit: 16000, temperature: 0.7},
-            'gpt-4': {inputTokenLimit: 25000, temperature: 0.7},
-            'gpt-4-turbo': {inputTokenLimit: 27000, temperature: 0.7},
-            'gpt-3.5-turbo': {inputTokenLimit: 16000, temperature: 0.7}
+            'gpt-5.5': {inputTokenLimit: 25000, temperature: 0.7},
+            'gpt-5.4': {inputTokenLimit: 25000, temperature: 0.7},
+            'gpt-5.4-mini': {inputTokenLimit: 20000, temperature: 0.7},
         },
         'anthropic': {
-            'claude-opus-4-1': {inputTokenLimit: 25000, outputTokenLimit: 4000, temperature: 0.7},
-            'claude-sonnet-4-0': {inputTokenLimit: 24000, outputTokenLimit: 4000, temperature: 0.7},
-            'claude-3-7-sonnet-latest': {inputTokenLimit: 24000, outputTokenLimit: 4000, temperature: 0.7},
-            'claude-3-5-sonnet-latest': {inputTokenLimit: 22000, outputTokenLimit: 4000, temperature: 0.7},
-            'claude-3-5-haiku-latest': {inputTokenLimit: 20000, outputTokenLimit: 3000, temperature: 0.7},
-            'claude-3-opus-latest': {inputTokenLimit: 25000, outputTokenLimit: 4000, temperature: 0.7},
+            'claude-opus-4-8': {inputTokenLimit: 25000, outputTokenLimit: 4000, temperature: 0.7},
+            'claude-opus-4-7': {inputTokenLimit: 25000, outputTokenLimit: 4000, temperature: 0.7},
+            'claude-sonnet-4-6': {inputTokenLimit: 24000, outputTokenLimit: 4000, temperature: 0.7},
+            'claude-haiku-4-5': {inputTokenLimit: 20000, outputTokenLimit: 3000, temperature: 0.7},
         },
         'google': {
-            'gemini-pro-latest': {inputTokenLimit: 15000, temperature: 0.7},
-            'gemini-flash-latest': {inputTokenLimit: 15000, temperature: 0.7},
-            'gemini-flash-lite-latest': {inputTokenLimit: 15000, temperature: 0.7},
+            'gemini-3.5-flash': {inputTokenLimit: 15000, temperature: 0.7},
             'gemini-3.1-pro-preview': {inputTokenLimit: 15000, temperature: 0.7},
-            'gemini-3-flash-preview': {inputTokenLimit: 15000, temperature: 0.7},
-            'gemini-3.1-flash-lite-preview': {inputTokenLimit: 15000, temperature: 0.7},
-            'gemini-3-pro-preview': {inputTokenLimit: 15000, temperature: 0.7},
+            'gemini-3.1-flash-lite': {inputTokenLimit: 15000, temperature: 0.7},
             'gemini-2.5-pro': {inputTokenLimit: 15000, temperature: 0.7},
             'gemini-2.5-flash': {inputTokenLimit: 15000, temperature: 0.7},
             'gemini-2.5-flash-lite': {inputTokenLimit: 15000, temperature: 0.7},
         },
-        'openrouter': {
+        'openai-compatible': {
             'claude-3-sonnet-20240229': {inputTokenLimit: 25000, outputTokenLimit: 3000, temperature: 0.7},
         }
     };
@@ -366,8 +360,11 @@ export function formatSummaryError(error) {
  * @param {Function} onError - Error callback (error)
  * @param {string} postTitle - Title of the post
  */
-export async function summarizeTextWithLLM(aiProvider, modelId, apiKey, text, commentPathToIdMap, onSuccess, onError, postTitle) {
-    if (!text || !aiProvider || !modelId || !apiKey) {
+export async function summarizeTextWithLLM(aiProvider, modelId, apiKey, text, commentPathToIdMap, onSuccess, onError, postTitle, baseURL) {
+    // OpenAI-compatible endpoints (e.g. local llama.cpp / LM Studio) may not require an API key.
+    const requiresKey = aiProvider !== 'openai-compatible';
+    const requiresBaseURL = aiProvider === 'openai-compatible';
+    if (!text || !aiProvider || !modelId || (requiresKey && !apiKey) || (requiresBaseURL && !baseURL)) {
         await Logger.error('Missing required parameters for AI summarization');
         onError(new Error('Missing AI configuration'));
         return;
@@ -393,6 +390,7 @@ export async function summarizeTextWithLLM(aiProvider, modelId, apiKey, text, co
         aiProvider,
         modelId,
         apiKey,
+        baseURL,
         systemPrompt,
         userPrompt,
         parameters,
@@ -547,4 +545,3 @@ export async function serverCacheConfigEnabled() {
     const settings = await storage.getItem('sync:settings');
     return settings?.serverCacheEnabled;
 }
-

@@ -44,6 +44,8 @@ import {
 // Import keyboard shortcuts
 import {setupKeyboardShortcuts} from './keyboard-shortcuts.js';
 
+const OPENAI_COMPATIBLE_OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
+
 class HNEnhancer {
 
     static DEBUG = false;  // Set to true when debugging
@@ -618,11 +620,26 @@ class HNEnhancer {
                 case 'openai':
                 case 'anthropic':
                 case 'google':
-                case 'openrouter':
                     const apiKey = settings?.[aiProvider]?.apiKey;
                     await summarizeTextWithLLM(
                         aiProvider, model, apiKey, formattedComment, commentPathToIdMap,
                         onSuccess, onError, postTitle
+                    );
+                    break;
+                // 'openrouter' is a legacy alias for settings saved before providers were unified.
+                case 'openai-compatible':
+                case 'openrouter':
+                    const compatSettings = settings?.['openai-compatible'] || settings?.openrouter || {};
+                    const isLegacyOpenRouterOnly = aiProvider === 'openrouter' && !settings?.['openai-compatible'];
+                    const compatBaseURL = compatSettings.baseURL
+                        || (isLegacyOpenRouterOnly || compatSettings.preset === 'openrouter'
+                            ? OPENAI_COMPATIBLE_OPENROUTER_BASE_URL
+                            : '');
+                    const compatModel = compatSettings.model || model;
+                    await summarizeTextWithLLM(
+                        'openai-compatible', compatModel, compatSettings.apiKey || '',
+                        formattedComment, commentPathToIdMap,
+                        onSuccess, onError, postTitle, compatBaseURL
                     );
                     break;
                 default:
