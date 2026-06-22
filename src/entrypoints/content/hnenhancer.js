@@ -83,6 +83,7 @@ class HNEnhancer {
             this.commentNavigator.setupCommentClickHandlers();
             this.commentNavigator.navigateToFirstComment(false);
             this.summaryPanel = new SummaryPanel();
+            this.setupSummaryPanelCommentLinks();
 
             // Wire up refresh button to force-refresh summary
             if (this.summaryPanel) {
@@ -578,13 +579,28 @@ class HNEnhancer {
             formattedComment = stripAnchors(formattedComment);
             const postTitle = this.getHNPostTitle();
 
+            let streamingStarted = false;
+            const onChunk = (delta) => {
+                if (!streamingStarted) {
+                    streamingStarted = true;
+                    this.summaryPanel.updateMetadataRow({
+                        state: 'streaming',
+                        provider: `${aiProvider}/${model || ''}`
+                    });
+                    this.summaryPanel.beginStreaming(commentPathToIdMap);
+                }
+                this.summaryPanel.appendStreamingText(delta);
+            };
+
             const onSuccess = (summary, duration, pathMap) => {
+                this.summaryPanel.finishStreaming();
                 this.showSummaryInPanel(summary, false, duration, pathMap, itemId).catch(error => {
                     Logger.errorSync('Error showing summary:', error);
                 });
             };
 
             const onError = (error) => {
+                this.summaryPanel.finishStreaming();
                 this.handleSummaryError(error);
             };
 
@@ -604,6 +620,7 @@ class HNEnhancer {
                         formattedComment, model, ollamaUrl, commentPathToIdMap,
                         onSuccess,
                         (error) => {
+                            this.summaryPanel.finishStreaming();
                             const errorFragment = createOllamaErrorMessage(error);
                             this.summaryPanel.updateContent({
                                 text: errorFragment,
@@ -612,7 +629,8 @@ class HNEnhancer {
                             this.attachErrorActionListeners();
                         },
                         postTitle,
-                        ollamaApiKey
+                        ollamaApiKey,
+                        onChunk
                     );
                     break;
                 case 'openai':
@@ -622,7 +640,8 @@ class HNEnhancer {
                     const apiKey = settings?.[aiProvider]?.apiKey;
                     await summarizeTextWithLLM(
                         aiProvider, model, apiKey, formattedComment, commentPathToIdMap,
-                        onSuccess, onError, postTitle
+                        onSuccess, onError, postTitle,
+                        onChunk
                     );
                     break;
                 default:
@@ -702,17 +721,22 @@ class HNEnhancer {
             });
         }
 
-        document.querySelectorAll('[data-comment-link="true"]').forEach(link => {
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                const id = link.dataset.commentId;
-                const comment = document.getElementById(id);
-                if (comment) {
-                    this.setCurrentComment(comment);
-                } else {
-                    Logger.infoSync('Failed to find DOM element for comment id:', id);
-                }
-            });
+    }
+
+    setupSummaryPanelCommentLinks() {
+        this.summaryPanel?.panel?.addEventListener('click', (e) => {
+            if (!(e.target instanceof Element)) return;
+            const link = e.target.closest('[data-comment-link="true"]');
+            if (!link || !this.summaryPanel.panel.contains(link)) return;
+
+            e.preventDefault();
+            const id = link.dataset.commentId;
+            const comment = document.getElementById(id);
+            if (comment) {
+                this.setCurrentComment(comment);
+            } else {
+                Logger.infoSync('Failed to find DOM element for comment id:', id);
+            }
         });
     }
 

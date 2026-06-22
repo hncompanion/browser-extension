@@ -1,6 +1,6 @@
 import {storage} from '#imports';
 import {browser} from 'wxt/browser';
-import {qualifyCommentLinks} from './comment-processor.js';
+import {qualifyCommentLinks, createSummaryFragment} from './comment-processor.js';
 
 // SVG Icon constants
 const ICONS = {
@@ -739,6 +739,8 @@ class SummaryPanel {
             this.renderCachedMetadata(metadataInfo, metadata);
         } else if (metadata.state === 'generated') {
             this.renderGeneratedMetadata(metadataInfo, metadata);
+        } else if (metadata.state === 'streaming') {
+            this.renderStreamingMetadata(metadataInfo, metadata);
         }
     }
 
@@ -809,6 +811,88 @@ class SummaryPanel {
                 browser.runtime.sendMessage({ type: 'HN_SHOW_OPTIONS', data: {} });
             });
             container.appendChild(providerLink);
+        }
+    }
+    /**
+     * Prepares the panel for a streaming render pass.
+     * @param {Map} [commentPathToIdMap] - Map of path → comment ID so backlinks
+     *        can be rendered live, identical to the final summary render.
+     */
+    beginStreaming(commentPathToIdMap) {
+        this._streamCommentMap = commentPathToIdMap ?? null;
+    }
+
+    appendStreamingText(delta) {
+        if (!this.panel) return;
+        const textElement = this.panel.querySelector('.summary-text');
+        if (!textElement) return;
+
+        if (!this._isStreaming) {
+            this._isStreaming = true;
+            this._streamBuffer = '';
+            textElement.replaceChildren();
+        }
+
+        this._streamBuffer += delta;
+
+        if (!this._renderTimer) {
+            this._renderTimer = setTimeout(() => {
+                this._renderStreamedMarkdown(textElement);
+                this._renderTimer = null;
+            }, 150);
+        }
+    }
+
+    _renderStreamedMarkdown(textElement) {
+        if (!this._streamBuffer) return;
+
+        // Preserve the reader's scroll position: only auto-scroll if they're
+        // already pinned near the bottom, so scrolling up mid-stream sticks.
+        const content = this.panel?.querySelector('.summary-panel-content');
+        const wasNearBottom = content
+            ? content.scrollHeight - content.scrollTop - content.clientHeight < 50
+            : true;
+
+        try {
+            // Reuse the same pipeline as the final render so comment backlinks
+            // appear live and the completed summary is visually identical.
+            const fragment = createSummaryFragment(this._streamBuffer, this._streamCommentMap);
+            this.setElementContent(textElement, fragment);
+        } catch (_) {
+            textElement.textContent = this._streamBuffer;
+        }
+
+        if (content && wasNearBottom) {
+            content.scrollTop = content.scrollHeight;
+        }
+    }
+
+    finishStreaming() {
+        if (this._renderTimer) {
+            clearTimeout(this._renderTimer);
+            this._renderTimer = null;
+        }
+        this._isStreaming = false;
+        this._streamBuffer = '';
+        this._streamCommentMap = null;
+    }
+
+    renderStreamingMetadata(container, metadata) {
+        const chip = document.createElement('span');
+        chip.className = 'summary-metadata-chip summary-metadata-chip-streaming';
+        chip.textContent = 'Streaming';
+        container.appendChild(chip);
+
+        if (metadata.provider) {
+            const sep = document.createElement('span');
+            sep.className = 'summary-metadata-separator summary-metadata-provider-separator';
+            sep.textContent = ' | ';
+            container.appendChild(sep);
+
+            const providerSpan = document.createElement('span');
+            providerSpan.className = 'summary-metadata-primary summary-metadata-provider';
+            providerSpan.textContent = metadata.provider;
+            container.appendChild(providerSpan);
         }
     }
 }

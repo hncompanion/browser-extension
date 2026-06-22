@@ -1,4 +1,4 @@
-import {summarizeText} from '../../lib/llm-summarizer.js';
+import {summarizeText, streamSummarizeText} from '../../lib/llm-summarizer.js';
 import { storage } from '#imports';
 import {browser} from "wxt/browser";
 import {Logger} from "../../lib/utils.js";
@@ -103,6 +103,116 @@ export default defineBackground(() => {
             default:
                 Logger.infoSync('Unknown message type:', message.type);
         }
+    });
+
+    // Handle streaming connections via ports
+    browser.runtime.onConnect.addListener((port) => {
+        if (port.name !== 'HN_STREAM') return;
+
+        let abortController = null;
+
+        port.onDisconnect.addListener(() => {
+            if (abortController) abortController.abort();
+        });
+
+        port.onMessage.addListener(async (message) => {
+            const safeSend = (msg) => {
+                try { port.postMessage(msg); } catch (_) { /* port disconnected */ }
+            };
+
+            if (message.type === 'HN_STREAM_SUMMARIZE') {
+                abortController = new AbortController();
+                await streamSummarizeText(
+                    message.data,
+                    (delta) => safeSend({ type: 'chunk', delta }),
+                    (fullText) => safeSend({ type: 'done', text: fullText }),
+                    (error) => safeSend({ type: 'error', error: error.toString() }),
+                    abortController.signal
+                );
+            } else if (message.type === 'HN_STREAM_OLLAMA') {
+                abortController = new AbortController();
+                let timedOut = false;
+                let timeoutId = null;
+                const timeoutMs = message.data.timeout || 180_000;
+                try {
+                    const { url, method, headers, body } = message.data;
+                    timeoutId = setTimeout(() => {
+                        timedOut = true;
+                        abortController.abort();
+                    }, timeoutMs);
+                    const response = await fetch(url, {
+                        method, headers, body,
+                        signal: abortController.signal
+                    });
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        safeSend({ type: 'error', error: `API Error: HTTP ${response.status} ${errorText}` });
+                        return;
+                    }
+
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder();
+                    let fullText = '';
+                    let buffer = '';
+
+                    // Process one complete NDJSON line. Returns true when the
+                    // stream signalled done so the caller can stop early.
+                    const handleLine = (line) => {
+                        if (!line.trim()) return false;
+                        try {
+                            const parsed = JSON.parse(line);
+                            if (parsed.response) {
+                                fullText += parsed.response;
+                                safeSend({ type: 'chunk', delta: parsed.response });
+                            }
+                            if (parsed.done) {
+                                safeSend({ type: 'done', text: fullText });
+                                return true;
+                            }
+                        } catch (_) { /* skip malformed lines */ }
+                        return false;
+                    };
+
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+                        if (abortController.signal.aborted) break;
+
+                        // Buffer across reads: a JSON object may be split over
+                        // two chunks, so only the trailing partial line is held
+                        // back until its newline arrives.
+                        buffer += decoder.decode(value, { stream: true });
+                        const lines = buffer.split('\n');
+                        buffer = lines.pop() ?? '';
+                        for (const line of lines) {
+                            if (handleLine(line)) return;
+                        }
+                    }
+
+                    if (abortController.signal.aborted) {
+                        if (timedOut) {
+                            safeSend({ type: 'error', error: `Request timed out after ${Math.round(timeoutMs / 1000)}s` });
+                        }
+                        return;
+                    }
+
+                    // Flush any final line left without a trailing newline.
+                    buffer += decoder.decode();
+                    if (handleLine(buffer)) return;
+
+                    safeSend({ type: 'done', text: fullText });
+                } catch (error) {
+                    if (timedOut) {
+                        safeSend({ type: 'error', error: `Request timed out after ${Math.round(timeoutMs / 1000)}s` });
+                    } else if (!abortController.signal.aborted) {
+                        safeSend({ type: 'error', error: error.toString() });
+                    }
+                } finally {
+                    if (timeoutId) clearTimeout(timeoutId);
+                }
+            }
+        });
     });
 
     // Handle async message and send response
