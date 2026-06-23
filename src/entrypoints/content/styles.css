@@ -505,6 +505,17 @@
     color: #4a7c4a;
 }
 
+.summary-metadata-chip-streaming {
+    background-color: #e0e8f0;
+    color: #3a6a8a;
+    animation: streaming-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes streaming-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
 .summary-metadata-provider-link,
 .summary-metadata-provider-link:link,
 .summary-metadata-provider-link:visited {
