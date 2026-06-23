@@ -32,6 +32,7 @@ import {getHNThread, createSummaryFragment} from './comment-processor.js';
 // Import AI summarizer functions
 import {
     getAIProviderModel,
+    resolveProviderSelection,
     formatSummaryError,
     createConfigurationError,
     summarizeTextWithLLM,
@@ -566,7 +567,7 @@ class HNEnhancer {
     async summarizeText(formattedComment, commentPathToIdMap, itemId) {
         const settings = await storage.getItem('sync:settings');
         try {
-            const aiProvider = settings?.providerSelection;
+            const aiProvider = resolveProviderSelection(settings);
             const model = settings?.[aiProvider]?.model;
 
             if (!aiProvider) {

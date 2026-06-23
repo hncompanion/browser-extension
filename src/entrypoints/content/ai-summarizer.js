@@ -19,9 +19,25 @@ import {getHNThread, createSummaryFragment} from './comment-processor.js';
  * Gets the AI provider and model from settings.
  * @returns {Promise<{aiProvider: string, model: string}>}
  */
+/**
+ * Resolves the effective provider selection, honoring the generation master
+ * toggle. Returns '' (no provider) when generation is disabled. For settings
+ * saved before `generationEnabled` existed, enablement is derived from a
+ * non-empty providerSelection so existing users keep generating.
+ * @param {object} settings
+ * @returns {string}
+ */
+export function resolveProviderSelection(settings) {
+    const generationEnabled = settings?.generationEnabled ?? Boolean(settings?.providerSelection);
+    return generationEnabled ? (settings?.providerSelection || '') : '';
+}
+
 export async function getAIProviderModel() {
     const settings = await storage.getItem('sync:settings');
-    const aiProvider = settings?.providerSelection;
+    const aiProvider = resolveProviderSelection(settings);
+    if (!aiProvider) {
+        return {aiProvider: '', model: undefined};
+    }
     if (aiProvider === 'openrouter') {
         const compatSettings = settings?.['openai-compatible'] || settings?.openrouter || {};
         return {aiProvider: 'openai-compatible', model: compatSettings.model};

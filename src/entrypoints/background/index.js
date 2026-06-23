@@ -7,6 +7,7 @@ export default defineBackground(() => {
 
     const DEFAULT_SETTINGS = {
         serverCacheEnabled: true,
+        generationEnabled: true,
         providerSelection: 'google',
         ollama: {
             cloud: false,

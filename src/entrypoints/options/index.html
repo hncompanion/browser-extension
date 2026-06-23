@@ -7,603 +7,443 @@
     <script src="options.js" type="module"></script>
     <meta name="manifest.open_in_tab" content="true"/>
 </head>
-<body class="flex items-center justify-center">
+<body class="flex items-start justify-center">
     <form class="w-full h-full overflow-y-auto">
-        <div class="w-full h-full space-y-8 mx-auto my-auto max-w-3xl p-6">
-            <div class="flex min-h-full flex-col justify-center p-8 m-4 rounded-xl shadow-xl mx-auto my-auto border border-gray-200/70 dark:border-white/10 bg-gray-200/70 dark:bg-gray-900/90"
+        <div class="w-full max-w-3xl mx-auto p-6">
+            <div class="flex min-h-full flex-col rounded-xl shadow-xl border border-gray-200/70 dark:border-white/10 bg-gray-200/70 dark:bg-gray-900/90"
                  style="min-width: 550px">
-                <fieldset>
-                    <legend class="text-base font-semibold text-gray-900 dark:text-white">Hacker News Companion Settings</legend>
-                    <p class="mt-1 text-sm/6 text-gray-600 dark:text-gray-400 border-b border-gray-200 pb-2 dark:border-white/10">Configure your AI providers and select which one to use.</p>
-                    <div class="mt-6 space-y-6">
 
-                                                <!--HN Companion Backend id="hn-companion-server-enabled" -->
-                        <fieldset>
-                            <legend class="sr-only">Hacker News Companion Settings</legend>
-                            <div class="space-y-5">
-                                <div class="flex gap-3 items-center">
-                                    <div class="flex h-6 shrink-0 items-center">
-                                        <div class="group grid size-4 grid-cols-1">
-                                            <input id="hn-companion-server-enabled"
-                                                   aria-describedby="hn-companion-server-description" name="comments"
-                                                   type="checkbox" checked
-                                                   class="col-start-1 row-start-1 appearance-none rounded border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto">
-                                            <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-[:disabled]:stroke-gray-950/25"
-                                                 viewBox="0 0 14 14" fill="none">
-                                                <path class="opacity-0 group-has-[:checked]:opacity-100"
-                                                      d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round"
-                                                      stroke-linejoin="round"/>
-                                                <path class="opacity-0 group-has-[:indeterminate]:opacity-100"
-                                                      d="M3 7H11"
-                                                      stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                            </svg>
-                                        </div>
-                                    </div>
-                                    <div class="text-sm/6 text-gray-900 dark:text-white">
-                                        <label for="hn-companion-server-enabled" class="font-medium">Load summary from Hacker News Companion Server</label>
-                                    </div>
-                                    <details class="inline-block relative" id="hn-companion-server-description">
-                                        <summary class="list-none text-gray-400 hover:text-gray-500 cursor-pointer">
-                                            <svg class="size-5 sm:size-4" viewBox="0 0 16 16" fill="currentColor"
-                                                 aria-hidden="true">
-                                                <path fill-rule="evenodd"
-                                                      d="M15 8A7 7 0 1 1 1 8a7 7 0 0 1 14 0Zm-6 3.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM7.293 5.293a1 1 0 1 1 .99 1.667c-.459.134-1.033.566-1.033 1.29v.25a.75.75 0 1 0 1.5 0v-.115a2.5 2.5 0 1 0-2.518-4.153.75.75 0 1 0 1.061 1.06Z"
-                                                      clip-rule="evenodd"/>
-                                            </svg>
-                                        </summary>
-                                        <div class="absolute left-0 -translate-x-32 mt-2 w-80 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-10 p-4 text-sm text-gray-600 dark:bg-gray-800 dark:text-white dark:outline-white/10 dark:focus:outline-indigo-500">
-                                            <p class="font-medium mb-2">How this works:</p>
-                                            <p>💡 The HN Companion server periodically fetches stories from the Hacker
-                                                News homepage and creates LLM summaries which are cached on our servers.</p>
-                                            <p class="pt-2">When enabled, cached summaries (if available) are displayed immediately without using your API keys.</p>
-                                            <p class="pt-2">You can always generate a fresh summary using your selected provider if needed.</p>
-                                        </div>
-                                    </details>
+                <!-- Header -->
+                <div class="px-8 pt-8 pb-5 border-b border-gray-200 dark:border-white/10">
+                    <h1 class="text-base font-semibold text-gray-900 dark:text-white">Hacker News Companion Settings</h1>
+                    <p class="mt-1 max-w-2xl text-sm/6 text-gray-600 dark:text-gray-400">Summaries load in two steps: try the cached server summary first, then fall back to your generation provider. Fine-tune prompts under Advanced.</p>
+                </div>
 
-                                </div>
-                            </div>
-                        </fieldset>
-                        
-                        <!-- Active Provider Selection -->
-                        <div class="rounded-xl border border-indigo-200 bg-indigo-50/50 px-5 py-4 dark:border-indigo-500/30 dark:bg-indigo-950/30">
-                            <div class="flex items-center justify-between gap-4">
+                <!-- Tabs -->
+                <div class="px-8 pt-2 border-b border-gray-200 dark:border-white/10">
+                    <nav class="-mb-px flex space-x-8" role="tablist" aria-label="Settings tabs">
+                        <button type="button" id="tab-general" data-tab="general" role="tab" aria-selected="true" aria-controls="panel-general" tabindex="0"
+                                class="whitespace-nowrap border-b-2 px-1 py-3 text-sm font-medium transition-colors border-indigo-500 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400">General</button>
+                        <button type="button" id="tab-advanced" data-tab="advanced" role="tab" aria-selected="false" aria-controls="panel-advanced" tabindex="-1"
+                                class="whitespace-nowrap border-b-2 px-1 py-3 text-sm font-medium transition-colors border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-white/20 dark:hover:text-gray-200">Advanced</button>
+                    </nav>
+                </div>
+
+                <div class="px-8 py-8">
+
+                    <!-- ===================== GENERAL PANEL ===================== -->
+                    <div id="panel-general" data-panel="general" role="tabpanel" aria-labelledby="tab-general" class="space-y-8">
+
+                        <!-- Both-off guard -->
+                        <div id="no-summary-warning" class="hidden items-start gap-2 rounded-lg border border-red-300/60 bg-red-50 px-3.5 py-3 text-sm font-medium text-red-800 dark:border-red-500/40 dark:bg-red-950/40 dark:text-red-200" role="alert">
+                            <span class="mt-1.5 size-1.5 shrink-0 rounded-full bg-red-500"></span>
+                            <span>No summary source is enabled. With both the server cache and provider generation off, the extension won't show any summaries.</span>
+                        </div>
+
+                        <!-- STEP 1 — Summary source -->
+                        <section aria-labelledby="step1-title">
+                            <div class="mb-4 flex items-center gap-3">
+                                <span class="grid size-6 place-items-center rounded-full bg-indigo-50 text-xs font-bold text-indigo-700 ring-1 ring-inset ring-indigo-500/30 dark:bg-indigo-500/15 dark:text-indigo-200">1</span>
                                 <div>
-                                    <label for="active-provider" class="block text-sm font-medium text-gray-900 dark:text-white">Active Provider</label>
-                                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Choose which configured provider to use for summarization</p>
-                                </div>
-                                <div class="grid grid-cols-1">
-                                    <select id="active-provider" name="active-provider"
-                                            class="col-start-1 row-start-1 w-48 appearance-none rounded-md bg-white py-1.5 pl-3 pr-8 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:*:bg-gray-800 dark:focus-visible:outline-indigo-500">
-                                        <option value="" selected>None</option>
-                                        <option value="ollama">Ollama [Local]</option>
-                                        <option value="ollama-cloud">Ollama [Cloud]</option>
-                                        <option value="google">Google Gemini</option>
-                                        <option value="anthropic">Anthropic</option>
-                                        <option value="openai">OpenAI</option>
-                                        <option value="openai-compatible">OpenAI-compatible</option>
-                                    </select>
-                                    <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" class="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-gray-500 sm:size-4 dark:text-gray-400">
-                                        <path d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" fill-rule="evenodd" />
-                                    </svg>
+                                    <h2 id="step1-title" class="text-sm font-semibold text-gray-900 dark:text-white">Summary source</h2>
+                                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">The first thing tried, before any provider runs.</p>
                                 </div>
                             </div>
-                        </div>
 
-                        <div class="flex items-center">
-                            <div aria-hidden="true" class="w-full border-t border-gray-300/70 dark:border-white/15"></div>
-                            <div class="relative flex justify-center">
-                                <span id="ollama-section-label" class="px-2 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:bg-gray-900 dark:text-gray-400 whitespace-nowrap">LOCAL AI PROVIDER (Free Option)</span>
-                            </div>
-                            <div aria-hidden="true" class="w-full border-t border-gray-300/70 dark:border-white/15"></div>
-                        </div>
-
-                        <div class="space-y-4">
-                            <!-- Ollama -->
-                            <div class="rounded-xl border border-gray-200/70 bg-white/60 px-5 py-4 shadow-sm cursor-pointer hover:bg-white/80 dark:border-white/10 dark:bg-gray-900/60 dark:hover:bg-gray-900/80" data-provider-card="ollama" role="button">
-                                <div class="flex items-center justify-between gap-4">
-                                    <div class="flex items-center gap-2">
-                                        <span class="block text-sm/6 font-medium text-gray-900 dark:text-white">Ollama</span>
-                                        <span class="ml-2 hidden items-center rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-semibold text-indigo-700 ring-1 ring-inset ring-indigo-500/20 dark:bg-indigo-500/20 dark:text-indigo-200" data-provider-chip="ollama">Active</span>
-
-                                        <details class="ml-1 inline-block relative">
-                                            <summary class="list-none text-gray-400 hover:text-gray-500 cursor-pointer">
-                                                <svg class="size-5 sm:size-4" viewBox="0 0 16 16" fill="currentColor"
-                                                     aria-hidden="true">
-                                                    <path fill-rule="evenodd"
-                                                          d="M15 8A7 7 0 1 1 1 8a7 7 0 0 1 14 0Zm-6 3.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM7.293 5.293a1 1 0 1 1 .99 1.667c-.459.134-1.033.566-1.033 1.29v.25a.75.75 0 1 0 1.5 0v-.115a2.5 2.5 0 1 0-2.518-4.153.75.75 0 1 0 1.061 1.06Z"
-                                                          clip-rule="evenodd"/>
-                                                </svg>
-                                            </summary>
-                                            <div class="absolute left-0 -translate-x-32  mt-2 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-10 p-4 text-sm text-gray-600 dark:bg-gray-800 dark:text-white dark:outline-white/10 dark:focus:outline-indigo-500">
-                                                <p class="font-medium mb-2">🌟 Local summarization using Ollama</p>
-                                                <p class="mb-3">For this extension to work with <a href="https://ollama.com/" target="_blank" class="underline">Ollama</a>:</p>
-                                                <ol class="list-decimal ml-4 space-y-2">
-                                                    <li>Make sure Ollama is running to see the list of available models in the dropdown</li>
-                                                    <li>Enable CORS for the extension:
-                                                        <div class="mt-2 p-2 bg-gray-200 rounded font-mono text-xs dark:bg-gray-900 dark:text-white">
-                                                            <p class="mb-1">On Mac (run on terminal):</p>
-                                                            <code class="bg-gray-100 px-2 py-1 rounded block overflow-x-auto dark:bg-gray-800 dark:text-white">
-                                                                OLLAMA_ORIGINS="chrome-extension://*,moz-extension://*" ollama serve
-                                                            </code>
-                                                        </div>
-                                                        <div class="mt-2 p-2 bg-gray-200 rounded font-mono text-xs dark:bg-gray-900 dark:text-white">
-                                                            <p class="mb-1">On Windows:</p>
-                                                            <code class="bg-gray-100 px-2 py-1 rounded block overflow-x-auto dark:bg-gray-800 dark:text-white">
-                                                                setx OLLAMA_ORIGINS "chrome-extension://*,moz-extension://*"
-                                                                <br>
-                                                                <br>
-                                                                ollama serve
-                                                            </code>
-                                                        </div>
-                                                    </li>
-                                                    <li>Restart Ollama for the CORS settings to take effect</li>
-                                                </ol>
-
-                                                <p class="mt-3 text-xs text-gray-500">Note: The model dropdown will
-                                                    automatically show your locally downloaded models when Ollama is running properly.
-                                                    Make sure the CORS settings persist across machine restarts.</p>
-                                            </div>
-                                        </details>
+                            <div class="rounded-xl border border-indigo-200 bg-indigo-50/50 dark:border-indigo-500/30 dark:bg-indigo-950/30">
+                                <div class="flex items-start justify-between gap-4 px-5 py-4">
+                                    <div>
+                                        <label for="hn-companion-server-enabled" class="text-sm font-semibold text-gray-900 dark:text-white">Load cached summaries from Hacker News Companion Server</label>
+                                        <p class="mt-1.5 text-sm/6 text-gray-600 dark:text-gray-400">When on, the extension tries the Companion server first. Your provider (Step 2) runs only on a cache miss, a failed fetch, or when you request a fresh summary.</p>
                                     </div>
-                                    <button type="button" class="flex size-8 items-center justify-center rounded-md border border-gray-300 bg-white/70 text-gray-500 shadow-sm hover:bg-white dark:border-gray-600 dark:bg-white/5 dark:text-gray-300" data-provider-toggle="ollama" aria-controls="ollama-body" aria-expanded="false">
-                                        <span class="sr-only">Show Ollama settings</span>
-                                        <svg viewBox="0 0 16 16" fill="currentColor" class="size-4 transition-transform" data-provider-chevron="ollama" aria-hidden="true">
-                                            <path d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" fill-rule="evenodd" />
-                                        </svg>
-                                    </button>
+                                    <div class="group relative inline-flex w-11 shrink-0 rounded-full bg-gray-200 p-0.5 inset-ring inset-ring-gray-900/15 transition-colors duration-200 ease-in-out has-checked:bg-indigo-600 dark:bg-white/5 dark:inset-ring-white/10 dark:has-checked:bg-indigo-500">
+                                        <span class="size-5 rounded-full bg-white shadow-xs ring-1 ring-gray-900/5 transition-transform duration-200 ease-in-out group-has-[:checked]:translate-x-5"></span>
+                                        <input id="hn-companion-server-enabled" type="checkbox" checked aria-label="Load cached summaries from Hacker News Companion Server" class="absolute inset-0 appearance-none focus:outline-hidden"/>
+                                    </div>
                                 </div>
-                                <p class="mt-2 ml-7 text-xs text-gray-500 dark:text-gray-400" id="ollama-subtitle">Local models running on your machine. No API key required.</p>
-                                <div class="mt-4 ml-7 space-y-4 hidden" id="ollama-body" data-provider-body="ollama">
-                                    <!-- Local / Cloud toggle -->
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-sm font-medium text-gray-900 dark:text-white">Mode</span>
-                                        <div class="inline-flex rounded-md shadow-sm" role="group">
-                                            <button type="button" id="ollama-mode-local"
-                                                    class="px-3 py-1 text-xs font-semibold rounded-l-md border border-gray-300 bg-indigo-600 text-white dark:border-gray-600"
-                                                    data-ollama-mode="local">Local</button>
-                                            <button type="button" id="ollama-mode-cloud"
-                                                    class="px-3 py-1 text-xs font-semibold rounded-r-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10"
-                                                    data-ollama-mode="cloud">Cloud</button>
-                                        </div>
-                                        <input type="hidden" id="ollama-cloud" name="ollama-cloud" value="false">
+                                <div class="grid grid-cols-1 gap-3 px-5 pb-5 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-stretch">
+                                    <div class="rounded-lg border border-white/10 bg-white/40 p-3 dark:bg-white/5">
+                                        <strong class="block text-sm font-semibold text-gray-900 dark:text-white">1. Try cached summary</strong>
+                                        <span class="mt-1 block text-xs text-gray-500 dark:text-gray-400">Fast path. Does not use your API key.</span>
                                     </div>
+                                    <div class="hidden items-center justify-center text-gray-400 sm:flex">&rarr;</div>
+                                    <div class="rounded-lg border border-white/10 bg-white/40 p-3 dark:bg-white/5">
+                                        <strong class="block text-sm font-semibold text-gray-900 dark:text-white">2. Fall back on miss</strong>
+                                        <span class="mt-1 block text-xs text-gray-500 dark:text-gray-400">Uses your provider from Step 2.</span>
+                                    </div>
+                                    <div class="hidden items-center justify-center text-gray-400 sm:flex">&rarr;</div>
+                                    <div class="rounded-lg border border-white/10 bg-white/40 p-3 dark:bg-white/5">
+                                        <strong class="block text-sm font-semibold text-gray-900 dark:text-white">3. Fresh summary</strong>
+                                        <span class="mt-1 block text-xs text-gray-500 dark:text-gray-400">Always generated by your provider.</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
 
-                                    <!-- Local mode fields -->
-                                    <div id="ollama-local-fields">
-                                        <div>
-                                            <label for="ollama-url" class="block text-sm/6 font-medium text-gray-900 dark:text-white">Ollama Server URL</label>
-                                            <div class="mt-2">
-                                                <input type="url" name="ollama-url" id="ollama-url" value="http://localhost:11434" placeholder="http://localhost:11434"
-                                                       class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500 dark:focus-visible:outline-indigo-500">
+                        <!-- STEP 2 — Generation provider -->
+                        <section aria-labelledby="step2-title">
+                            <div class="mb-4 flex items-center gap-3">
+                                <span class="grid size-6 place-items-center rounded-full bg-indigo-50 text-xs font-bold text-indigo-700 ring-1 ring-inset ring-indigo-500/30 dark:bg-indigo-500/15 dark:text-indigo-200">2</span>
+                                <div class="grow">
+                                    <h2 id="step2-title" class="text-sm font-semibold text-gray-900 dark:text-white">Generation provider</h2>
+                                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Used for cache misses and fresh summaries.</p>
+                                </div>
+                                <span id="active-provider-label" class="inline-flex items-center rounded-md bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-500/20 dark:bg-indigo-500/20 dark:text-indigo-200">Active: None</span>
+                                <div class="group relative inline-flex w-11 shrink-0 rounded-full bg-gray-200 p-0.5 inset-ring inset-ring-gray-900/15 transition-colors duration-200 ease-in-out has-checked:bg-indigo-600 dark:bg-white/5 dark:inset-ring-white/10 dark:has-checked:bg-indigo-500">
+                                    <span class="size-5 rounded-full bg-white shadow-xs ring-1 ring-gray-900/5 transition-transform duration-200 ease-in-out group-has-[:checked]:translate-x-5"></span>
+                                    <input id="generation-enabled" type="checkbox" checked aria-label="Generate summaries with a provider" class="absolute inset-0 appearance-none focus:outline-hidden"/>
+                                </div>
+                            </div>
+
+                            <!-- Readiness banner -->
+                            <div id="provider-readiness" class="mb-3 flex items-center gap-2 rounded-lg border px-3.5 py-2.5 text-xs font-medium">
+                                <span id="provider-readiness-dot" class="size-1.5 shrink-0 rounded-full"></span>
+                                <span id="provider-readiness-text"></span>
+                            </div>
+
+                            <!-- Off-state note (shown when generation is off) -->
+                            <div id="gen-off-note" class="hidden rounded-xl border border-dashed border-gray-300 bg-gray-50 px-5 py-4 text-sm text-gray-600 dark:border-white/10 dark:bg-gray-900/50 dark:text-gray-400">
+                                Turn on <strong class="font-semibold text-gray-800 dark:text-gray-200">Generate summaries with a provider</strong> to choose and configure a model. Your last selection is remembered.
+                            </div>
+
+                            <!-- Provider list (collapses when generation is off) -->
+                            <div id="gen-collapse">
+                                <!-- LOCAL -->
+                                <div class="mt-3 mb-3 flex items-center gap-2.5">
+                                    <span class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Local</span>
+                                            <span class="h-px grow bg-gray-300/70 dark:bg-white/10"></span>
+                                        </div>
+                                        <div class="space-y-4">
+                                            <!-- Ollama Local -->
+                                            <div class="rounded-xl border border-gray-200/70 bg-white/60 shadow-sm dark:border-white/10 dark:bg-gray-900/60" data-provider-card="ollama">
+                                                <div class="flex items-start gap-3.5 px-5 py-6">
+                                                    <input type="radio" name="provider" value="ollama" id="provider-ollama" class="mt-1 size-4 shrink-0 accent-indigo-600" aria-label="Use Ollama Local">
+                                                    <div class="min-w-0 grow">
+                                                        <div class="flex flex-wrap items-center gap-2">
+                                                            <span class="text-sm font-semibold text-gray-900 dark:text-white">Ollama Local</span>
+                                                            <span class="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10 dark:bg-gray-400/10 dark:text-gray-400 dark:ring-gray-400/20">No API key</span>
+                                                            <span class="hidden items-center rounded-md px-2 py-1 text-xs font-medium" data-provider-status="ollama"></span>
+                                                        </div>
+                                                        <p class="mt-2 text-sm/6 text-gray-500 dark:text-gray-400">Run models on your own machine. Best for privacy; requires Ollama running with extension access enabled.</p>
+                                                    </div>
+                                                    <button type="button" class="flex size-8 shrink-0 items-center justify-center rounded-md border border-gray-300 bg-white text-gray-500 shadow-sm hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700" data-provider-toggle="ollama" aria-controls="ollama-body" aria-expanded="false">
+                                                <span class="sr-only">Show Ollama Local settings</span>
+                                                <svg viewBox="0 0 16 16" fill="currentColor" class="size-4 transition-transform" data-provider-chevron="ollama" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z"/></svg>
+                                            </button>
+                                        </div>
+                                                <div class="hidden px-5 pb-6 pl-12 space-y-5" id="ollama-body" data-provider-body="ollama">
+                                                    <div>
+                                                        <label for="ollama-url" class="block text-sm/6 font-medium text-gray-900 dark:text-white">Ollama Server URL</label>
+                                                        <input type="url" name="ollama-url" id="ollama-url" value="http://localhost:11434" placeholder="http://localhost:11434"
+                                                               class="mt-2 block w-full rounded-md bg-white px-3 py-2 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:focus-visible:outline-indigo-500">
+                                                        <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">Default Ollama URL. The model list loads when the server is reachable with CORS enabled.</p>
+                                                    </div>
+                                                    <div>
+                                                        <label for="ollama-model" class="block text-sm/6 font-medium text-gray-900 dark:text-white">Select Ollama Model</label>
+                                                        <select id="ollama-model" name="ollama-model"
+                                                                class="mt-2 block w-full rounded-md bg-white px-3 py-2 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:*:bg-gray-800 dark:focus-visible:outline-indigo-500">
+                                                            <option value="">Expand to load models</option>
+                                                        </select>
                                             </div>
-                                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">The base URL of your Ollama server (default: http://localhost:11434)</p>
                                         </div>
                                     </div>
+                                </div>
 
-                                    <!-- Cloud mode fields -->
-                                    <div id="ollama-cloud-fields" class="hidden">
-                                        <div class="flex items-center gap-3">
-                                            <div class="relative grow">
-                                                <label for="ollama-key" class="sr-only">Enter Ollama API Key</label>
-                                                <input type="password"
-                                                       id="ollama-key"
-                                                       name="ollama-key"
-                                                       class="block w-full rounded-md bg-white px-3 py-1.5 pr-16 text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500 dark:focus:outline-indigo-500"
-                                                       placeholder="Enter Ollama API Key">
-                                                <button type="button" class="absolute inset-y-0 right-2 my-auto rounded-md px-2 text-xs font-semibold text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200" data-toggle-visibility="ollama-key" aria-pressed="false">Show</button>
-                                            </div>
-                                            <details class="relative">
-                                                <summary class="list-none text-gray-400 hover:text-gray-500 cursor-pointer">
-                                                    <svg class="size-5 sm:size-4" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-                                                        <path fill-rule="evenodd" d="M15 8A7 7 0 1 1 1 8a7 7 0 0 1 14 0Zm-6 3.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM7.293 5.293a1 1 0 1 1 .99 1.667c-.459.134-1.033.566-1.033 1.29v.25a.75.75 0 1 0 1.5 0v-.115a2.5 2 0 1 0-2.518-4.153.75.75 0 1 0 1.061 1.06Z" clip-rule="evenodd"/>
-                                                    </svg>
-                                                </summary>
-                                                <div class="absolute right-0 mt-2 w-72 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-10 p-4 text-sm text-gray-600 dark:bg-gray-800 dark:text-white dark:outline-white/10 dark:focus:outline-indigo-500">
-                                                    🔑 Get your API key from <a href="https://ollama.com/settings/keys" target="_blank" class="underline">ollama.com/settings/keys</a>.
-                                                    <p class="pt-3">API key is securely stored in your browser's local storage and can sync across your devices with browser sync.</p>
+                                <!-- HOSTED -->
+                                <div class="mt-7 mb-3 flex items-center gap-2.5">
+                                    <span class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Hosted</span>
+                                    <span class="h-px grow bg-gray-300/70 dark:bg-white/10"></span>
+                                </div>
+                                <div class="space-y-4">
+                                            <!-- Google Gemini -->
+                                            <div class="rounded-xl border border-gray-200/70 bg-white/60 shadow-sm dark:border-white/10 dark:bg-gray-900/60" data-provider-card="google">
+                                                <div class="flex items-start gap-3.5 px-5 py-6">
+                                                    <input type="radio" name="provider" value="google" id="provider-google" class="mt-1 size-4 shrink-0 accent-indigo-600" aria-label="Use Google Gemini">
+                                                    <div class="min-w-0 grow">
+                                                        <div class="flex flex-wrap items-center gap-2">
+                                                            <span class="text-sm font-semibold text-gray-900 dark:text-white">Google Gemini</span>
+                                                            <span class="inline-flex items-center rounded-md bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20 dark:bg-emerald-500/15 dark:text-emerald-300">Recommended</span>
+                                                            <span class="hidden items-center rounded-md px-2 py-1 text-xs font-medium" data-provider-status="google"></span>
+                                                        </div>
+                                                        <p class="mt-2 text-sm/6 text-gray-500 dark:text-gray-400">Good default balance of speed, cost, and quality for most summaries.</p>
+                                                    </div>
+                                            <button type="button" class="flex size-8 shrink-0 items-center justify-center rounded-md border border-gray-300 bg-white text-gray-500 shadow-sm hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700" data-provider-toggle="google" aria-controls="google-body" aria-expanded="false">
+                                                <span class="sr-only">Show Google Gemini settings</span>
+                                                <svg viewBox="0 0 16 16" fill="currentColor" class="size-4 transition-transform" data-provider-chevron="google" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z"/></svg>
+                                            </button>
+                                        </div>
+                                                <div class="hidden px-5 pb-6 pl-12 space-y-5" id="google-body" data-provider-body="google">
+                                                    <div class="flex items-center gap-3">
+                                                        <div class="relative grow">
+                                                            <label for="google-key" class="sr-only">Gemini API key</label>
+                                                            <input type="password" id="google-key" name="google-key" placeholder="Enter Gemini API key"
+                                                                   class="block w-full rounded-md bg-white px-3 py-2 pr-16 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:focus:outline-indigo-500">
+                                                    <button type="button" class="absolute inset-y-0 right-2 my-auto rounded-md px-2 text-xs font-semibold text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200" data-toggle-visibility="google-key" aria-pressed="false">Show</button>
                                                 </div>
-                                            </details>
+                                                <details class="relative">
+                                                    <summary class="list-none cursor-pointer text-gray-400 hover:text-gray-500"><svg class="size-4" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M15 8A7 7 0 1 1 1 8a7 7 0 0 1 14 0Zm-6 3.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM7.293 5.293a1 1 0 1 1 .99 1.667c-.459.134-1.033.566-1.033 1.29v.25a.75.75 0 1 0 1.5 0v-.115a2.5 2.5 0 1 0-2.518-4.153.75.75 0 1 0 1.061 1.06Z"/></svg></summary>
+                                                    <div class="absolute right-0 z-10 mt-2 w-72 rounded-md bg-white p-4 text-sm text-gray-600 shadow-lg ring-1 ring-black/5 dark:bg-gray-800 dark:text-white">🔑 Get your API key from <a href="https://aistudio.google.com/apikey" target="_blank" class="underline">aistudio.google.com</a>.<p class="pt-3">Stored in your browser's local storage and synced across your devices. The key is sent only to the selected provider when making requests.</p></div>
+                                                </details>
+                                            </div>
+                                            <div>
+                                                        <label for="google-model" class="block text-sm/6 font-medium text-gray-900 dark:text-white">Select Gemini Model</label>
+                                                        <select id="google-model" name="google-model"
+                                                                class="mt-2 block w-full rounded-md bg-white px-3 py-2 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:*:bg-gray-800 dark:focus-visible:outline-indigo-500">
+                                                    <option value="gemini-3.5-flash" selected>Gemini 3.5 Flash</option>
+                                                    <option value="gemini-3.1-pro-preview">Gemini 3.1 Pro</option>
+                                                    <option value="gemini-3.1-flash-lite">Gemini 3.1 Flash-Lite</option>
+                                                    <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+                                                    <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                                                    <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash-Lite</option>
+                                                </select>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <div>
-                                        <label for="ollama-model" class="block text-sm/6 font-medium text-gray-900 dark:text-white">Select Ollama Model
-                                            <span id="ollama-cors-hint" class="ml-3 inline-flex items-center rounded-md bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-800 ring-1 ring-inset ring-yellow-600/20">Make sure Ollama is running with CORS enabled</span>
-                                        </label>
-                                        <div class="mt-3 grid grid-cols-1">
-                                            <select id="ollama-model"
-                                                    name="ollama-model"
-                                                    class="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white py-1.5 pl-3 pr-8 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:*:bg-gray-800 dark:focus-visible:outline-indigo-500">
-                                                <option value="llama2"></option>
-                                            </select>
-                                            <svg viewBox="0 0 16 16" fill="currentColor" data-slot="icon" aria-hidden="true" class="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-gray-500 sm:size-4 dark:text-gray-400">
-                                                <path d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" fill-rule="evenodd" />
-                                            </svg>
+                                            <!-- Anthropic -->
+                                            <div class="rounded-xl border border-gray-200/70 bg-white/60 shadow-sm dark:border-white/10 dark:bg-gray-900/60" data-provider-card="anthropic">
+                                                <div class="flex items-start gap-3.5 px-5 py-6">
+                                            <input type="radio" name="provider" value="anthropic" id="provider-anthropic" class="mt-1 size-4 shrink-0 accent-indigo-600" aria-label="Use Anthropic">
+                                            <div class="min-w-0 grow">
+                                                <div class="flex flex-wrap items-center gap-2">
+                                                    <span class="text-sm font-semibold text-gray-900 dark:text-white">Anthropic</span>
+                                                            <span class="hidden items-center rounded-md px-2 py-1 text-xs font-medium" data-provider-status="anthropic"></span>
+                                                        </div>
+                                                        <p class="mt-2 text-sm/6 text-gray-500 dark:text-gray-400">Strong long-context quality for deeper comment threads and nuanced discussions.</p>
+                                            </div>
+                                            <button type="button" class="flex size-8 shrink-0 items-center justify-center rounded-md border border-gray-300 bg-white text-gray-500 shadow-sm hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700" data-provider-toggle="anthropic" aria-controls="anthropic-body" aria-expanded="false">
+                                                <span class="sr-only">Show Anthropic settings</span>
+                                                <svg viewBox="0 0 16 16" fill="currentColor" class="size-4 transition-transform" data-provider-chevron="anthropic" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z"/></svg>
+                                            </button>
+                                        </div>
+                                                <div class="hidden px-5 pb-6 pl-12 space-y-5" id="anthropic-body" data-provider-body="anthropic">
+                                            <div class="flex items-center gap-3">
+                                                <div class="relative grow">
+                                                            <label for="anthropic-key" class="sr-only">Anthropic API key</label>
+                                                            <input type="password" id="anthropic-key" name="anthropic-key" placeholder="Enter Anthropic API key"
+                                                                   class="block w-full rounded-md bg-white px-3 py-2 pr-16 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:focus:outline-indigo-500">
+                                                    <button type="button" class="absolute inset-y-0 right-2 my-auto rounded-md px-2 text-xs font-semibold text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200" data-toggle-visibility="anthropic-key" aria-pressed="false">Show</button>
+                                                </div>
+                                                <details class="relative">
+                                                    <summary class="list-none cursor-pointer text-gray-400 hover:text-gray-500"><svg class="size-4" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M15 8A7 7 0 1 1 1 8a7 7 0 0 1 14 0Zm-6 3.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM7.293 5.293a1 1 0 1 1 .99 1.667c-.459.134-1.033.566-1.033 1.29v.25a.75.75 0 1 0 1.5 0v-.115a2.5 2.5 0 1 0-2.518-4.153.75.75 0 1 0 1.061 1.06Z"/></svg></summary>
+                                                    <div class="absolute right-0 z-10 mt-2 w-72 rounded-md bg-white p-4 text-sm text-gray-600 shadow-lg ring-1 ring-black/5 dark:bg-gray-800 dark:text-white">🔑 Get your API key from <a href="https://console.anthropic.com/settings/keys" target="_blank" class="underline">console.anthropic.com</a>.<p class="pt-3">Stored in your browser's local storage and synced across your devices. The key is sent only to the selected provider when making requests.</p></div>
+                                                </details>
+                                            </div>
+                                            <div>
+                                                        <label for="anthropic-model" class="block text-sm/6 font-medium text-gray-900 dark:text-white">Select Anthropic Model</label>
+                                                        <select id="anthropic-model" name="anthropic-model"
+                                                                class="mt-2 block w-full rounded-md bg-white px-3 py-2 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:*:bg-gray-800 dark:focus-visible:outline-indigo-500">
+                                                    <option value="claude-opus-4-8" selected>Claude Opus 4.8</option>
+                                                    <option value="claude-opus-4-7">Claude Opus 4.7</option>
+                                                    <option value="claude-sonnet-4-6">Claude Sonnet 4.6</option>
+                                                    <option value="claude-haiku-4-5">Claude Haiku 4.5</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                            <!-- OpenAI -->
+                                            <div class="rounded-xl border border-gray-200/70 bg-white/60 shadow-sm dark:border-white/10 dark:bg-gray-900/60" data-provider-card="openai">
+                                                <div class="flex items-start gap-3.5 px-5 py-6">
+                                            <input type="radio" name="provider" value="openai" id="provider-openai" class="mt-1 size-4 shrink-0 accent-indigo-600" aria-label="Use OpenAI">
+                                            <div class="min-w-0 grow">
+                                                <div class="flex flex-wrap items-center gap-2">
+                                                    <span class="text-sm font-semibold text-gray-900 dark:text-white">OpenAI</span>
+                                                            <span class="hidden items-center rounded-md px-2 py-1 text-xs font-medium" data-provider-status="openai"></span>
+                                                        </div>
+                                                        <p class="mt-2 text-sm/6 text-gray-500 dark:text-gray-400">Broad model support with predictable hosted API behavior.</p>
+                                            </div>
+                                            <button type="button" class="flex size-8 shrink-0 items-center justify-center rounded-md border border-gray-300 bg-white text-gray-500 shadow-sm hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700" data-provider-toggle="openai" aria-controls="openai-body" aria-expanded="false">
+                                                <span class="sr-only">Show OpenAI settings</span>
+                                                <svg viewBox="0 0 16 16" fill="currentColor" class="size-4 transition-transform" data-provider-chevron="openai" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z"/></svg>
+                                            </button>
+                                        </div>
+                                                <div class="hidden px-5 pb-6 pl-12 space-y-5" id="openai-body" data-provider-body="openai">
+                                            <div class="flex items-center gap-3">
+                                                <div class="relative grow">
+                                                            <label for="openai-key" class="sr-only">OpenAI API key</label>
+                                                            <input type="password" id="openai-key" name="openai-key" placeholder="Enter OpenAI API key"
+                                                                   class="block w-full rounded-md bg-white px-3 py-2 pr-16 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:focus:outline-indigo-500">
+                                                    <button type="button" class="absolute inset-y-0 right-2 my-auto rounded-md px-2 text-xs font-semibold text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200" data-toggle-visibility="openai-key" aria-pressed="false">Show</button>
+                                                </div>
+                                                <details class="relative">
+                                                    <summary class="list-none cursor-pointer text-gray-400 hover:text-gray-500"><svg class="size-4" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M15 8A7 7 0 1 1 1 8a7 7 0 0 1 14 0Zm-6 3.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM7.293 5.293a1 1 0 1 1 .99 1.667c-.459.134-1.033.566-1.033 1.29v.25a.75.75 0 1 0 1.5 0v-.115a2.5 2.5 0 1 0-2.518-4.153.75.75 0 1 0 1.061 1.06Z"/></svg></summary>
+                                                    <div class="absolute right-0 z-10 mt-2 w-72 rounded-md bg-white p-4 text-sm text-gray-600 shadow-lg ring-1 ring-black/5 dark:bg-gray-800 dark:text-white">🔑 Get your API key from <a href="https://platform.openai.com/api-keys" target="_blank" class="underline">platform.openai.com</a>.<p class="pt-3">Stored in your browser's local storage and synced across your devices. The key is sent only to the selected provider when making requests.</p></div>
+                                                </details>
+                                            </div>
+                                            <div>
+                                                        <label for="openai-model" class="block text-sm/6 font-medium text-gray-900 dark:text-white">Select OpenAI Model</label>
+                                                        <select id="openai-model" name="openai-model"
+                                                                class="mt-2 block w-full rounded-md bg-white px-3 py-2 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:*:bg-gray-800 dark:focus-visible:outline-indigo-500">
+                                                    <option value="gpt-5.5" selected>GPT-5.5</option>
+                                                    <option value="gpt-5.4">GPT-5.4</option>
+                                                    <option value="gpt-5.4-mini">GPT-5.4 mini</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                            <!-- Ollama Cloud -->
+                                            <div class="rounded-xl border border-gray-200/70 bg-white/60 shadow-sm dark:border-white/10 dark:bg-gray-900/60" data-provider-card="ollama-cloud">
+                                                <div class="flex items-start gap-3.5 px-5 py-6">
+                                            <input type="radio" name="provider" value="ollama-cloud" id="provider-ollama-cloud" class="mt-1 size-4 shrink-0 accent-indigo-600" aria-label="Use Ollama Cloud">
+                                            <div class="min-w-0 grow">
+                                                <div class="flex flex-wrap items-center gap-2">
+                                                    <span class="text-sm font-semibold text-gray-900 dark:text-white">Ollama Cloud</span>
+                                                            <span class="hidden items-center rounded-md px-2 py-1 text-xs font-medium" data-provider-status="ollama-cloud"></span>
+                                                        </div>
+                                                        <p class="mt-2 text-sm/6 text-gray-500 dark:text-gray-400">Hosted Ollama models. Separate from Ollama Local because it needs a cloud API key.</p>
+                                            </div>
+                                            <button type="button" class="flex size-8 shrink-0 items-center justify-center rounded-md border border-gray-300 bg-white text-gray-500 shadow-sm hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700" data-provider-toggle="ollama-cloud" aria-controls="ollama-cloud-body" aria-expanded="false">
+                                                <span class="sr-only">Show Ollama Cloud settings</span>
+                                                <svg viewBox="0 0 16 16" fill="currentColor" class="size-4 transition-transform" data-provider-chevron="ollama-cloud" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z"/></svg>
+                                            </button>
+                                        </div>
+                                                <div class="hidden px-5 pb-6 pl-12 space-y-5" id="ollama-cloud-body" data-provider-body="ollama-cloud">
+                                            <div class="flex items-center gap-3">
+                                                <div class="relative grow">
+                                                            <label for="ollama-key" class="sr-only">Ollama API key</label>
+                                                            <input type="password" id="ollama-key" name="ollama-key" placeholder="Enter Ollama API key"
+                                                                   class="block w-full rounded-md bg-white px-3 py-2 pr-16 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:focus:outline-indigo-500">
+                                                    <button type="button" class="absolute inset-y-0 right-2 my-auto rounded-md px-2 text-xs font-semibold text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200" data-toggle-visibility="ollama-key" aria-pressed="false">Show</button>
+                                                </div>
+                                                <details class="relative">
+                                                    <summary class="list-none cursor-pointer text-gray-400 hover:text-gray-500"><svg class="size-4" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M15 8A7 7 0 1 1 1 8a7 7 0 0 1 14 0Zm-6 3.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM7.293 5.293a1 1 0 1 1 .99 1.667c-.459.134-1.033.566-1.033 1.29v.25a.75.75 0 1 0 1.5 0v-.115a2.5 2.5 0 1 0-2.518-4.153.75.75 0 1 0 1.061 1.06Z"/></svg></summary>
+                                                    <div class="absolute right-0 z-10 mt-2 w-72 rounded-md bg-white p-4 text-sm text-gray-600 shadow-lg ring-1 ring-black/5 dark:bg-gray-800 dark:text-white">🔑 Get your API key from <a href="https://ollama.com/settings/keys" target="_blank" class="underline">ollama.com/settings/keys</a>.<p class="pt-3">Stored in your browser's local storage and synced across your devices.</p></div>
+                                                </details>
+                                            </div>
+                                            <div>
+                                                        <label for="ollama-cloud-model" class="block text-sm/6 font-medium text-gray-900 dark:text-white">Select Ollama Cloud Model</label>
+                                                        <select id="ollama-cloud-model" name="ollama-cloud-model"
+                                                                class="mt-2 block w-full rounded-md bg-white px-3 py-2 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:*:bg-gray-800 dark:focus-visible:outline-indigo-500">
+                                                    <option value="">Expand to load models</option>
+                                                </select>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+
+                                <!-- COMPATIBLE ENDPOINTS -->
+                                <div class="mt-7 mb-3 flex items-center gap-2.5">
+                                    <span class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Compatible endpoints</span>
+                                    <span class="h-px grow bg-gray-300/70 dark:bg-white/10"></span>
+                                </div>
+                                <div class="space-y-4">
+                                            <!-- OpenAI-compatible -->
+                                            <div class="rounded-xl border border-gray-200/70 bg-white/60 shadow-sm dark:border-white/10 dark:bg-gray-900/60" data-provider-card="openai-compatible">
+                                                <div class="flex items-start gap-3.5 px-5 py-6">
+                                            <input type="radio" name="provider" value="openai-compatible" id="provider-openai-compatible" class="mt-1 size-4 shrink-0 accent-indigo-600" aria-label="Use OpenAI-compatible">
+                                            <div class="min-w-0 grow">
+                                                <div class="flex flex-wrap items-center gap-2">
+                                                    <span class="text-sm font-semibold text-gray-900 dark:text-white">OpenAI-compatible</span>
+                                                            <span class="hidden items-center rounded-md px-2 py-1 text-xs font-medium" data-provider-status="openai-compatible"></span>
+                                                        </div>
+                                                        <p class="mt-2 text-sm/6 text-gray-500 dark:text-gray-400">OpenRouter, Groq, Together, LM Studio, llama.cpp, vLLM, or another OpenAI-compatible endpoint.</p>
+                                            </div>
+                                            <button type="button" class="flex size-8 shrink-0 items-center justify-center rounded-md border border-gray-300 bg-white text-gray-500 shadow-sm hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700" data-provider-toggle="openai-compatible" aria-controls="openai-compatible-body" aria-expanded="false">
+                                                <span class="sr-only">Show OpenAI-compatible settings</span>
+                                                <svg viewBox="0 0 16 16" fill="currentColor" class="size-4 transition-transform" data-provider-chevron="openai-compatible" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z"/></svg>
+                                            </button>
+                                        </div>
+                                                <div class="hidden px-5 pb-6 pl-12 space-y-5" id="openai-compatible-body" data-provider-body="openai-compatible">
+                                            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                                <div>
+                                                        <label for="oaicompat-preset" class="block text-sm/6 font-medium text-gray-900 dark:text-white">Service</label>
+                                                        <select id="oaicompat-preset" name="oaicompat-preset"
+                                                                class="mt-2 block w-full rounded-md bg-white px-3 py-2 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:*:bg-gray-800 dark:focus-visible:outline-indigo-500">
+                                                        <option value="openrouter">OpenRouter</option>
+                                                        <option value="groq">Groq</option>
+                                                        <option value="together">Together</option>
+                                                        <option value="custom">Custom…</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                        <label for="oaicompat-model" class="block text-sm/6 font-medium text-gray-900 dark:text-white">Model identifier</label>
+                                                        <input type="text" id="oaicompat-model" name="oaicompat-model" placeholder="e.g. deepseek/deepseek-chat"
+                                                               class="mt-2 block w-full rounded-md bg-white px-3 py-2 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:focus:outline-indigo-500">
+                                                </div>
+                                            </div>
+                                            <div>
+                                                        <label for="oaicompat-url" class="block text-sm/6 font-medium text-gray-900 dark:text-white">Base URL</label>
+                                                        <input type="url" id="oaicompat-url" name="oaicompat-url" placeholder="http://localhost:1234/v1"
+                                                               class="mt-2 block w-full rounded-md bg-white px-3 py-2 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 disabled:opacity-60 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:focus:outline-indigo-500">
+                                                <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400" id="oaicompat-url-hint">Works with supported OpenAI-compatible servers, including local LM Studio, llama.cpp, and vLLM on localhost. Use its <code>/v1</code> base URL.</p>
+                                            </div>
+                                            <div class="flex items-center gap-3">
+                                                <div class="relative grow">
+                                                        <label for="oaicompat-key" class="sr-only">API key</label>
+                                                        <input type="password" id="oaicompat-key" name="oaicompat-key" placeholder="Enter API key"
+                                                               class="block w-full rounded-md bg-white px-3 py-2 pr-16 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:focus:outline-indigo-500">
+                                                    <button type="button" class="absolute inset-y-0 right-2 my-auto rounded-md px-2 text-xs font-semibold text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200" data-toggle-visibility="oaicompat-key" aria-pressed="false">Show</button>
+                                                </div>
+                                                <details class="relative">
+                                                    <summary class="list-none cursor-pointer text-gray-400 hover:text-gray-500"><svg class="size-4" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M15 8A7 7 0 1 1 1 8a7 7 0 0 1 14 0Zm-6 3.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM7.293 5.293a1 1 0 1 1 .99 1.667c-.459.134-1.033.566-1.033 1.29v.25a.75.75 0 1 0 1.5 0v-.115a2.5 2.5 0 1 0-2.518-4.153.75.75 0 1 0 1.061 1.06Z"/></svg></summary>
+                                                    <div class="absolute right-0 z-10 mt-2 w-72 rounded-md bg-white p-4 text-sm text-gray-600 shadow-lg ring-1 ring-black/5 dark:bg-gray-800 dark:text-white"><span id="oaicompat-key-help">🔑 Enter the API key for the selected service.</span><p class="pt-3">Stored in your browser's local storage and synced across your devices. Local servers (e.g. llama.cpp, LM Studio) usually need no key.</p></div>
+                                                </details>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div><!-- /gen-collapse -->
+                        </section>
+                    </div>
+
+                    <!-- ===================== ADVANCED PANEL ===================== -->
+                    <div id="panel-advanced" data-panel="advanced" role="tabpanel" aria-labelledby="tab-advanced" class="hidden" hidden>
+                        <div class="mb-4">
+                            <h2 class="text-sm font-semibold text-gray-900 dark:text-white">Prompt customization</h2>
+                            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Override the built-in system and user prompts used when your provider generates a summary. Most users never need to change these.</p>
                         </div>
 
-                        <div class="flex items-center">
-                            <div aria-hidden="true" class="w-full border-t border-gray-300/70 dark:border-white/15"></div>
-                            <div class="relative flex justify-center">
-                                <span class="px-2 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:bg-gray-900 dark:text-gray-400 whitespace-nowrap">HOSTED AI PROVIDERS (API key required)</span>
+                        <div class="rounded-xl border border-gray-200/70 bg-white/60 px-5 py-4 shadow-sm dark:border-white/10 dark:bg-gray-900/60">
+                            <div class="flex items-start justify-between gap-4">
+                                <div>
+                                    <label for="prompt-customization" id="prompt-customization-label" class="text-sm font-semibold text-gray-900 dark:text-white">Use custom prompts</label>
+                                    <p id="prompt-customization-description" class="mt-1 text-sm/6 text-gray-500 dark:text-gray-400">Keep this off to use the built-in system and user prompts. Affects only summaries your provider generates — not cached server summaries.</p>
+                                </div>
+                                <div class="group relative inline-flex w-11 shrink-0 rounded-full bg-gray-200 p-0.5 inset-ring inset-ring-gray-900/15 transition-colors duration-200 ease-in-out has-checked:bg-indigo-600 dark:bg-white/5 dark:inset-ring-white/10 dark:has-checked:bg-indigo-500">
+                                    <span class="size-5 rounded-full bg-white shadow-xs ring-1 ring-gray-900/5 transition-transform duration-200 ease-in-out group-has-[:checked]:translate-x-5"></span>
+                                    <input id="prompt-customization" type="checkbox" name="prompt-customization" aria-labelledby="prompt-customization-label" aria-describedby="prompt-customization-description" class="absolute inset-0 appearance-none focus:outline-hidden"/>
+                                </div>
                             </div>
-                            <div aria-hidden="true" class="w-full border-t border-gray-300/70 dark:border-white/15"></div>
-                        </div>
 
-                        <div class="space-y-4">
-                            <!-- Google Gemini -->
-                            <div class="rounded-xl border border-gray-200/70 bg-white/60 px-5 py-4 shadow-sm cursor-pointer hover:bg-white/80 dark:border-white/10 dark:bg-gray-900/60 dark:hover:bg-gray-900/80" data-provider-card="google" role="button">
-                                <div class="flex items-center justify-between gap-4">
+                            <div id="prompt-customization-fields" class="mt-5 space-y-5 border-t border-gray-200 pt-5 dark:border-white/10">
+                                <div>
                                     <div class="flex items-center gap-2">
-                                        <span class="block text-sm/6 font-medium text-gray-900 dark:text-white">Google Gemini</span>
-                                        <span class="ml-2 hidden items-center rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-semibold text-indigo-700 ring-1 ring-inset ring-indigo-500/20 dark:bg-indigo-500/20 dark:text-indigo-200" data-provider-chip="google">Active</span>
-                                        <span class="ml-2 inline-flex items-center rounded-md bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20">Recommended</span>
-                                    </div>
-                                    <button type="button"
-                                            class="flex size-8 items-center justify-center rounded-md border border-gray-300 bg-white/70 text-gray-500 shadow-sm hover:bg-white dark:border-gray-600 dark:bg-white/5 dark:text-gray-300" data-provider-toggle="google" aria-controls="google-body" aria-expanded="false">
-                                        <span class="sr-only">Show Google Gemini settings</span>
-                                        <svg viewBox="0 0 16 16" fill="currentColor" class="size-4 transition-transform"
-                                             data-provider-chevron="google" aria-hidden="true">
-                                            <path d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z"
-                                                  clip-rule="evenodd" fill-rule="evenodd"/>
-                                        </svg>
-                                    </button>
-                                </div>
-                                <p class="mt-2 ml-7 text-xs text-gray-500 dark:text-gray-400">Best balance of speed and cost for most users.</p>
-                                <div class="mt-4 ml-7 space-y-4 hidden" id="google-body" data-provider-body="google">
-                                    <div class="mt-2 flex items-center gap-3">
-                                        <div class="relative grow">
-                                            <label for="google-key" class="sr-only">Enter Gemini API Key</label>
-                                            <input type="password"
-                                                   id="google-key"
-                                                   name="google-key"
-                                                   class="block w-full rounded-md bg-white px-3 py-1.5 pr-16 text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500 dark:focus:outline-indigo-500"
-                                                   placeholder="Enter Gemini API Key">
-                                            <button type="button" class="absolute inset-y-0 right-2 my-auto rounded-md px-2 text-xs font-semibold text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200" data-toggle-visibility="google-key" aria-pressed="false">Show</button>
-                                        </div>
-                                        <details class="relative">
-                                            <summary class="list-none text-gray-400 hover:text-gray-500 cursor-pointer">
-                                                <svg class="size-5 sm:size-4" viewBox="0 0 16 16" fill="currentColor"
-                                                     aria-hidden="true">
-                                                    <path fill-rule="evenodd"
-                                                          d="M15 8A7 7 0 1 1 1 8a7 7 0 0 1 14 0Zm-6 3.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM7.293 5.293a1 1 0 1 1 .99 1.667c-.459.134-1.033.566-1.033 1.29v.25a.75.75 0 1 0 1.5 0v-.115a2.5 2 0 1 0-2.518-4.153.75.75 0 1 0 1.061 1.06Z"
-                                                          clip-rule="evenodd"/>
-                                                </svg>
-                                            </summary>
-                                            <div class="absolute right-0 mt-2 w-72 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-10 p-4 text-sm text-gray-600 dark:bg-gray-800 dark:text-white dark:outline-white/10 dark:focus:outline-indigo-500">
-                                                🔑 Get your API key from <a href="https://aistudio.google.com/apikey"
-                                                                           target="_blank" class="underline">here</a>.
-                                                <p class="pt-3"> API key is securely stored in your browser's local storage and can sync across
-                                                your devices with browser sync. The key is transmitted only to the selected LLM provider when making requests.</p>
+                                        <label for="user-prompt" class="block text-sm font-medium text-gray-700 dark:text-gray-200">User prompt</label>
+                                        <details class="relative inline-block">
+                                            <summary class="list-none cursor-pointer text-gray-400 hover:text-gray-500"><svg class="size-4" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M15 8A7 7 0 1 1 1 8a7 7 0 0 1 14 0Zm-6 3.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM7.293 5.293a1 1 0 1 1 .99 1.667c-.459.134-1.033.566-1.033 1.29v.25a.75.75 0 1 0 1.5 0v-.115a2.5 2.5 0 1 0-2.518-4.153.75.75 0 1 0 1.061 1.06Z"/></svg></summary>
+                                            <div class="absolute left-0 z-10 mt-2 w-96 rounded-md bg-white p-4 text-sm text-gray-600 shadow-lg ring-1 ring-black/5 dark:bg-gray-800 dark:text-white">
+                                                <p class="mb-2 font-medium">The user prompt uses JavaScript template literals. Include these variables:</p>
+                                                <ol class="ml-4 list-decimal space-y-1"><li><code>${title}</code> — the post title.</li><li><code>${text}</code> — the formatted comment text.</li></ol>
+                                                <p class="mt-2 text-xs text-gray-500">Include both <code>${title}</code> and <code>${text}</code> for best results.</p>
                                             </div>
                                         </details>
                                     </div>
-                                    <div>
-                                        <label for="google-model" class="block text-sm/6 font-medium text-gray-900 dark:text-gray-100">Select Gemini Model</label>
-                                        <div class="mt-2 grid grid-cols-1">
-                                            <select id="google-model" name="google-model"
-                                                    class="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white py-1.5 pl-3 pr-8 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:*:bg-gray-800 dark:focus-visible:outline-indigo-500">
-                                                <option value="gemini-3.5-flash" selected>Gemini 3.5 Flash</option>
-                                                <option value="gemini-3.1-pro-preview">Gemini 3.1 Pro</option>
-                                                <option value="gemini-3.1-flash-lite">Gemini 3.1 Flash-Lite</option>
-                                                <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
-                                                <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
-                                                <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash-Lite</option>
-                                            </select>
-                                            <svg viewBox="0 0 16 16" fill="currentColor" data-slot="icon" aria-hidden="true" class="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-gray-500 sm:size-4 dark:text-gray-400">
-                                                <path d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" fill-rule="evenodd" />
-                                            </svg>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Anthropic -->
-                            <div class="rounded-xl border border-gray-200/70 bg-white/60 px-5 py-4 shadow-sm cursor-pointer hover:bg-white/80 dark:border-white/10 dark:bg-gray-900/60 dark:hover:bg-gray-900/80" data-provider-card="anthropic" role="button">
-                                <div class="flex items-center justify-between gap-4">
-                                    <div class="flex items-center gap-2">
-                                        <span class="block text-sm/6 font-medium text-gray-900 dark:text-white">Anthropic</span>
-                                        <span class="ml-2 hidden items-center rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-semibold text-indigo-700 ring-1 ring-inset ring-indigo-500/20 dark:bg-indigo-500/20 dark:text-indigo-200" data-provider-chip="anthropic">Active</span>
-                                    </div>
-                                    <button type="button" class="flex size-8 items-center justify-center rounded-md border border-gray-300 bg-white/70 text-gray-500 shadow-sm hover:bg-white dark:border-gray-600 dark:bg-white/5 dark:text-gray-300" data-provider-toggle="anthropic" aria-controls="anthropic-body" aria-expanded="false">
-                                        <span class="sr-only">Show Anthropic settings</span>
-                                        <svg viewBox="0 0 16 16" fill="currentColor" class="size-4 transition-transform" data-provider-chevron="anthropic" aria-hidden="true">
-                                            <path d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" fill-rule="evenodd" />
-                                        </svg>
-                                    </button>
-                                </div>
-                                <p class="mt-2 ml-7 text-xs text-gray-500 dark:text-gray-400">Great quality for long summaries and deeper nuance.</p>
-                                <div class="mt-4 ml-7 space-y-4 hidden" id="anthropic-body" data-provider-body="anthropic">
-                                    <div class="mt-2 flex items-center gap-3">
-                                        <div class="relative grow">
-                                            <label for="anthropic-key" class="sr-only">Enter Anthropic API Key</label>
-                                            <input type="password"
-                                                   id="anthropic-key"
-                                                   name="anthropic-key"
-                                                   class="block w-full rounded-md bg-white px-3 py-1.5 pr-16 text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500 dark:focus:outline-indigo-500"
-                                                   placeholder="Enter Anthropic API Key">
-                                            <button type="button" class="absolute inset-y-0 right-2 my-auto rounded-md px-2 text-xs font-semibold text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200" data-toggle-visibility="anthropic-key" aria-pressed="false">Show</button>
-                                        </div>
-                                        <details class="relative">
-                                            <summary class="list-none text-gray-400 hover:text-gray-500 cursor-pointer">
-                                                <svg class="size-5 sm:size-4" viewBox="0 0 16 16" fill="currentColor"
-                                                     aria-hidden="true">
-                                                    <path fill-rule="evenodd"
-                                                          d="M15 8A7 7 0 1 1 1 8a7 7 0 0 1 14 0Zm-6 3.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM7.293 5.293a1 1 0 1 1 .99 1.667c-.459.134-1.033.566-1.033 1.29v.25a.75.75 0 1 0 1.5 0v-.115a2.5 2 0 1 0-2.518-4.153.75.75 0 1 0 1.061 1.06Z"
-                                                          clip-rule="evenodd"/>
-                                                </svg>
-                                            </summary>
-                                            <div class="absolute right-0 mt-2 w-72 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-10 p-4 text-sm text-gray-600 dark:bg-gray-800 dark:text-white dark:outline-white/10 dark:focus:outline-indigo-500">
-                                                🔑 Get your API key from <a
-                                                    href="https://console.anthropic.com/settings/keys"
-                                                    target="_blank" class="underline">here</a>.
-                                                <p class="pt-3"> API key is securely stored in your browser's local storage
-                                                and can sync across your devices with browser sync. The key is transmitted only to the selected
-                                                LLM provider when making requests.</p>
-                                            </div>
-                                        </details>
-                                    </div>
-                                    <div>
-                                        <label for="anthropic-model" class="block text-sm font-medium text-gray-900 dark:text-gray-100">Select Anthropic Model</label>
-                                        <div class="mt-2 grid grid-cols-1">
-                                            <select id="anthropic-model"
-                                                    name="anthropic-model"
-                                                    class="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white py-1.5 pl-3 pr-8 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:*:bg-gray-800 dark:focus-visible:outline-indigo-500">
-                                                <option value="claude-opus-4-8" selected>Claude Opus 4.8</option>
-                                                <option value="claude-opus-4-7">Claude Opus 4.7</option>
-                                                <option value="claude-sonnet-4-6">Claude Sonnet 4.6</option>
-                                                <option value="claude-haiku-4-5">Claude Haiku 4.5</option>
-                                            </select>
-                                            <svg viewBox="0 0 16 16" fill="currentColor" data-slot="icon" aria-hidden="true" class="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-gray-500 sm:size-4 dark:text-gray-400">
-                                                <path d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" fill-rule="evenodd" />
-                                            </svg>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- OpenAI -->
-                            <div class="rounded-xl border border-gray-200/70 bg-white/60 px-5 py-4 shadow-sm cursor-pointer hover:bg-white/80 dark:border-white/10 dark:bg-gray-900/60 dark:hover:bg-gray-900/80" data-provider-card="openai" role="button">
-                                <div class="flex items-center justify-between gap-4">
-                                    <div class="flex items-center gap-2">
-                                        <span class="block text-sm/6 font-medium text-gray-900 dark:text-white">OpenAI</span>
-                                        <span class="ml-2 hidden items-center rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-semibold text-indigo-700 ring-1 ring-inset ring-indigo-500/20 dark:bg-indigo-500/20 dark:text-indigo-200" data-provider-chip="openai">Active</span>
-                                    </div>
-                                    <button type="button" class="flex size-8 items-center justify-center rounded-md border border-gray-300 bg-white/70 text-gray-500 shadow-sm hover:bg-white dark:border-gray-600 dark:bg-white/5 dark:text-gray-300" data-provider-toggle="openai" aria-controls="openai-body" aria-expanded="false">
-                                        <span class="sr-only">Show OpenAI settings</span>
-                                        <svg viewBox="0 0 16 16" fill="currentColor" class="size-4 transition-transform" data-provider-chevron="openai" aria-hidden="true">
-                                            <path d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" fill-rule="evenodd" />
-                                        </svg>
-                                    </button>
-                                </div>
-                                <p class="mt-2 ml-7 text-xs text-gray-500 dark:text-gray-400">Reliable models with broad ecosystem support.</p>
-                                <div class="mt-4 ml-7 space-y-4 hidden" id="openai-body" data-provider-body="openai">
-                                    <div class="mt-2 flex items-center gap-3">
-                                        <div class="relative grow">
-                                            <label for="openai-key" class="sr-only">Enter OpenAI API Key</label>
-                                            <input type="password"
-                                                   id="openai-key"
-                                                   name="openai-key"
-                                                   placeholder="Enter OpenAI API Key"
-                                                   class="block w-full rounded-md bg-white px-3 py-1.5 pr-16 text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500 dark:focus:outline-indigo-500">
-                                            <button type="button" class="absolute inset-y-0 right-2 my-auto rounded-md px-2 text-xs font-semibold text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200" data-toggle-visibility="openai-key" aria-pressed="false">Show</button>
-                                        </div>
-                                        <details class="relative">
-                                            <summary class="list-none text-gray-400 hover:text-gray-500 cursor-pointer">
-                                                <svg class="size-5 sm:size-4" viewBox="0 0 16 16" fill="currentColor"
-                                                     aria-hidden="true">
-                                                    <path fill-rule="evenodd"
-                                                          d="M15 8A7 7 0 1 1 1 8a7 7 0 0 1 14 0Zm-6 3.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM7.293 5.293a1 1 0 1 1 .99 1.667c-.459.134-1.033.566-1.033 1.29v.25a.75.75 0 1 0 1.5 0v-.115a2.5 2 0 1 0-2.518-4.153.75.75 0 1 0 1.061 1.06Z"
-                                                          clip-rule="evenodd"/>
-                                                </svg>
-                                            </summary>
-                                            <div class="absolute right-0 mt-2 w-72 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-10 p-4 text-sm text-gray-600 dark:bg-gray-800 dark:text-white dark:outline-white/10 dark:focus:outline-indigo-500">
-                                                🔑 Get your API key from <a href="https://platform.openai.com/api-keys"
-                                                                           target="_blank" class="underline">here</a>.
-                                                <p class="pt-3"> API key is securely stored in your browser's local storage
-                                                and can sync across your devices with browser sync. The key is transmitted only to the selected
-                                                LLM provider when making requests.</p>
-                                            </div>
-                                        </details>
-                                    </div>
-                                    <div>
-                                        <label for="openai-model" class="block text-sm font-medium text-gray-900 dark:text-gray-100">Select OpenAI Model</label>
-                                        <div class="mt-2 grid grid-cols-1">
-                                            <select id="openai-model"
-                                                    name="openai-model"
-                                                    class="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white py-1.5 pl-3 pr-8 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:*:bg-gray-800 dark:focus-visible:outline-indigo-500">
-                                                <option value="gpt-5.5" selected>GPT-5.5</option>
-                                                <option value="gpt-5.4">GPT-5.4</option>
-                                                <option value="gpt-5.4-mini">GPT-5.4 mini</option>
-                                            </select>
-                                            <svg viewBox="0 0 16 16" fill="currentColor" data-slot="icon" aria-hidden="true" class="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-gray-500 sm:size-4 dark:text-gray-400">
-                                                <path d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" fill-rule="evenodd" />
-                                            </svg>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- OpenAI-compatible -->
-                            <div class="rounded-xl border border-gray-200/70 bg-white/60 px-5 py-4 shadow-sm cursor-pointer hover:bg-white/80 dark:border-white/10 dark:bg-gray-900/60 dark:hover:bg-gray-900/80" data-provider-card="openai-compatible" role="button">
-                                <div class="flex items-center justify-between gap-4">
-                                    <div class="flex items-center gap-2">
-                                        <span class="block text-sm/6 font-medium text-gray-900 dark:text-white">OpenAI-compatible</span>
-                                        <span class="ml-2 hidden items-center rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-semibold text-indigo-700 ring-1 ring-inset ring-indigo-500/20 dark:bg-indigo-500/20 dark:text-indigo-200" data-provider-chip="openai-compatible">Active</span>
-                                    </div>
-                                    <button type="button" class="flex size-8 items-center justify-center rounded-md border border-gray-300 bg-white/70 text-gray-500 shadow-sm hover:bg-white dark:border-gray-600 dark:bg-white/5 dark:text-gray-300" data-provider-toggle="openai-compatible" aria-controls="openai-compatible-body" aria-expanded="false">
-                                        <span class="sr-only">Show OpenAI-compatible settings</span>
-                                        <svg viewBox="0 0 16 16" fill="currentColor" class="size-4 transition-transform" data-provider-chevron="openai-compatible" aria-hidden="true">
-                                            <path d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" fill-rule="evenodd" />
-                                        </svg>
-                                    </button>
-                                </div>
-                                <p class="mt-2 ml-7 text-xs text-gray-500 dark:text-gray-400">OpenRouter, Groq, Together, or another supported OpenAI-compatible endpoint.</p>
-                                <div class="mt-4 ml-7 space-y-4 hidden" id="openai-compatible-body" data-provider-body="openai-compatible">
-                                    <div>
-                                        <label for="oaicompat-preset" class="block text-sm font-medium text-gray-900 dark:text-gray-100">Service</label>
-                                        <div class="mt-2 grid grid-cols-1">
-                                            <select id="oaicompat-preset"
-                                                    name="oaicompat-preset"
-                                                    class="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white py-1.5 pl-3 pr-8 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:*:bg-gray-800 dark:focus-visible:outline-indigo-500">
-                                                <option value="openrouter">OpenRouter</option>
-                                                <option value="groq">Groq</option>
-                                                <option value="together">Together</option>
-                                                <option value="custom">Custom…</option>
-                                            </select>
-                                            <svg viewBox="0 0 16 16" fill="currentColor" data-slot="icon" aria-hidden="true" class="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-gray-500 sm:size-4 dark:text-gray-400">
-                                                <path d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" fill-rule="evenodd" />
-                                            </svg>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label for="oaicompat-url" class="block text-sm font-medium text-gray-900 dark:text-gray-100">Base URL</label>
-                                        <div class="mt-2 grid grid-cols-1">
-                                            <input type="url"
-                                                   id="oaicompat-url"
-                                                   name="oaicompat-url"
-                                                   placeholder="http://localhost:1234/v1"
-                                                   class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 disabled:opacity-60 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500 dark:focus:outline-indigo-500">
-                                        </div>
-                                        <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400" id="oaicompat-url-hint">Works with supported OpenAI-compatible servers, including local LM Studio, llama.cpp, and vLLM on localhost. Use its <code>/v1</code> base URL.</p>
-                                    </div>
-                                    <div class="mt-2 flex items-center gap-3">
-                                        <div class="relative grow">
-                                            <label for="oaicompat-key" class="sr-only">API key</label>
-                                            <input type="password"
-                                                   id="oaicompat-key"
-                                                   name="oaicompat-key"
-                                                   placeholder="Enter API key"
-                                                   class="block w-full rounded-md bg-white px-3 py-1.5 pr-16 text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500 dark:focus:outline-indigo-500">
-                                            <button type="button" class="absolute inset-y-0 right-2 my-auto rounded-md px-2 text-xs font-semibold text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200" data-toggle-visibility="oaicompat-key" aria-pressed="false">Show</button>
-                                        </div>
-                                        <details class="relative">
-                                            <summary class="list-none text-gray-400 hover:text-gray-500 cursor-pointer">
-                                                <svg class="size-5 sm:size-4" viewBox="0 0 16 16" fill="currentColor"
-                                                     aria-hidden="true">
-                                                    <path fill-rule="evenodd"
-                                                          d="M15 8A7 7 0 1 1 1 8a7 7 0 0 1 14 0Zm-6 3.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM7.293 5.293a1 1 0 1 1 .99 1.667c-.459.134-1.033.566-1.033 1.29v.25a.75.75 0 1 0 1.5 0v-.115a2.5 2 0 1 0-2.518-4.153.75.75 0 1 0 1.061 1.06Z"
-                                                          clip-rule="evenodd"/>
-                                                </svg>
-                                            </summary>
-                                            <div class="absolute right-0 mt-2 w-72 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-10 p-4 text-sm text-gray-600 dark:bg-gray-800 dark:text-white dark:outline-white/10 dark:focus:outline-indigo-500">
-                                                <span id="oaicompat-key-help">🔑 Enter the API key for the selected service.</span>
-                                                <p class="pt-3"> API key is securely stored in your browser's local storage
-                                                    and can sync across your devices with browser sync. The key is transmitted only to the
-                                                    selected endpoint when making requests. Local servers (e.g. llama.cpp, LM Studio) usually need no key.</p>
-                                            </div>
-                                        </details>
-                                    </div>
-                                    <div>
-                                        <label for="oaicompat-model" class="block text-sm font-medium text-gray-900 dark:text-gray-100">Model identifier</label>
-                                        <div class="mt-2 grid grid-cols-1">
-                                            <input type="text"
-                                                   id="oaicompat-model"
-                                                   name="oaicompat-model"
-                                                   placeholder="e.g. deepseek/deepseek-chat"
-                                                   class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500 dark:focus:outline-indigo-500">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="flex items-center">
-                            <div aria-hidden="true" class="w-full border-t border-gray-300/70 dark:border-white/15"></div>
-                            <div class="relative flex justify-center">
-                                <span class="px-2 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:bg-gray-900 dark:text-gray-400 whitespace-nowrap">Prompt Customization</span>
-                            </div>
-                            <div aria-hidden="true" class="w-full border-t border-gray-300/70 dark:border-white/15"></div>
-                        </div>
-
-                        <div class="flex items-center justify-between">
-                            <span class="flex grow flex-col">
-                                <label id="prompt-customization-label" for="prompt-customization"
-                                       class="text-sm/6 font-medium text-gray-900 dark:text-white">Enable prompt customization</label>
-                                <span id="prompt-customization-description" class="text-sm text-gray-500 dark:text-gray-400">When disabled, the extension will use the default System and User prompt</span>
-                            </span>
-                            <div class="group relative inline-flex w-11 shrink-0 rounded-full bg-gray-200 p-0.5 inset-ring inset-ring-gray-900/15 outline-offset-2 outline-indigo-600 transition-colors duration-200 ease-in-out has-checked:bg-indigo-600 has-focus-visible:outline-2 dark:bg-white/5 dark:inset-ring-white/10 dark:outline-indigo-500 dark:has-checked:bg-indigo-500">
-                                <span class="size-5 rounded-full bg-white shadow-xs ring-1 ring-gray-900/5 transition-transform duration-200 ease-in-out group-has-[:checked]:translate-x-5"></span>
-                                <input id="prompt-customization" type="checkbox" name="prompt-customization"
-                                                                                 aria-labelledby="prompt-customization-label" aria-describedby="prompt-customization-description"
-                                                                                 class="absolute inset-0 appearance-none focus:outline-hidden"/>
-                            </div>
-                        </div>
-
-                        <div id="prompt-customization-fields" class="mt-4 space-y-6 hidden">
-                            <!-- User Prompt -->
-                            <div>
-                                <div class="flex items-center">
-
-                                    <label for="user-prompt" class="block text-sm/6 font-medium text-gray-900 dark:text-white">User Prompt</label>
-                                    <details class="ml-2 inline-block relative">
-                                        <summary class="list-none text-gray-400 hover:text-gray-500 cursor-pointer">
-                                            <svg class="size-5 sm:size-4" viewBox="0 0 16 16" fill="currentColor"
-                                                 aria-hidden="true">
-                                                <path fill-rule="evenodd"
-                                                      d="M15 8A7 7 0 1 1 1 8a7 7 0 0 1 14 0Zm-6 3.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM7.293 5.293a1 1 0 1 1 .99 1.667c-.459.134-1.033.566-1.033 1.29v.25a.75.75 0 1 0 1.5 0v-.115a2.5 2 0 1 0-2.518-4.153.75.75 0 1 0 1.061 1.06Z"
-                                                      clip-rule="evenodd"/>
-                                            </svg>
-                                        </summary>
-                                        <div class="absolute left-0 -translate-x-32 mt-2 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-10 p-4 text-sm text-gray-600 dark:bg-gray-800 dark:text-white dark:outline-white/10 dark:focus:outline-indigo-500" style="min-width: 450px;">
-                                            <p class="font-medium mb-2">ℹ️ Important instructions for customizing User Prompt: ℹ️</p>
-                                            <p class="mb-3">The user prompt uses JavaScript template literals for dynamic content. You SHOULD use the following variables in your prompt:<br>
-                                            <ol class="list-decimal ml-4 space-y-2">
-                                                <li>`${title}`: The title of the Hacker News post.</li>
-                                                <li>`${text}`: The formatted comment text.</li>
-                                            </ol>
-                                            <p class="mt-2 mb-2">
-                                                <span class="font-medium">Example</span>:<br>
-                                            <div class="mt-2 p-2 bg-gray-200 rounded font-mono text-xs dark:bg-gray-900 dark:text-white">
-                                                <code class="bg-gray-100 px-2 py-1 rounded block overflow-x-auto dark:bg-gray-800 dark:text-white">
-                                                    Summarize the following Hacker News post titled "${title}":\n\n${text}</code>
-                                            </div>
-                                            <p class="mt-3 text-xs text-gray-500">Note: Make sure to include both `${title}` and `${text}` for best results.</p>
-                                        </div>
-                                    </details>
-                                </div>
-
-                                <div class="mt-2">
                                     <textarea id="user-prompt" name="user-prompt" rows="6"
-                                              class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6
-                                              disabled:bg-gray-100 disabled:text-gray-500 disabled:outline-gray-200 disabled:placeholder:text-gray-300
-                                              dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500 dark:focus:outline-indigo-500
-                                              dark:disabled:bg-white/5 dark:disabled:text-gray-400 dark:disabled:outline-white/5 dark:disabled:placeholder:text-gray-600"></textarea>
+                                              class="mt-2 block w-full rounded-md bg-white px-3 py-2 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 disabled:bg-gray-100 disabled:text-gray-500 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:focus:outline-indigo-500 dark:disabled:bg-white/5 dark:disabled:text-gray-400"></textarea>
+                                    <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">Requires <code>${title}</code> and <code>${text}</code> when enabled.</p>
                                 </div>
-
-                            </div>
-
-                            <!-- System Prompt -->
-                            <div>
-                                <label for="system-prompt" class="block text-sm/6 font-medium text-gray-900 dark:text-white">System Prompt</label>
-                                <div class="mt-2">
+                                <div>
+                                    <label for="system-prompt" class="block text-sm font-medium text-gray-700 dark:text-gray-200">System prompt</label>
                                     <textarea id="system-prompt" name="system-prompt" rows="6"
-                                              class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6
-                                              disabled:bg-gray-100 disabled:text-gray-500 disabled:outline-gray-200 disabled:placeholder:text-gray-300
-                                              dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500 dark:focus:outline-indigo-500
-                                              dark:disabled:bg-white/5 dark:disabled:text-gray-400 dark:disabled:outline-white/5 dark:disabled:placeholder:text-gray-600"></textarea>
+                                              class="mt-2 block w-full rounded-md bg-white px-3 py-2 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 disabled:bg-gray-100 disabled:text-gray-500 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:focus:outline-indigo-500 dark:disabled:bg-white/5 dark:disabled:text-gray-400"></textarea>
                                 </div>
-                            </div>
-                        </div>
-
-                        <div class="sticky bottom-0 -mx-8 mt-8 flex items-center justify-between gap-x-6 px-8 py-4 ">
-                            <p class="text-xs text-gray-500 dark:text-gray-400">Changes are saved to your browser sync.</p>
-                            <div class="flex items-center gap-x-4">
-                                <button id="cancel-button" type="button" class="rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">Cancel</button>
-                                <button type="submit"
-                                        class="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                                    Save
-                                </button>
                             </div>
                         </div>
                     </div>
-                </fieldset>
+
+                    <!-- Footer -->
+                    <div class="sticky bottom-0 -mx-8 mt-8 flex items-center justify-between gap-x-6  px-8 py-4 backdrop-blur">
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Changes are applied after you press Save and stored with browser sync.</p>
+                        <div class="flex items-center gap-x-4">
+                            <button id="cancel-button" type="button" class="rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">Cancel</button>
+                            <button type="submit" class="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Save</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </form>
-
 </body>
 </html>
