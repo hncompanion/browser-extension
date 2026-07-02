@@ -1,0 +1,48 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run tests
+        run: pnpm test
+
+      - name: Verify tag matches manifest version
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          if ! grep -q "version: \"$TAG_VERSION\"" wxt.config.ts; then
+            echo "Tag $GITHUB_REF_NAME does not match the version in wxt.config.ts"
+            echo "Update the manifest version before tagging."
+            exit 1
+          fi
+
+      - name: Build Chrome zip
+        run: pnpm zip
+
+      - name: Build Firefox zip
+        run: pnpm zip:firefox
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" .output/*.zip --generate-notes

@@ -5,6 +5,11 @@ import tailwindcss from '@tailwindcss/vite';
 // See https://wxt.dev/api/config.html
 export default defineConfig({
     srcDir: 'src',
+    zip: {
+        // Keep release artifact names stable (browser-extension-x.y.z-chrome.zip)
+        // instead of relying on the checkout directory name.
+        name: 'browser-extension',
+    },
     manifest: ({browser}) => {
         let manifest = {
             name: "Hacker News Companion",
