@@ -1,6 +1,8 @@
 import {defineConfig} from 'wxt';
 // @ts-ignore
 import tailwindcss from '@tailwindcss/vite';
+// @ts-ignore
+import {ALL_OPTIONAL_HOST_PERMISSIONS} from './src/lib/host-permissions.js';
 
 // See https://wxt.dev/api/config.html
 export default defineConfig({
@@ -22,33 +24,7 @@ export default defineConfig({
                 "https://hn.algolia.com/*",
                 "https://app.hncompanion.com/*"
             ],
-            optional_host_permissions: [
-                "https://api.openai.com/*",
-                "https://api.anthropic.com/*",
-                "https://openrouter.ai/*",
-                "https://api.groq.com/*",
-                "https://api.together.ai/*",
-                "https://api.fireworks.ai/*",
-                "https://api.deepinfra.com/*",
-                "https://api.mistral.ai/*",
-                "https://api.cerebras.ai/*",
-                "https://api.perplexity.ai/*",
-                "https://api.x.ai/*",
-                "https://api.novita.ai/*",
-                "https://api.sambanova.ai/*",
-                "https://api.z.ai/*",
-                "https://api.tokenrouter.com/*",
-                "https://api.deepseek.com/*",
-                "https://api.cohere.ai/*",
-                "https://api.cloudflare.com/*",
-                "https://ai-gateway.vercel.sh/*",
-                "https://*.oci.oraclecloud.com/*",
-                "https://generativelanguage.googleapis.com/*",
-                "http://host.docker.internal/*",
-                "https://ollama.com/*",
-                "http://localhost/*",
-                "http://127.0.0.1/*"
-            ],
+            optional_host_permissions: ALL_OPTIONAL_HOST_PERMISSIONS,
             icons: {
                 16: '/icon/icon-16.png',
                 32: '/icon/icon-32.png',

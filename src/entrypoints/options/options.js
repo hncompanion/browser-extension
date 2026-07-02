@@ -5,6 +5,7 @@ import {browser} from "wxt/browser";
 import {storage} from '#imports';
 import {Logger} from "../../lib/utils.js";
 import {sendBackgroundMessage} from "../../lib/messaging.js";
+import {OPTIONAL_HOST_PERMISSIONS, OPENAI_COMPATIBLE_PERMISSION_ORIGINS} from "../../lib/host-permissions.js";
 
 const DEFAULT_OLLAMA_URL = 'http://localhost:11434';
 const OLLAMA_CLOUD_URL = 'https://ollama.com';
@@ -39,33 +40,6 @@ const OPENAI_COMPATIBLE_PRESETS = {
         modelPlaceholder: 'model identifier',
         keyHelp: '🔑 Enter the API key if your endpoint requires one. Local servers (llama.cpp, LM Studio) usually need none.',
     },
-};
-
-const OPENAI_COMPATIBLE_PERMISSION_ORIGINS = [
-    'https://openrouter.ai/*',
-    'https://api.groq.com/*',
-    'https://api.together.ai/*',
-    'https://api.together.xyz/*',
-    'https://api.fireworks.ai/*',
-    'https://api.deepinfra.com/*',
-    'https://api.mistral.ai/*',
-    'https://api.cerebras.ai/*',
-    'https://api.perplexity.ai/*',
-    'https://api.x.ai/*',
-    'https://api.novita.ai/*',
-    'https://api.sambanova.ai/*',
-    'https://api.z.ai/*',
-    'https://api.tokenrouter.com/*',
-    'http://localhost/*',
-    'http://127.0.0.1/*',
-];
-
-const OPTIONAL_HOST_PERMISSIONS = {
-    openai: ['https://api.openai.com/*'],
-    anthropic: ['https://api.anthropic.com/*'],
-    google: ['https://generativelanguage.googleapis.com/*'],
-    ollama: ['http://localhost/*'],
-    'ollama-cloud': ['https://ollama.com/*'],
 };
 
 // Provider radio values used in the UI. Ollama is split into two cards
@@ -110,7 +84,17 @@ function getOpenAICompatibleOriginPattern() {
 }
 
 function isSupportedOpenAICompatibleOrigin(pattern) {
-    return OPENAI_COMPATIBLE_PERMISSION_ORIGINS.includes(pattern);
+    return OPENAI_COMPATIBLE_PERMISSION_ORIGINS.some((allowed) => {
+        if (allowed === pattern) return true;
+        // Wildcard-subdomain entries like https://*.oci.oraclecloud.com/*
+        // cover any concrete host under that domain.
+        const wildcard = allowed.match(/^(https?):\/\/\*\.([^/]+)\/\*$/);
+        if (!wildcard) return false;
+        const concrete = pattern.match(/^(https?):\/\/([^/]+)\/\*$/);
+        return !!concrete
+            && concrete[1] === wildcard[1]
+            && (concrete[2] === wildcard[2] || concrete[2].endsWith(`.${wildcard[2]}`));
+    });
 }
 
 // Resolve the host-permission origins needed for the active provider, including

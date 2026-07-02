@@ -76,9 +76,10 @@ export async function getUserMessage(title, text) {
  * Gets model-specific configuration.
  * @param {string} provider - AI provider name
  * @param {string} modelId - Model ID
+ * @param {string} [baseURL] - Endpoint base URL (OpenAI-compatible providers)
  * @returns {Object} Model configuration
  */
-export function getModelConfiguration(provider, modelId) {
+export function getModelConfiguration(provider, modelId, baseURL) {
     const defaultConfig = {
         inputTokenLimit: 15000,
         outputTokenLimit: 4000,
@@ -108,14 +109,32 @@ export function getModelConfiguration(provider, modelId) {
             'gemini-2.5-flash': {inputTokenLimit: 15000, temperature: 0.7},
             'gemini-2.5-flash-lite': {inputTokenLimit: 15000, temperature: 0.7},
         },
-        'openai-compatible': {
-            'claude-3-sonnet-20240229': {inputTokenLimit: 25000, outputTokenLimit: 3000, temperature: 0.7},
-        }
     };
 
-    return (modelConfigs[provider] && modelConfigs[provider][modelId])
+    const config = (modelConfigs[provider] && modelConfigs[provider][modelId])
         || (modelConfigs[provider] && modelConfigs[provider].default)
         || defaultConfig;
+
+    // The conservative default input limit is sized for local models; hosted
+    // OpenAI-compatible endpoints handle inputs as large as the other cloud providers.
+    if (config === defaultConfig
+        && (provider === 'openai-compatible' || provider === 'openrouter')
+        && baseURL && !isLocalEndpoint(baseURL)) {
+        return {...defaultConfig, inputTokenLimit: 25000};
+    }
+    return config;
+}
+
+function isLocalEndpoint(baseURL) {
+    try {
+        const {hostname} = new URL(baseURL);
+        return hostname === 'localhost'
+            || hostname === '127.0.0.1'
+            || hostname === '[::1]'
+            || hostname === 'host.docker.internal';
+    } catch {
+        return true; // Unparseable URL: stay conservative.
+    }
 }
 
 /**
@@ -388,7 +407,7 @@ export async function summarizeTextWithLLM(aiProvider, modelId, apiKey, text, co
 
     Logger.debugSync(`Summarizing with ${aiProvider} / ${modelId}`);
 
-    const modelConfig = getModelConfiguration(aiProvider, modelId);
+    const modelConfig = getModelConfiguration(aiProvider, modelId, baseURL);
     const tokenLimitText = splitInputTextAtTokenLimit(text, modelConfig.inputTokenLimit);
 
     const systemPrompt = await getSystemMessage();
