@@ -52,31 +52,35 @@
 
                             <div class="rounded-xl border border-indigo-200 bg-indigo-50/50 dark:border-indigo-500/30 dark:bg-indigo-950/30">
                                 <div class="flex items-start justify-between gap-4 px-5 py-4">
-                                    <div>
-                                        <label for="hn-companion-server-enabled" class="text-sm font-semibold text-gray-900 dark:text-white">Load cached summaries from Hacker News Companion Server</label>
-                                        <p class="mt-1.5 text-sm/6 text-gray-600 dark:text-gray-400">When on, the extension tries the Companion server first. Your provider (Step 2) runs only on a cache miss, a failed fetch, or when you request a fresh summary.</p>
-                                    </div>
+                                    <label for="hn-companion-server-enabled" class="text-sm font-semibold text-gray-900 dark:text-white">Load cached summaries from Hacker News Companion Server</label>
                                     <div class="group relative inline-flex w-11 shrink-0 rounded-full bg-gray-200 p-0.5 inset-ring inset-ring-gray-900/15 transition-colors duration-200 ease-in-out has-checked:bg-indigo-600 dark:bg-white/5 dark:inset-ring-white/10 dark:has-checked:bg-indigo-500">
                                         <span class="size-5 rounded-full bg-white shadow-xs ring-1 ring-gray-900/5 transition-transform duration-200 ease-in-out group-has-[:checked]:translate-x-5"></span>
                                         <input id="hn-companion-server-enabled" type="checkbox" checked aria-label="Load cached summaries from Hacker News Companion Server" class="absolute inset-0 appearance-none focus:outline-hidden"/>
                                     </div>
                                 </div>
-                                <div class="grid grid-cols-1 gap-3 px-5 pb-5 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-stretch">
-                                    <div class="rounded-lg border border-white/10 bg-white/40 p-3 dark:bg-white/5">
-                                        <strong class="block text-sm font-semibold text-gray-900 dark:text-white">1. Try cached summary</strong>
-                                        <span class="mt-1 block text-xs text-gray-500 dark:text-gray-400">Fast path. Does not use your API key.</span>
+                                <details class="group/how px-5 pb-4">
+                                    <summary class="inline-flex cursor-pointer list-none items-center gap-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-300 dark:hover:text-indigo-200 [&::-webkit-details-marker]:hidden">
+                                        <svg viewBox="0 0 16 16" fill="currentColor" class="size-4 transition-transform group-open/how:rotate-90" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M6.22 4.22a.75.75 0 0 1 1.06 0l3.25 3.25a.75.75 0 0 1 0 1.06l-3.25 3.25a.75.75 0 0 1-1.06-1.06L8.94 8 6.22 5.28a.75.75 0 0 1 0-1.06Z"/></svg>
+                                        How this works
+                                    </summary>
+                                    <p class="mt-3 text-sm/6 text-gray-600 dark:text-gray-400">When on, the extension tries the HN Companion server first. Your provider (Step 2) runs only on a cache miss, a failed fetch, or when you request a fresh summary.</p>
+                                    <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-stretch">
+                                        <div class="rounded-lg border border-white/10 bg-white/40 p-3 dark:bg-white/5">
+                                            <strong class="block text-sm font-semibold text-gray-900 dark:text-white">1. Try cached summary</strong>
+                                            <span class="mt-1 block text-xs text-gray-500 dark:text-gray-400">Fast path. Does not use your API key.</span>
+                                        </div>
+                                        <div class="hidden items-center justify-center text-gray-400 sm:flex">&rarr;</div>
+                                        <div class="rounded-lg border border-white/10 bg-white/40 p-3 dark:bg-white/5">
+                                            <strong class="block text-sm font-semibold text-gray-900 dark:text-white">2. Fall back on miss</strong>
+                                            <span class="mt-1 block text-xs text-gray-500 dark:text-gray-400">Uses your provider from Step 2.</span>
+                                        </div>
+                                        <div class="hidden items-center justify-center text-gray-400 sm:flex">&rarr;</div>
+                                        <div class="rounded-lg border border-white/10 bg-white/40 p-3 dark:bg-white/5">
+                                            <strong class="block text-sm font-semibold text-gray-900 dark:text-white">3. Fresh summary</strong>
+                                            <span class="mt-1 block text-xs text-gray-500 dark:text-gray-400">Always generated by your provider.</span>
+                                        </div>
                                     </div>
-                                    <div class="hidden items-center justify-center text-gray-400 sm:flex">&rarr;</div>
-                                    <div class="rounded-lg border border-white/10 bg-white/40 p-3 dark:bg-white/5">
-                                        <strong class="block text-sm font-semibold text-gray-900 dark:text-white">2. Fall back on miss</strong>
-                                        <span class="mt-1 block text-xs text-gray-500 dark:text-gray-400">Uses your provider from Step 2.</span>
-                                    </div>
-                                    <div class="hidden items-center justify-center text-gray-400 sm:flex">&rarr;</div>
-                                    <div class="rounded-lg border border-white/10 bg-white/40 p-3 dark:bg-white/5">
-                                        <strong class="block text-sm font-semibold text-gray-900 dark:text-white">3. Fresh summary</strong>
-                                        <span class="mt-1 block text-xs text-gray-500 dark:text-gray-400">Always generated by your provider.</span>
-                                    </div>
-                                </div>
+                                </details>
                             </div>
                         </section>
 

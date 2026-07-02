@@ -657,8 +657,11 @@ class HNEnhancer {
                             ? OPENAI_COMPATIBLE_OPENROUTER_BASE_URL
                             : '');
                     const compatModel = compatSettings.model || model;
+                    const compatProvider = isLegacyOpenRouterOnly || compatSettings.preset === 'openrouter'
+                        ? 'openrouter'
+                        : 'openai-compatible';
                     await summarizeTextWithLLM(
-                        'openai-compatible', compatModel, compatSettings.apiKey || '',
+                        compatProvider, compatModel, compatSettings.apiKey || '',
                         formattedComment, commentPathToIdMap,
                         onSuccess, onError, postTitle, compatBaseURL,
                         onChunk

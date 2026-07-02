@@ -506,7 +506,14 @@ export async function summarizeUsingOllama(text, model, ollamaUrl, commentPathTo
  * @returns {DocumentFragment|string}
  */
 export function createOllamaErrorMessage(error) {
-    if (error.message?.includes('403')) {
+    const message = error.message || '';
+    const isForbidden = message.includes('HTTP 403') || message.includes(' 403 ');
+    const isCorsLike = message.includes('CORS')
+        || message.includes('origin is not allowed')
+        || message.includes('forbidden by Ollama')
+        || message.includes('Forbidden');
+
+    if (isForbidden && isCorsLike) {
         return createErrorElement({
             type: 'network',
             title: 'Ollama Blocked the Request',
@@ -516,8 +523,18 @@ export function createOllamaErrorMessage(error) {
         });
     }
 
+    if (message.includes('requires a subscription') || message.includes('upgrade for access')) {
+        return createErrorElement({
+            type: 'api_key',
+            title: 'Ollama Cloud Access Required',
+            description: 'Ollama Cloud rejected the request because this model requires an active subscription or different account access.',
+            action: { label: 'Open Settings', id: 'error-open-settings' },
+            hint: 'Check your Ollama Cloud API key, subscription, and selected model.'
+        });
+    }
+
     // For network errors, use the styled error element
-    if (error.message?.includes('Failed to fetch') || error.message?.includes('NetworkError')) {
+    if (message.includes('Failed to fetch') || message.includes('NetworkError')) {
         return createErrorElement({
             type: 'network',
             title: 'Cannot Connect to Ollama',
@@ -531,7 +548,7 @@ export function createOllamaErrorMessage(error) {
     return createErrorElement({
         type: 'generic',
         title: 'Ollama Error',
-        description: error.message || 'An unexpected error occurred while communicating with Ollama.',
+        description: message || 'An unexpected error occurred while communicating with Ollama.',
         action: { label: 'Open Settings', id: 'error-open-settings' },
         hint: 'Check your Ollama configuration and try again.'
     });

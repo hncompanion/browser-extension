@@ -40,9 +40,9 @@ export default defineConfig({
                 "https://*.oci.oraclecloud.com/*",
                 "https://generativelanguage.googleapis.com/*",
                 "http://host.docker.internal/*",
+                "https://ollama.com/*",
                 "http://localhost/*",
-                "http://127.0.0.1/*",
-                "https://ollama.com/*"
+                "http://127.0.0.1/*"
             ],
             icons: {
                 16: '/icon/icon-16.png',
