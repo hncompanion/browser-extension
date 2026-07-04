@@ -10,6 +10,7 @@ import {AI_SYSTEM_PROMPT, AI_USER_PROMPT_TEMPLATE} from './constants.js';
 // Import generic utilities from lib
 import {buildFragment, createStrong, createInternalLink, createExternalLink} from '../../lib/dom-utils.js';
 import {stripAnchors, splitInputTextAtTokenLimit} from '../../lib/text-utils.js';
+import {OPENAI_COMPATIBLE_PROVIDERS} from '../../lib/openai-compatible-providers.js';
 
 // Import HN-specific DOM utilities
 import {createHighlightedAuthor, createLoadingMessage} from './hn-dom-utils.js';
@@ -120,9 +121,36 @@ export function getModelConfiguration(provider, modelId, baseURL) {
     if (config === defaultConfig
         && (provider === 'openai-compatible' || provider === 'openrouter')
         && baseURL && !isLocalEndpoint(baseURL)) {
+        // Curated provider metadata can lower defaults for suggested models
+        // with smaller contexts; the 25k cap keeps request cost bounded
+        // regardless of model context size.
+        const suggestedModel = findSuggestedModel(baseURL, modelId);
+        if (suggestedModel) {
+            const outputAllowance = Math.min(4000, suggestedModel.output > 0 ? suggestedModel.output : 4000);
+            return {
+                ...defaultConfig,
+                inputTokenLimit: Math.max(1000, Math.min(25000, suggestedModel.context - outputAllowance)),
+                outputTokenLimit: suggestedModel.output > 0 ? Math.min(4000, suggestedModel.output) : 4000,
+            };
+        }
         return {...defaultConfig, inputTokenLimit: 25000};
     }
     return config;
+}
+
+// Look up a model in the curated provider metadata by matching the saved base
+// URL to a known preset. Returns null for custom endpoints and non-suggested
+// models.
+function findSuggestedModel(baseURL, modelId) {
+    if (!baseURL || !modelId) return null;
+    const normalizedBaseURL = normalizeBaseURL(baseURL);
+    const provider = OPENAI_COMPATIBLE_PROVIDERS.find((p) => normalizeBaseURL(p.baseURL) === normalizedBaseURL);
+    const models = provider?.suggestedModels;
+    return models?.find((model) => model.id === modelId) || null;
+}
+
+function normalizeBaseURL(baseURL) {
+    return String(baseURL || '').trim().replace(/\/+$/, '');
 }
 
 function isLocalEndpoint(baseURL) {

@@ -27,6 +27,9 @@ jobs:
       - name: Run tests
         run: pnpm test
 
+      - name: Validate provider catalog against models.dev
+        run: pnpm providers:check
+
       - name: Verify tag matches manifest version
         run: |
           TAG_VERSION="${GITHUB_REF_NAME#v}"

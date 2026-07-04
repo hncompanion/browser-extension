@@ -3,10 +3,8 @@
     --font-sans: sans-serif;
 }
 
-/* Native <select> chevron. The OS arrow renders poorly in dark mode, so hide it
-   (appearance: none) and draw a neutral chevron that reads on both themes.
-   A bare element rule intentionally overrides the utility right-padding so the
-   chevron never overlaps the text. */
+/* Native select chevrons render inconsistently in dark mode, so hide them and
+   draw a neutral chevron that reads on both themes. */
 select {
     appearance: none;
     -webkit-appearance: none;

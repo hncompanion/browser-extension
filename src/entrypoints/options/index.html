@@ -86,11 +86,12 @@
 
                         <!-- STEP 2 — Generation provider -->
                         <section aria-labelledby="step2-title">
-                            <div class="mb-4 flex items-center gap-3">
+                            <!-- pr-[21px] aligns the toggle with the card-enclosed Step 1 toggle (card px-5 + 1px border) -->
+                            <div class="mb-4 flex items-center gap-3 pr-[21px]">
                                 <span class="grid size-6 place-items-center rounded-full bg-indigo-50 text-xs font-bold text-indigo-700 ring-1 ring-inset ring-indigo-500/30 dark:bg-indigo-500/15 dark:text-indigo-200">2</span>
                                 <div class="grow">
                                     <h2 id="step2-title" class="text-sm font-semibold text-gray-900 dark:text-white">Generation provider</h2>
-                                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Used for cache misses and fresh summaries.</p>
+                                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">The AI model that generates summaries.</p>
                                 </div>
                                 <span id="active-provider-label" class="inline-flex items-center rounded-md bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-500/20 dark:bg-indigo-500/20 dark:text-indigo-200">Active: None</span>
                                 <div class="group relative inline-flex w-11 shrink-0 rounded-full bg-gray-200 p-0.5 inset-ring inset-ring-gray-900/15 transition-colors duration-200 ease-in-out has-checked:bg-indigo-600 dark:bg-white/5 dark:inset-ring-white/10 dark:has-checked:bg-indigo-500">
@@ -355,16 +356,23 @@
                                                         <label for="oaicompat-preset" class="block text-sm/6 font-medium text-gray-900 dark:text-white">Service</label>
                                                         <select id="oaicompat-preset" name="oaicompat-preset"
                                                                 class="mt-2 block w-full rounded-md bg-white px-3 py-2 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:*:bg-gray-800 dark:focus-visible:outline-indigo-500">
-                                                        <option value="openrouter">OpenRouter</option>
-                                                        <option value="groq">Groq</option>
-                                                        <option value="together">Together</option>
-                                                        <option value="custom">Custom…</option>
+                                                        <!-- Options populated from the provider catalog (options.js) -->
                                                     </select>
                                                 </div>
                                                 <div>
                                                         <label for="oaicompat-model" class="block text-sm/6 font-medium text-gray-900 dark:text-white">Model identifier</label>
-                                                        <input type="text" id="oaicompat-model" name="oaicompat-model" placeholder="e.g. deepseek/deepseek-chat"
-                                                               class="mt-2 block w-full rounded-md bg-white px-3 py-2 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:focus:outline-indigo-500">
+                                                        <el-autocomplete class="relative mt-2 block">
+                                                            <input type="text" id="oaicompat-model" name="oaicompat-model" placeholder="model identifier"
+                                                                   class="block w-full rounded-md bg-white py-2 pl-3 pr-10 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500 dark:focus:outline-indigo-500">
+                                                            <button type="button" class="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" aria-label="Show model suggestions">
+                                                                <svg viewBox="0 0 20 20" fill="currentColor" class="size-5" aria-hidden="true">
+                                                                    <path d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" fill-rule="evenodd" />
+                                                                </svg>
+                                                            </button>
+                                                            <el-options id="oaicompat-model-list" anchor="bottom end" popover
+                                                                        class="z-50 m-0 max-h-60 w-[var(--input-width)] overflow-auto rounded-md bg-white p-0 py-1 text-base shadow-lg outline-1 outline-black/5 [--anchor-gap:0.25rem] [transition-behavior:allow-discrete] data-[closed]:data-[leave]:opacity-0 data-[leave]:transition data-[leave]:duration-100 data-[leave]:ease-in sm:text-sm dark:bg-gray-800 dark:shadow-none dark:-outline-offset-1 dark:outline-white/10">
+                                                            </el-options>
+                                                        </el-autocomplete>
                                                 </div>
                                             </div>
                                             <div>

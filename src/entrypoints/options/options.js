@@ -5,42 +5,41 @@ import {browser} from "wxt/browser";
 import {storage} from '#imports';
 import {Logger} from "../../lib/utils.js";
 import {sendBackgroundMessage} from "../../lib/messaging.js";
-import {OPTIONAL_HOST_PERMISSIONS, OPENAI_COMPATIBLE_PERMISSION_ORIGINS} from "../../lib/host-permissions.js";
+import {
+    OPTIONAL_HOST_PERMISSIONS,
+    originPatternFromUrl,
+    isSupportedOpenAICompatibleOrigin,
+} from "../../lib/host-permissions.js";
+import {OPENAI_COMPATIBLE_PROVIDERS} from "../../lib/openai-compatible-providers.js";
 
 const DEFAULT_OLLAMA_URL = 'http://localhost:11434';
 const OLLAMA_CLOUD_URL = 'https://ollama.com';
 
-const OPENAI_COMPATIBLE_OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
-
 // OpenAI-compatible service presets. Selecting one pre-fills the base URL and
 // whether an API key is expected. 'custom' lets the user point at a supported
 // local or hosted endpoint from OPENAI_COMPATIBLE_PERMISSION_ORIGINS.
-const OPENAI_COMPATIBLE_PRESETS = {
-    openrouter: {
-        baseURL: OPENAI_COMPATIBLE_OPENROUTER_BASE_URL,
-        keyRequired: true,
-        modelPlaceholder: 'e.g. deepseek/deepseek-chat',
-        keyHelp: '🔑 Get your API key from <a href="https://openrouter.ai/settings/keys" target="_blank" class="underline">openrouter.ai</a> and browse models <a href="https://openrouter.ai/models" target="_blank" class="underline">here</a>.',
-    },
-    groq: {
-        baseURL: 'https://api.groq.com/openai/v1',
-        keyRequired: true,
-        modelPlaceholder: 'e.g. llama-3.3-70b-versatile',
-        keyHelp: '🔑 Get your API key from <a href="https://console.groq.com/keys" target="_blank" class="underline">console.groq.com</a>.',
-    },
-    together: {
-        baseURL: 'https://api.together.ai/v1',
-        keyRequired: true,
-        modelPlaceholder: 'e.g. meta-llama/Llama-3.3-70B-Instruct-Turbo',
-        keyHelp: '🔑 Get your API key from <a href="https://api.together.ai/settings/api-keys" target="_blank" class="underline">together.ai</a>.',
-    },
-    custom: {
+const OPENAI_COMPATIBLE_PRESETS = Object.fromEntries([
+    ...OPENAI_COMPATIBLE_PROVIDERS.map((provider) => [provider.id, {
+        label: provider.label,
+        baseURL: provider.baseURL,
+        keyRequired: provider.keyRequired,
+        keysUrl: provider.keysUrl,
+        docUrl: provider.docsUrl,
+        models: provider.suggestedModels || [],
+        modelPlaceholder: provider.suggestedModels?.[0]
+            ? `e.g. ${provider.suggestedModels[0].id}`
+            : 'model identifier',
+    }]),
+    ['custom', {
+        label: 'Custom…',
         baseURL: '',
         keyRequired: false,
+        keysUrl: '',
+        docUrl: '',
+        models: [],
         modelPlaceholder: 'model identifier',
-        keyHelp: '🔑 Enter the API key if your endpoint requires one. Local servers (llama.cpp, LM Studio) usually need none.',
-    },
-};
+    }],
+]);
 
 // Provider radio values used in the UI. Ollama is split into two cards
 // (local + cloud) that both persist to the single `ollama` settings object,
@@ -54,6 +53,23 @@ const PROVIDER_LABELS = {
     'openai-compatible': 'OpenAI-compatible',
 };
 
+const OPENAI_COMPATIBLE_MODEL_OPTION_CLASS = [
+    'block',
+    'group',
+    'select-none',
+    'px-3',
+    'py-2',
+    'text-gray-900',
+    'aria-selected:bg-indigo-600',
+    'aria-selected:text-white',
+    'dark:text-gray-300',
+    'dark:aria-selected:bg-indigo-500',
+    '[&:not([hidden])]:block',
+].join(' ');
+
+const OPENAI_COMPATIBLE_MODEL_ID_CLASS = 'block truncate font-semibold';
+const OPENAI_COMPATIBLE_MODEL_NAME_CLASS = 'mt-0.5 block truncate text-gray-500 group-aria-selected:text-indigo-100 dark:text-gray-400 dark:group-aria-selected:text-indigo-100';
+
 // Preserved across load/save so we can keep the Ollama cloud flag/model intact
 // when neither Ollama card is the active provider.
 let savedOllamaCloud = false;
@@ -63,38 +79,8 @@ let savedOllamaCloudModel = '';
 const $ = (id) => document.getElementById(id);
 const val = (id) => ($(id)?.value ?? '');
 
-// Derive an optional-permission origin pattern (e.g. "https://api.groq.com/*")
-// from a base URL. Returns null if the URL can't be parsed.
-function originPatternFromUrl(url) {
-    try {
-        const parsed = new URL(url);
-        if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-            return null;
-        }
-        // Extension match patterns don't include ports; omitting the port also
-        // lets one localhost permission cover LM Studio, llama.cpp, vLLM, etc.
-        return `${parsed.protocol}//${parsed.hostname}/*`;
-    } catch {
-        return null;
-    }
-}
-
 function getOpenAICompatibleOriginPattern() {
     return originPatternFromUrl(val('oaicompat-url').trim());
-}
-
-function isSupportedOpenAICompatibleOrigin(pattern) {
-    return OPENAI_COMPATIBLE_PERMISSION_ORIGINS.some((allowed) => {
-        if (allowed === pattern) return true;
-        // Wildcard-subdomain entries like https://*.oci.oraclecloud.com/*
-        // cover any concrete host under that domain.
-        const wildcard = allowed.match(/^(https?):\/\/\*\.([^/]+)\/\*$/);
-        if (!wildcard) return false;
-        const concrete = pattern.match(/^(https?):\/\/([^/]+)\/\*$/);
-        return !!concrete
-            && concrete[1] === wildcard[1]
-            && (concrete[2] === wildcard[2] || concrete[2].endsWith(`.${wildcard[2]}`));
-    });
 }
 
 // Resolve the host-permission origins needed for the active provider, including
@@ -185,15 +171,57 @@ function getSelectedProvider() {
     return checked ? checked.value : '';
 }
 
+// Fill the preset <select> from the catalog. Must run before loadSettings()
+// restores the saved preset — assigning select.value before its options exist
+// silently fails (selectedIndex stays -1) and breaks the round-trip.
+function populateOpenAICompatiblePresetSelect() {
+    const select = $('oaicompat-preset');
+    if (!select) return;
+    select.options.length = 0;
+    for (const [id, preset] of Object.entries(OPENAI_COMPATIBLE_PRESETS)) {
+        const option = document.createElement('option');
+        option.value = id;
+        option.textContent = preset.label;
+        select.appendChild(option);
+    }
+}
+
+// Build the key-help line with DOM APIs.
+function renderOpenAICompatibleKeyHelp(container, preset, isCustom) {
+    container.textContent = '';
+    if (isCustom || !preset.keysUrl) {
+        container.textContent = '🔑 Enter the API key if your endpoint requires one. Local servers (llama.cpp, LM Studio) usually need none.';
+        return;
+    }
+    const appendLink = (href, text) => {
+        const link = document.createElement('a');
+        link.href = href;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.className = 'underline';
+        link.textContent = text;
+        container.append(link);
+    };
+    container.append('🔑 Get your API key from ');
+    appendLink(preset.keysUrl, new URL(preset.keysUrl).hostname);
+    if (preset.docUrl) {
+        container.append(' and browse ');
+        appendLink(preset.docUrl, 'models & docs');
+    }
+    container.append('.');
+}
+
 // Apply an OpenAI-compatible preset to the form: fill the base URL (and lock it
-// for known services), update the key hint, and refresh the model placeholder.
-// When `fillUrl` is false the existing URL value is preserved (used on load).
+// for known services), update the key hint, and refresh the model placeholder
+// and suggestion list. When `fillUrl` is false the existing URL value is
+// preserved (used on load).
 function applyOpenAICompatiblePreset(presetId, fillUrl = true) {
     const preset = OPENAI_COMPATIBLE_PRESETS[presetId] || OPENAI_COMPATIBLE_PRESETS.custom;
     const isCustom = presetId === 'custom';
 
     const urlInput = $('oaicompat-url');
     const modelInput = $('oaicompat-model');
+    const modelList = $('oaicompat-model-list');
     const keyInput = $('oaicompat-key');
     const keyHelp = $('oaicompat-key-help');
     const urlHint = $('oaicompat-url-hint');
@@ -211,11 +239,33 @@ function applyOpenAICompatiblePreset(presetId, fillUrl = true) {
     if (modelInput) {
         modelInput.placeholder = preset.modelPlaceholder;
     }
+    if (modelList) {
+        modelList.textContent = '';
+        for (const model of preset.models) {
+            const option = document.createElement('el-option');
+            const id = document.createElement('span');
+            const name = document.createElement('span');
+
+            // el-autocomplete reads the option's `value` attribute (el-option has
+            // no value property), so setAttribute is required for selection to work.
+            option.setAttribute('value', model.id);
+            option.className = OPENAI_COMPATIBLE_MODEL_OPTION_CLASS;
+
+            id.className = OPENAI_COMPATIBLE_MODEL_ID_CLASS;
+            id.textContent = model.id;
+
+            name.className = OPENAI_COMPATIBLE_MODEL_NAME_CLASS;
+            name.textContent = model.name;
+
+            option.append(id, name);
+            modelList.appendChild(option);
+        }
+    }
     if (keyInput) {
         keyInput.placeholder = preset.keyRequired ? 'Enter API key' : 'API key (optional for local servers)';
     }
     if (keyHelp) {
-        keyHelp.innerHTML = preset.keyHelp;
+        renderOpenAICompatibleKeyHelp(keyHelp, preset, isCustom);
     }
 }
 
@@ -710,6 +760,9 @@ async function loadSettings() {
 // ---- Init -------------------------------------------------------------------
 
 document.addEventListener('DOMContentLoaded', async () => {
+    // Preset options must exist before loadSettings() restores the saved
+    // preset, or the select's value assignment is silently dropped.
+    populateOpenAICompatiblePresetSelect();
     await loadSettings();
 
     // Ensure the OpenAI-compatible card has correct URL/lock/placeholder state
