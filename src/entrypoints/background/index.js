@@ -7,6 +7,7 @@ export default defineBackground(() => {
 
     const DEFAULT_SETTINGS = {
         serverCacheEnabled: true,
+        generationEnabled: true,
         providerSelection: 'google',
         ollama: {
             cloud: false,
@@ -15,17 +16,19 @@ export default defineBackground(() => {
         },
         google: {
             apiKey: '',
-            model: 'gemini-2.5-pro'
+            model: 'gemini-3.5-flash'
         },
         anthropic: {
             apiKey: '',
-            model: ''
+            model: 'claude-opus-4-8'
         },
         openai: {
             apiKey: '',
-            model: ''
+            model: 'gpt-5.5'
         },
-        openrouter: {
+        'openai-compatible': {
+            preset: 'openrouter',
+            baseURL: 'https://openrouter.ai/api/v1',
             apiKey: '',
             model: ''
         }

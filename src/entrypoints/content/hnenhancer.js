@@ -32,6 +32,7 @@ import {getHNThread, createSummaryFragment} from './comment-processor.js';
 // Import AI summarizer functions
 import {
     getAIProviderModel,
+    resolveProviderSelection,
     formatSummaryError,
     createConfigurationError,
     summarizeTextWithLLM,
@@ -43,6 +44,8 @@ import {
 
 // Import keyboard shortcuts
 import {setupKeyboardShortcuts} from './keyboard-shortcuts.js';
+
+const OPENAI_COMPATIBLE_OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
 
 class HNEnhancer {
 
@@ -565,7 +568,7 @@ class HNEnhancer {
     async summarizeText(formattedComment, commentPathToIdMap, itemId) {
         const settings = await storage.getItem('sync:settings');
         try {
-            const aiProvider = settings?.providerSelection;
+            const aiProvider = resolveProviderSelection(settings);
             const model = settings?.[aiProvider]?.model;
 
             if (!aiProvider) {
@@ -636,11 +639,31 @@ class HNEnhancer {
                 case 'openai':
                 case 'anthropic':
                 case 'google':
-                case 'openrouter':
                     const apiKey = settings?.[aiProvider]?.apiKey;
                     await summarizeTextWithLLM(
                         aiProvider, model, apiKey, formattedComment, commentPathToIdMap,
                         onSuccess, onError, postTitle,
+                        undefined,
+                        onChunk
+                    );
+                    break;
+                // 'openrouter' is a legacy alias for settings saved before providers were unified.
+                case 'openai-compatible':
+                case 'openrouter':
+                    const compatSettings = settings?.['openai-compatible'] || settings?.openrouter || {};
+                    const isLegacyOpenRouterOnly = aiProvider === 'openrouter' && !settings?.['openai-compatible'];
+                    const compatBaseURL = compatSettings.baseURL
+                        || (isLegacyOpenRouterOnly || compatSettings.preset === 'openrouter'
+                            ? OPENAI_COMPATIBLE_OPENROUTER_BASE_URL
+                            : '');
+                    const compatModel = compatSettings.model || model;
+                    const compatProvider = isLegacyOpenRouterOnly || compatSettings.preset === 'openrouter'
+                        ? 'openrouter'
+                        : 'openai-compatible';
+                    await summarizeTextWithLLM(
+                        compatProvider, compatModel, compatSettings.apiKey || '',
+                        formattedComment, commentPathToIdMap,
+                        onSuccess, onError, postTitle, compatBaseURL,
                         onChunk
                     );
                     break;

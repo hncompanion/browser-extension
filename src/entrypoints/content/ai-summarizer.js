@@ -10,6 +10,7 @@ import {AI_SYSTEM_PROMPT, AI_USER_PROMPT_TEMPLATE} from './constants.js';
 // Import generic utilities from lib
 import {buildFragment, createStrong, createInternalLink, createExternalLink} from '../../lib/dom-utils.js';
 import {stripAnchors, splitInputTextAtTokenLimit} from '../../lib/text-utils.js';
+import {OPENAI_COMPATIBLE_PROVIDERS} from '../../lib/openai-compatible-providers.js';
 
 // Import HN-specific DOM utilities
 import {createHighlightedAuthor, createLoadingMessage} from './hn-dom-utils.js';
@@ -19,9 +20,29 @@ import {getHNThread, createSummaryFragment} from './comment-processor.js';
  * Gets the AI provider and model from settings.
  * @returns {Promise<{aiProvider: string, model: string}>}
  */
+/**
+ * Resolves the effective provider selection, honoring the generation master
+ * toggle. Returns '' (no provider) when generation is disabled. For settings
+ * saved before `generationEnabled` existed, enablement is derived from a
+ * non-empty providerSelection so existing users keep generating.
+ * @param {object} settings
+ * @returns {string}
+ */
+export function resolveProviderSelection(settings) {
+    const generationEnabled = settings?.generationEnabled ?? Boolean(settings?.providerSelection);
+    return generationEnabled ? (settings?.providerSelection || '') : '';
+}
+
 export async function getAIProviderModel() {
     const settings = await storage.getItem('sync:settings');
-    const aiProvider = settings?.providerSelection;
+    const aiProvider = resolveProviderSelection(settings);
+    if (!aiProvider) {
+        return {aiProvider: '', model: undefined};
+    }
+    if (aiProvider === 'openrouter') {
+        const compatSettings = settings?.['openai-compatible'] || settings?.openrouter || {};
+        return {aiProvider: 'openai-compatible', model: compatSettings.model};
+    }
     const model = settings?.[aiProvider]?.model;
     return {aiProvider, model};
 }
@@ -56,9 +77,10 @@ export async function getUserMessage(title, text) {
  * Gets model-specific configuration.
  * @param {string} provider - AI provider name
  * @param {string} modelId - Model ID
+ * @param {string} [baseURL] - Endpoint base URL (OpenAI-compatible providers)
  * @returns {Object} Model configuration
  */
-export function getModelConfiguration(provider, modelId) {
+export function getModelConfiguration(provider, modelId, baseURL) {
     const defaultConfig = {
         inputTokenLimit: 15000,
         outputTokenLimit: 4000,
@@ -70,42 +92,77 @@ export function getModelConfiguration(provider, modelId) {
 
     const modelConfigs = {
         'openai': {
-            'gpt-5': {inputTokenLimit: 25000, temperature: 0.7},
-            'gpt-5-mini': {inputTokenLimit: 20000, temperature: 0.7},
-            'gpt-5-nano': {inputTokenLimit: 16000, temperature: 0.7},
-            'gpt-4.1-nano': {inputTokenLimit: 16000, temperature: 0.7},
-            'gpt-4': {inputTokenLimit: 25000, temperature: 0.7},
-            'gpt-4-turbo': {inputTokenLimit: 27000, temperature: 0.7},
-            'gpt-3.5-turbo': {inputTokenLimit: 16000, temperature: 0.7}
+            'gpt-5.5': {inputTokenLimit: 25000, temperature: 0.7},
+            'gpt-5.4': {inputTokenLimit: 25000, temperature: 0.7},
+            'gpt-5.4-mini': {inputTokenLimit: 20000, temperature: 0.7},
         },
         'anthropic': {
-            'claude-opus-4-1': {inputTokenLimit: 25000, outputTokenLimit: 4000, temperature: 0.7},
-            'claude-sonnet-4-0': {inputTokenLimit: 24000, outputTokenLimit: 4000, temperature: 0.7},
-            'claude-3-7-sonnet-latest': {inputTokenLimit: 24000, outputTokenLimit: 4000, temperature: 0.7},
-            'claude-3-5-sonnet-latest': {inputTokenLimit: 22000, outputTokenLimit: 4000, temperature: 0.7},
-            'claude-3-5-haiku-latest': {inputTokenLimit: 20000, outputTokenLimit: 3000, temperature: 0.7},
-            'claude-3-opus-latest': {inputTokenLimit: 25000, outputTokenLimit: 4000, temperature: 0.7},
+            'claude-opus-4-8': {inputTokenLimit: 25000, outputTokenLimit: 4000, temperature: 0.7},
+            'claude-opus-4-7': {inputTokenLimit: 25000, outputTokenLimit: 4000, temperature: 0.7},
+            'claude-sonnet-4-6': {inputTokenLimit: 24000, outputTokenLimit: 4000, temperature: 0.7},
+            'claude-haiku-4-5': {inputTokenLimit: 20000, outputTokenLimit: 3000, temperature: 0.7},
         },
         'google': {
-            'gemini-pro-latest': {inputTokenLimit: 15000, temperature: 0.7},
-            'gemini-flash-latest': {inputTokenLimit: 15000, temperature: 0.7},
-            'gemini-flash-lite-latest': {inputTokenLimit: 15000, temperature: 0.7},
+            'gemini-3.5-flash': {inputTokenLimit: 15000, temperature: 0.7},
             'gemini-3.1-pro-preview': {inputTokenLimit: 15000, temperature: 0.7},
-            'gemini-3-flash-preview': {inputTokenLimit: 15000, temperature: 0.7},
-            'gemini-3.1-flash-lite-preview': {inputTokenLimit: 15000, temperature: 0.7},
-            'gemini-3-pro-preview': {inputTokenLimit: 15000, temperature: 0.7},
+            'gemini-3.1-flash-lite': {inputTokenLimit: 15000, temperature: 0.7},
             'gemini-2.5-pro': {inputTokenLimit: 15000, temperature: 0.7},
             'gemini-2.5-flash': {inputTokenLimit: 15000, temperature: 0.7},
             'gemini-2.5-flash-lite': {inputTokenLimit: 15000, temperature: 0.7},
         },
-        'openrouter': {
-            'claude-3-sonnet-20240229': {inputTokenLimit: 25000, outputTokenLimit: 3000, temperature: 0.7},
-        }
     };
 
-    return (modelConfigs[provider] && modelConfigs[provider][modelId])
+    const config = (modelConfigs[provider] && modelConfigs[provider][modelId])
         || (modelConfigs[provider] && modelConfigs[provider].default)
         || defaultConfig;
+
+    // The conservative default input limit is sized for local models; hosted
+    // OpenAI-compatible endpoints handle inputs as large as the other cloud providers.
+    if (config === defaultConfig
+        && (provider === 'openai-compatible' || provider === 'openrouter')
+        && baseURL && !isLocalEndpoint(baseURL)) {
+        // Curated provider metadata can lower defaults for suggested models
+        // with smaller contexts; the 25k cap keeps request cost bounded
+        // regardless of model context size.
+        const suggestedModel = findSuggestedModel(baseURL, modelId);
+        if (suggestedModel) {
+            const outputAllowance = Math.min(4000, suggestedModel.output > 0 ? suggestedModel.output : 4000);
+            return {
+                ...defaultConfig,
+                inputTokenLimit: Math.max(1000, Math.min(25000, suggestedModel.context - outputAllowance)),
+                outputTokenLimit: suggestedModel.output > 0 ? Math.min(4000, suggestedModel.output) : 4000,
+            };
+        }
+        return {...defaultConfig, inputTokenLimit: 25000};
+    }
+    return config;
+}
+
+// Look up a model in the curated provider metadata by matching the saved base
+// URL to a known preset. Returns null for custom endpoints and non-suggested
+// models.
+function findSuggestedModel(baseURL, modelId) {
+    if (!baseURL || !modelId) return null;
+    const normalizedBaseURL = normalizeBaseURL(baseURL);
+    const provider = OPENAI_COMPATIBLE_PROVIDERS.find((p) => normalizeBaseURL(p.baseURL) === normalizedBaseURL);
+    const models = provider?.suggestedModels;
+    return models?.find((model) => model.id === modelId) || null;
+}
+
+function normalizeBaseURL(baseURL) {
+    return String(baseURL || '').trim().replace(/\/+$/, '');
+}
+
+function isLocalEndpoint(baseURL) {
+    try {
+        const {hostname} = new URL(baseURL);
+        return hostname === 'localhost'
+            || hostname === '127.0.0.1'
+            || hostname === '[::1]'
+            || hostname === 'host.docker.internal';
+    } catch {
+        return true; // Unparseable URL: stay conservative.
+    }
 }
 
 /**
@@ -366,8 +423,11 @@ export function formatSummaryError(error) {
  * @param {Function} onError - Error callback (error)
  * @param {string} postTitle - Title of the post
  */
-export async function summarizeTextWithLLM(aiProvider, modelId, apiKey, text, commentPathToIdMap, onSuccess, onError, postTitle, onChunk) {
-    if (!text || !aiProvider || !modelId || !apiKey) {
+export async function summarizeTextWithLLM(aiProvider, modelId, apiKey, text, commentPathToIdMap, onSuccess, onError, postTitle, baseURL, onChunk) {
+    // OpenAI-compatible endpoints (e.g. local llama.cpp / LM Studio) may not require an API key.
+    const requiresKey = aiProvider !== 'openai-compatible';
+    const requiresBaseURL = aiProvider === 'openai-compatible';
+    if (!text || !aiProvider || !modelId || (requiresKey && !apiKey) || (requiresBaseURL && !baseURL)) {
         await Logger.error('Missing required parameters for AI summarization');
         onError(new Error('Missing AI configuration'));
         return;
@@ -375,7 +435,7 @@ export async function summarizeTextWithLLM(aiProvider, modelId, apiKey, text, co
 
     Logger.debugSync(`Summarizing with ${aiProvider} / ${modelId}`);
 
-    const modelConfig = getModelConfiguration(aiProvider, modelId);
+    const modelConfig = getModelConfiguration(aiProvider, modelId, baseURL);
     const tokenLimitText = splitInputTextAtTokenLimit(text, modelConfig.inputTokenLimit);
 
     const systemPrompt = await getSystemMessage();
@@ -393,6 +453,7 @@ export async function summarizeTextWithLLM(aiProvider, modelId, apiKey, text, co
         aiProvider,
         modelId,
         apiKey,
+        baseURL,
         systemPrompt,
         userPrompt,
         parameters,
@@ -492,7 +553,14 @@ export async function summarizeUsingOllama(text, model, ollamaUrl, commentPathTo
  * @returns {DocumentFragment|string}
  */
 export function createOllamaErrorMessage(error) {
-    if (error.message?.includes('403')) {
+    const message = error.message || '';
+    const isForbidden = message.includes('HTTP 403') || message.includes(' 403 ');
+    const isCorsLike = message.includes('CORS')
+        || message.includes('origin is not allowed')
+        || message.includes('forbidden by Ollama')
+        || message.includes('Forbidden');
+
+    if (isForbidden && isCorsLike) {
         return createErrorElement({
             type: 'network',
             title: 'Ollama Blocked the Request',
@@ -502,8 +570,18 @@ export function createOllamaErrorMessage(error) {
         });
     }
 
+    if (message.includes('requires a subscription') || message.includes('upgrade for access')) {
+        return createErrorElement({
+            type: 'api_key',
+            title: 'Ollama Cloud Access Required',
+            description: 'Ollama Cloud rejected the request because this model requires an active subscription or different account access.',
+            action: { label: 'Open Settings', id: 'error-open-settings' },
+            hint: 'Check your Ollama Cloud API key, subscription, and selected model.'
+        });
+    }
+
     // For network errors, use the styled error element
-    if (error.message?.includes('Failed to fetch') || error.message?.includes('NetworkError')) {
+    if (message.includes('Failed to fetch') || message.includes('NetworkError')) {
         return createErrorElement({
             type: 'network',
             title: 'Cannot Connect to Ollama',
@@ -517,7 +595,7 @@ export function createOllamaErrorMessage(error) {
     return createErrorElement({
         type: 'generic',
         title: 'Ollama Error',
-        description: error.message || 'An unexpected error occurred while communicating with Ollama.',
+        description: message || 'An unexpected error occurred while communicating with Ollama.',
         action: { label: 'Open Settings', id: 'error-open-settings' },
         hint: 'Check your Ollama configuration and try again.'
     });
@@ -564,4 +642,3 @@ export async function serverCacheConfigEnabled() {
     const settings = await storage.getItem('sync:settings');
     return settings?.serverCacheEnabled;
 }
-

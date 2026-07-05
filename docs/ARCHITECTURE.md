@@ -40,7 +40,7 @@ src/
 ### Feature Modules
 
 **`ai-summarizer.js`** - AI summarization logic
-- Provider configuration (OpenAI, Anthropic, Google, OpenRouter, Ollama)
+- Provider configuration (OpenAI, Anthropic, Google, OpenAI-compatible [OpenRouter/Groq/Together/supported custom], Ollama)
 - Model-specific token limits and parameters
 - Summarization request handling and error formatting
 - Server cache integration

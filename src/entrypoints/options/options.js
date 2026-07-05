@@ -5,40 +5,125 @@ import {browser} from "wxt/browser";
 import {storage} from '#imports';
 import {Logger} from "../../lib/utils.js";
 import {sendBackgroundMessage} from "../../lib/messaging.js";
+import {
+    OPTIONAL_HOST_PERMISSIONS,
+    originPatternFromUrl,
+    isSupportedOpenAICompatibleOrigin,
+} from "../../lib/host-permissions.js";
+import {OPENAI_COMPATIBLE_PROVIDERS} from "../../lib/openai-compatible-providers.js";
 
 const DEFAULT_OLLAMA_URL = 'http://localhost:11434';
 const OLLAMA_CLOUD_URL = 'https://ollama.com';
 
-const OPTIONAL_HOST_PERMISSIONS = {
-    openai: ['https://api.openai.com/*'],
-    anthropic: ['https://api.anthropic.com/*'],
-    openrouter: ['https://openrouter.ai/*'],
-    google: ['https://generativelanguage.googleapis.com/*'],
-    ollama: ['http://localhost:11434/*'],
-    'ollama-cloud': ['https://ollama.com/*'],
+// OpenAI-compatible provider presets. Selecting one pre-fills the base URL and
+// whether an API key is expected. 'custom' lets the user point at a supported
+// local or hosted endpoint from OPENAI_COMPATIBLE_PERMISSION_ORIGINS.
+const OPENAI_COMPATIBLE_PRESETS = Object.fromEntries([
+    ...OPENAI_COMPATIBLE_PROVIDERS.map((provider) => [provider.id, {
+        label: provider.label,
+        baseURL: provider.baseURL,
+        keyRequired: provider.keyRequired,
+        editableBaseURL: provider.editableBaseURL || false,
+        keysUrl: provider.keysUrl,
+        docUrl: provider.docsUrl,
+        models: provider.suggestedModels || [],
+        modelPlaceholder: provider.suggestedModels?.[0]
+            ? `e.g. ${provider.suggestedModels[0].id}`
+            : 'model ID',
+    }]),
+    ['custom', {
+        label: 'Custom…',
+        baseURL: '',
+        keyRequired: false,
+        editableBaseURL: true,
+        keysUrl: '',
+        docUrl: '',
+        models: [],
+        modelPlaceholder: 'e.g. model-name',
+    }],
+]);
+
+const OPENAI_COMPATIBLE_PRESET_GROUPS = [
+    {
+        label: 'Common',
+        presets: ['openrouter', 'groq', 'mistral', 'deepseek', 'zai', 'custom'],
+    },
+    {
+        label: 'Gateways',
+        presets: ['vercel', 'tokenrouter', 'cloudflare', 'huggingface'],
+    },
+    {
+        label: 'More providers',
+        presets: ['together', 'fireworks', 'deepinfra', 'cerebras', 'cohere', 'xai', 'perplexity'],
+    },
+];
+
+// Provider radio values used in the UI. Ollama is split into two cards
+// (local + cloud) that both persist to the single `ollama` settings object,
+// distinguished by the `cloud` flag.
+const PROVIDER_LABELS = {
+    'ollama': 'Ollama Local',
+    'ollama-cloud': 'Ollama Cloud',
+    'google': 'Google Gemini',
+    'anthropic': 'Anthropic',
+    'openai': 'OpenAI',
+    'openai-compatible': 'OpenAI-compatible',
 };
 
-const PROVIDER_INPUT_SELECTORS = {
-    google: ['#google-key', '#google-model'],
-    anthropic: ['#anthropic-key', '#anthropic-model'],
-    openai: ['#openai-key', '#openai-model'],
-    openrouter: ['#openrouter-key', '#openrouter-model'],
-    ollama: ['#ollama-url', '#ollama-model', '#ollama-key', '#ollama-cloud'],
-    'ollama-cloud': ['#ollama-url', '#ollama-model', '#ollama-key', '#ollama-cloud'],
-};
+const OPENAI_COMPATIBLE_MODEL_OPTION_CLASS = [
+    'block',
+    'group',
+    'select-none',
+    'px-3',
+    'py-2',
+    'text-gray-900',
+    'aria-selected:bg-indigo-600',
+    'aria-selected:text-white',
+    'dark:text-gray-300',
+    'dark:aria-selected:bg-indigo-500',
+    '[&:not([hidden])]:block',
+].join(' ');
 
+const OPENAI_COMPATIBLE_MODEL_ID_CLASS = 'block truncate font-semibold';
+const OPENAI_COMPATIBLE_MODEL_NAME_CLASS = 'mt-0.5 block truncate text-gray-500 group-aria-selected:text-indigo-100 dark:text-gray-400 dark:group-aria-selected:text-indigo-100';
+
+// Preserved across load/save so we can keep the Ollama cloud flag/model intact
+// when neither Ollama card is the active provider.
+let savedOllamaCloud = false;
+let savedOllamaLocalModel = '';
+let savedOllamaCloudModel = '';
+let savedOpenAICompatibleSettings = null;
+
+const $ = (id) => document.getElementById(id);
+const val = (id) => ($(id)?.value ?? '');
+
+function getOpenAICompatibleOriginPattern() {
+    return originPatternFromUrl(val('oaicompat-url').trim());
+}
+
+// Resolve the host-permission origins needed for the active provider, including
+// the dynamic origin for a user-supplied OpenAI-compatible base URL.
+function getProviderPermissionOrigins(providerId) {
+    if (providerId === 'openai-compatible') {
+        const pattern = getOpenAICompatibleOriginPattern();
+        return pattern && isSupportedOpenAICompatibleOrigin(pattern) ? [pattern] : [];
+    }
+    return OPTIONAL_HOST_PERMISSIONS[providerId] || [];
+}
+
+// Map a UI radio value to the stored providerSelection encoding.
 function resolveOllamaProvider(providerId) {
     return providerId === 'ollama-cloud' ? 'ollama' : providerId;
 }
 
-function getOllamaCardId(providerId) {
-    return (providerId === 'ollama' || providerId === 'ollama-cloud') ? 'ollama' : providerId;
+// Map a stored providerSelection back to the UI radio value.
+function toRadioValue(selection, ollamaCloud) {
+    if (selection === 'openrouter') return 'openai-compatible';
+    if (selection === 'ollama') return ollamaCloud ? 'ollama-cloud' : 'ollama';
+    return selection || '';
 }
 
 async function hasOptionalHostPermissions(origins) {
-    if (!origins || origins.length === 0) {
-        return true;
-    }
     if (!browser.permissions?.contains) {
         return true;
     }
@@ -62,188 +147,392 @@ async function requestOptionalHostPermissions(origins) {
     }
 }
 
-function setOllamaModelSelectStatus(text) {
-    const selectElement = document.getElementById('ollama-model');
-    if (!selectElement) return;
-    selectElement.options.length = 0;
+// Set a <select> to a saved value, falling back to `fallback` when the saved
+// value is no longer an available option (e.g. a now-deprecated model ID).
+function setSelectValueWithFallback(selectId, savedValue, fallback) {
+    const select = $(selectId);
+    if (!select) return;
+    select.value = savedValue || fallback;
+    if (select.selectedIndex === -1) {
+        select.value = fallback;
+    }
+}
+
+// Ensure a model value is present and selected in a model <select>, adding it as
+// an option when missing (so a saved model shows before the live list loads).
+function preselectModel(selectId, model) {
+    if (!model) return;
+    const select = $(selectId);
+    if (!select) return;
+    let option = Array.from(select.options).find((o) => o.value === model);
+    if (!option) {
+        option = document.createElement('option');
+        option.value = model;
+        option.textContent = model;
+        select.appendChild(option);
+    }
+    select.value = model;
+}
+
+function setOllamaModelSelectStatus(selectId, text) {
+    const select = $(selectId);
+    if (!select) return;
+    select.options.length = 0;
     const option = document.createElement('option');
     option.value = '';
     option.textContent = text;
-    selectElement.appendChild(option);
+    select.appendChild(option);
 }
 
-function isOllamaCloudMode() {
-    return document.getElementById('ollama-cloud').value === 'true';
+function getSelectedProvider() {
+    const checked = document.querySelector('input[name="provider"]:checked');
+    return checked ? checked.value : '';
 }
 
-function setOllamaMode(isCloud) {
-    const localFields = document.getElementById('ollama-local-fields');
-    const cloudFields = document.getElementById('ollama-cloud-fields');
-    const corsHint = document.getElementById('ollama-cors-hint');
-    const subtitle = document.getElementById('ollama-subtitle');
-    const hiddenInput = document.getElementById('ollama-cloud');
-    const localBtn = document.getElementById('ollama-mode-local');
-    const cloudBtn = document.getElementById('ollama-mode-cloud');
+// Fill the preset <select> from the catalog. Must run before loadSettings()
+// restores the saved preset — assigning select.value before its options exist
+// silently fails (selectedIndex stays -1) and breaks the round-trip.
+function populateOpenAICompatiblePresetSelect() {
+    const select = $('oaicompat-preset');
+    if (!select) return;
+    select.options.length = 0;
+    const added = new Set();
 
-    hiddenInput.value = isCloud ? 'true' : 'false';
+    const appendOption = (parent, id) => {
+        const preset = OPENAI_COMPATIBLE_PRESETS[id];
+        if (!preset || added.has(id)) return;
+        const option = document.createElement('option');
+        option.value = id;
+        option.textContent = preset.label;
+        parent.appendChild(option);
+        added.add(id);
+    };
 
-    localFields.classList.toggle('hidden', isCloud);
-    cloudFields.classList.toggle('hidden', !isCloud);
-    if (corsHint) {
-        corsHint.style.display = isCloud ? 'none' : '';
+    for (const group of OPENAI_COMPATIBLE_PRESET_GROUPS) {
+        const optgroup = document.createElement('optgroup');
+        optgroup.label = group.label;
+        for (const id of group.presets) {
+            appendOption(optgroup, id);
+        }
+        if (optgroup.children.length > 0) {
+            select.appendChild(optgroup);
+        }
     }
 
-    if (subtitle) {
-        subtitle.textContent = isCloud
-            ? 'Run models on Ollama\'s cloud. API key required.'
-            : 'Local models running on your machine. No API key required.';
-    }
-
-    const sectionLabel = document.getElementById('ollama-section-label');
-    if (sectionLabel) {
-        sectionLabel.textContent = isCloud
-            ? 'OLLAMA CLOUD PROVIDER (API key required)'
-            : 'LOCAL AI PROVIDER (Free Option)';
-    }
-
-    const activeClasses = 'bg-indigo-600 text-white';
-    const inactiveClasses = 'bg-white text-gray-700 hover:bg-gray-50 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10';
-
-    [localBtn, cloudBtn].forEach(btn => {
-        btn.className = btn.className.replace(/bg-indigo-600|text-white|bg-white|text-gray-700|hover:bg-gray-50|dark:bg-white\/5|dark:text-gray-300|dark:hover:bg-white\/10/g, '').trim();
-    });
-
-    if (isCloud) {
-        cloudBtn.classList.add(...activeClasses.split(' '));
-        localBtn.classList.add(...inactiveClasses.split(' '));
-    } else {
-        localBtn.classList.add(...activeClasses.split(' '));
-        cloudBtn.classList.add(...inactiveClasses.split(' '));
+    for (const id of Object.keys(OPENAI_COMPATIBLE_PRESETS)) {
+        appendOption(select, id);
     }
 }
 
-function getOllamaEffectiveUrl() {
-    return isOllamaCloudMode()
-        ? OLLAMA_CLOUD_URL
-        : (document.getElementById('ollama-url').value.replace(/\/+$/, '') || DEFAULT_OLLAMA_URL);
+// Build the key-help line with DOM APIs.
+function renderOpenAICompatibleKeyHelp(container, preset, isCustom) {
+    container.textContent = '';
+    if (isCustom || !preset.keysUrl) {
+        container.textContent = '🔑 Enter the API key if your endpoint requires one. Local servers (llama.cpp, LM Studio) usually need none.';
+        return;
+    }
+    const appendLink = (href, text) => {
+        const link = document.createElement('a');
+        link.href = href;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.className = 'underline';
+        link.textContent = text;
+        container.append(link);
+    };
+    container.append('🔑 Get your API key from ');
+    appendLink(preset.keysUrl, new URL(preset.keysUrl).hostname);
+    if (preset.docUrl) {
+        container.append(' and browse ');
+        appendLink(preset.docUrl, 'models & docs');
+    }
+    container.append('.');
 }
 
-function getOllamaFetchHeaders() {
-    if (!isOllamaCloudMode()) return {};
-    const apiKey = document.getElementById('ollama-key').value;
-    if (!apiKey) return {};
-    return { 'Authorization': `Bearer ${apiKey}` };
+// Apply an OpenAI-compatible preset to the form: fill the base URL, lock it for
+// fixed known providers, update the key hint, and refresh the model placeholder
+// and suggestion list. When `fillUrl` is false the existing URL value is
+// preserved (used on load). When `resetProviderFields` is true, provider-specific
+// model and key values are cleared so they do not leak across presets.
+function applyOpenAICompatiblePreset(presetId, {fillUrl = true, resetProviderFields = false} = {}) {
+    const preset = OPENAI_COMPATIBLE_PRESETS[presetId] || OPENAI_COMPATIBLE_PRESETS.custom;
+    const isCustom = presetId === 'custom';
+    const isEditableBaseURL = isCustom || preset.editableBaseURL;
+
+    const urlInput = $('oaicompat-url');
+    const modelInput = $('oaicompat-model');
+    const modelList = $('oaicompat-model-list');
+    const keyInput = $('oaicompat-key');
+    const keyHelp = $('oaicompat-key-help');
+
+    if (urlInput) {
+        if (fillUrl) {
+            urlInput.value = isCustom ? '' : preset.baseURL;
+        }
+        urlInput.disabled = !isEditableBaseURL;
+    }
+    if (modelInput) {
+        if (resetProviderFields) {
+            modelInput.value = '';
+        }
+        modelInput.placeholder = preset.modelPlaceholder;
+    }
+    if (modelList) {
+        modelList.textContent = '';
+        for (const model of preset.models) {
+            const option = document.createElement('el-option');
+            const id = document.createElement('span');
+            const name = document.createElement('span');
+
+            // el-autocomplete reads the option's `value` attribute (el-option has
+            // no value property), so setAttribute is required for selection to work.
+            option.setAttribute('value', model.id);
+            option.className = OPENAI_COMPATIBLE_MODEL_OPTION_CLASS;
+
+            id.className = OPENAI_COMPATIBLE_MODEL_ID_CLASS;
+            id.textContent = model.id;
+
+            name.className = OPENAI_COMPATIBLE_MODEL_NAME_CLASS;
+            name.textContent = model.name;
+
+            option.append(id, name);
+            modelList.appendChild(option);
+        }
+    }
+    if (keyInput) {
+        if (resetProviderFields) {
+            keyInput.value = '';
+        }
+        keyInput.placeholder = preset.keyRequired ? 'Enter API key' : 'API key (optional)';
+    }
+    if (keyHelp) {
+        renderOpenAICompatibleKeyHelp(keyHelp, preset, isCustom);
+    }
+}
+
+function restoreSavedOpenAICompatibleSettings(presetId) {
+    if (savedOpenAICompatibleSettings?.preset !== presetId) return false;
+
+    const urlInput = $('oaicompat-url');
+    const modelInput = $('oaicompat-model');
+    const keyInput = $('oaicompat-key');
+    if (urlInput) urlInput.value = savedOpenAICompatibleSettings.baseURL || '';
+    if (modelInput) modelInput.value = savedOpenAICompatibleSettings.model || '';
+    if (keyInput) keyInput.value = savedOpenAICompatibleSettings.apiKey || '';
+    return true;
 }
 
 function setPromptCustomizationState(isEnabled) {
-    const systemPromptTextarea = document.getElementById('system-prompt');
-    const userPromptTextarea = document.getElementById('user-prompt');
-    const promptCustomizationFields = document.getElementById('prompt-customization-fields');
+    const systemPromptTextarea = $('system-prompt');
+    const userPromptTextarea = $('user-prompt');
+    const fields = $('prompt-customization-fields');
 
-    if (promptCustomizationFields) {
-        promptCustomizationFields.classList.toggle('hidden', !isEnabled);
+    if (fields) {
+        fields.classList.toggle('opacity-60', !isEnabled);
     }
-
-    if (!systemPromptTextarea || !userPromptTextarea) return;
-
-    if (isEnabled) {
-        systemPromptTextarea.removeAttribute('disabled');
-        userPromptTextarea.removeAttribute('disabled');
-        systemPromptTextarea.removeAttribute('readonly');
-        userPromptTextarea.removeAttribute('readonly');
-    } else {
-        systemPromptTextarea.setAttribute('disabled', 'true');
-        userPromptTextarea.setAttribute('disabled', 'true');
-        systemPromptTextarea.setAttribute('readonly', 'true');
-        userPromptTextarea.setAttribute('readonly', 'true');
-    }
-}
-
-// Update the "Active" badge to show on the currently selected provider
-function updateActiveProviderBadge(providerId) {
-    // Allow empty string (None) as a valid selection
-    const activeProvider = PROVIDER_INPUT_SELECTORS[providerId] ? providerId : '';
-    const activeCardId = getOllamaCardId(activeProvider);
-
-    const cardProviders = ['ollama', 'google', 'anthropic', 'openai', 'openrouter'];
-    cardProviders.forEach((provider) => {
-        const isActive = provider === activeCardId;
-        const chip = document.querySelector(`[data-provider-chip="${provider}"]`);
-        const card = document.querySelector(`[data-provider-card="${provider}"]`);
-
-        if (chip) {
-            chip.classList.toggle('hidden', !isActive);
-            chip.classList.toggle('inline-flex', isActive);
-        }
-
-        if (card) {
-            card.classList.toggle('ring-2', isActive);
-            card.classList.toggle('ring-indigo-500/40', isActive);
+    [systemPromptTextarea, userPromptTextarea].forEach((textarea) => {
+        if (!textarea) return;
+        if (isEnabled) {
+            textarea.removeAttribute('disabled');
+            textarea.removeAttribute('readonly');
+        } else {
+            textarea.setAttribute('disabled', 'true');
+            textarea.setAttribute('readonly', 'true');
         }
     });
 }
 
-// Toggle a provider card's expanded/collapsed state
+// ---- Readiness / status -----------------------------------------------------
+
+// Mirror of the downstream readiness rules (ai-summarizer.js): cloud key
+// providers need an API key; openai-compatible needs a base URL + model (key
+// optional); local Ollama needs a selected model (and a reachable server).
+function getProviderConfig(provider) {
+    switch (provider) {
+        case 'google':
+        case 'anthropic':
+        case 'openai':
+            return {configured: !!val(`${provider}-key`), missing: 'an API key'};
+        case 'ollama-cloud':
+            return {configured: !!val('ollama-key'), missing: 'an API key'};
+        case 'ollama':
+            return {configured: !!val('ollama-model'), missing: 'a running server and a selected model'};
+        case 'openai-compatible': {
+            const url = val('oaicompat-url').trim();
+            const model = val('oaicompat-model').trim();
+            return {configured: !!url && !!model, missing: !url ? 'a Base URL' : 'a model ID'};
+        }
+        default:
+            return {configured: false, missing: 'setup'};
+    }
+}
+
+const BANNER_BASE = 'mb-4 flex items-center gap-2 rounded-lg border px-3.5 py-3 text-sm font-medium';
+const BANNER_VARIANTS = {
+    ready: {box: 'border-emerald-300/60 bg-emerald-50 text-emerald-800 dark:border-emerald-500/40 dark:bg-emerald-950/40 dark:text-emerald-200', dot: 'bg-emerald-500'},
+    warn: {box: 'border-amber-300/60 bg-amber-50 text-amber-800 dark:border-amber-500/40 dark:bg-amber-950/40 dark:text-amber-200', dot: 'bg-amber-500'},
+    neutral: {box: 'border-gray-300/60 bg-gray-100 text-gray-600 dark:border-white/10 dark:bg-white/5 dark:text-gray-300', dot: 'bg-gray-400'},
+};
+
+function setReadinessBanner(variant, message) {
+    const banner = $('provider-readiness');
+    const dot = $('provider-readiness-dot');
+    const text = $('provider-readiness-text');
+    if (!banner || !dot || !text) return;
+    const v = BANNER_VARIANTS[variant];
+    banner.className = `${BANNER_BASE} ${v.box}`;
+    dot.className = `size-1.5 shrink-0 rounded-full ${v.dot}`;
+    text.textContent = message;
+}
+
+const PILL_INDIGO = 'inline-flex items-center rounded-md bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-500/20 dark:bg-indigo-500/20 dark:text-indigo-200';
+const PILL_NEUTRAL = 'inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10 dark:bg-gray-400/10 dark:text-gray-400 dark:ring-gray-400/20';
+
+const STATUS_GREEN = 'inline-flex items-center rounded-md bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20 dark:bg-emerald-500/15 dark:text-emerald-300';
+const STATUS_AMBER = 'inline-flex items-center rounded-md bg-amber-50 px-2 py-1 text-xs font-medium text-amber-800 ring-1 ring-inset ring-amber-600/20 dark:bg-amber-500/15 dark:text-amber-300';
+
+function updateActiveAndReadiness() {
+    const generationEnabled = $('generation-enabled').checked;
+    const provider = getSelectedProvider();
+    const pill = $('active-provider-label');
+
+    if (!generationEnabled) {
+        pill.textContent = 'Off';
+        pill.className = PILL_NEUTRAL;
+        setReadinessBanner('neutral', 'Provider generation is off — only cached summaries will be shown.');
+        return;
+    }
+    if (!provider) {
+        pill.textContent = 'Active: None';
+        pill.className = PILL_NEUTRAL;
+        setReadinessBanner('warn', 'Choose a provider to generate summaries.');
+        return;
+    }
+    const label = PROVIDER_LABELS[provider] || provider;
+    pill.textContent = `Active: ${label}`;
+    pill.className = PILL_INDIGO;
+
+    const {configured, missing} = getProviderConfig(provider);
+    if (configured) {
+        setReadinessBanner('ready', 'Your active provider is configured and ready to generate summaries.');
+    } else {
+        setReadinessBanner('warn', `${label} needs ${missing} before it can generate summaries.`);
+    }
+}
+
+function updateProviderBadges() {
+    const selected = getSelectedProvider();
+    Object.keys(PROVIDER_LABELS).forEach((provider) => {
+        const {configured} = getProviderConfig(provider);
+        const badge = document.querySelector(`[data-provider-status="${provider}"]`);
+        if (badge) {
+            if (configured) {
+                badge.className = STATUS_GREEN;
+                badge.textContent = 'Configured';
+            } else {
+                badge.className = STATUS_AMBER;
+                badge.textContent = provider === 'ollama'
+                    ? 'Needs local server'
+                    : provider === 'openai-compatible' ? 'Needs setup' : 'Missing API key';
+            }
+        }
+
+        const card = document.querySelector(`[data-provider-card="${provider}"]`);
+        if (card) {
+            const active = provider === selected;
+            card.classList.toggle('ring-2', active);
+            card.classList.toggle('ring-indigo-500/50', active);
+            card.classList.toggle('border-indigo-300', active);
+            card.classList.toggle('dark:border-indigo-500/40', active);
+        }
+    });
+}
+
+function updateGenerationCollapse() {
+    const generationEnabled = $('generation-enabled').checked;
+    $('gen-collapse').classList.toggle('hidden', !generationEnabled);
+    $('gen-off-note').classList.toggle('hidden', generationEnabled);
+}
+
+function updateNoSummaryGuard() {
+    const cacheOff = !$('hn-companion-server-enabled').checked;
+    const generationOff = !$('generation-enabled').checked;
+    const warning = $('no-summary-warning');
+    const show = cacheOff && generationOff;
+    warning.classList.toggle('hidden', !show);
+    warning.classList.toggle('flex', show);
+}
+
+function refreshUI() {
+    updateGenerationCollapse();
+    updateNoSummaryGuard();
+    updateProviderBadges();
+    updateActiveAndReadiness();
+}
+
+// ---- Tabs -------------------------------------------------------------------
+
+const TAB_ACTIVE = ['border-indigo-500', 'text-indigo-600', 'dark:border-indigo-400', 'dark:text-indigo-400'];
+const TAB_INACTIVE = ['border-transparent', 'text-gray-500', 'hover:border-gray-300', 'hover:text-gray-700', 'dark:text-gray-400', 'dark:hover:border-white/20', 'dark:hover:text-gray-200'];
+
+function switchTab(name) {
+    document.querySelectorAll('[data-panel]').forEach((panel) => {
+        const active = panel.getAttribute('data-panel') === name;
+        panel.classList.toggle('hidden', !active);
+        panel.toggleAttribute('hidden', !active);
+    });
+    document.querySelectorAll('[data-tab]').forEach((btn) => {
+        const active = btn.getAttribute('data-tab') === name;
+        btn.setAttribute('aria-selected', active ? 'true' : 'false');
+        btn.setAttribute('tabindex', active ? '0' : '-1');
+        btn.classList.remove(...TAB_ACTIVE, ...TAB_INACTIVE);
+        btn.classList.add(...(active ? TAB_ACTIVE : TAB_INACTIVE));
+    });
+}
+
+function focusAdjacentTab(current, direction) {
+    const tabs = Array.from(document.querySelectorAll('[data-tab]'));
+    const currentIndex = tabs.indexOf(current);
+    if (currentIndex === -1) return;
+    const next = tabs[(currentIndex + direction + tabs.length) % tabs.length];
+    next.focus();
+    switchTab(next.getAttribute('data-tab'));
+}
+
+// ---- Provider card expand / selection --------------------------------------
+
 async function toggleProviderCard(providerId) {
     const body = document.querySelector(`[data-provider-body="${providerId}"]`);
     const toggle = document.querySelector(`[data-provider-toggle="${providerId}"]`);
     const chevron = document.querySelector(`[data-provider-chevron="${providerId}"]`);
-
     if (!body) return;
 
-    const isCurrentlyHidden = body.classList.contains('hidden');
+    const willExpand = body.classList.contains('hidden');
+    body.classList.toggle('hidden', !willExpand);
+    if (toggle) toggle.setAttribute('aria-expanded', willExpand ? 'true' : 'false');
+    if (chevron) chevron.classList.toggle('rotate-180', willExpand);
 
-    body.classList.toggle('hidden', !isCurrentlyHidden);
-
-    if (toggle) {
-        toggle.setAttribute('aria-expanded', isCurrentlyHidden ? 'true' : 'false');
-    }
-
-    if (chevron) {
-        chevron.classList.toggle('rotate-180', isCurrentlyHidden);
-    }
-
-    // If expanding Ollama, fetch models
-    if (providerId === 'ollama' && isCurrentlyHidden) {
-        const permKey = isOllamaCloudMode() ? 'ollama-cloud' : 'ollama';
-        const origins = OPTIONAL_HOST_PERMISSIONS[permKey];
-        let granted = await hasOptionalHostPermissions(origins);
-        if (!granted) {
-            granted = await requestOptionalHostPermissions(origins);
-        }
-        if (!granted) {
-            setOllamaModelSelectStatus('Permission required to load models');
-            return;
-        }
-        await fetchOllamaModels();
+    if (willExpand && (providerId === 'ollama' || providerId === 'ollama-cloud')) {
+        await ensureOllamaModels(providerId, {requestPermission: true});
     }
 }
 
-// Handle active provider dropdown change
-async function handleActiveProviderChange(providerId) {
-    // Sync the Ollama mode toggle when the dropdown changes
-    if (providerId === 'ollama' || providerId === 'ollama-cloud') {
-        setOllamaMode(providerId === 'ollama-cloud');
+function selectProvider(value) {
+    if (value) {
+        const body = document.querySelector(`[data-provider-body="${value}"]`);
+        if (body && body.classList.contains('hidden')) {
+            void toggleProviderCard(value);
+        }
     }
-
-    updateActiveProviderBadge(providerId);
-
-    // Expand the selected provider's card if it's collapsed
-    const cardId = getOllamaCardId(providerId);
-    const body = document.querySelector(`[data-provider-body="${cardId}"]`);
-    if (body && body.classList.contains('hidden')) {
-        await toggleProviderCard(cardId);
-    }
+    updateProviderBadges();
+    updateActiveAndReadiness();
 }
 
 function setupKeyVisibilityToggles() {
-    const toggles = document.querySelectorAll('[data-toggle-visibility]');
-    toggles.forEach((toggle) => {
+    document.querySelectorAll('[data-toggle-visibility]').forEach((toggle) => {
         toggle.addEventListener('click', () => {
-            const inputId = toggle.getAttribute('data-toggle-visibility');
-            const input = document.getElementById(inputId);
+            const input = $(toggle.getAttribute('data-toggle-visibility'));
             if (!input) return;
-
             const isPassword = input.type === 'password';
             input.type = isPassword ? 'text' : 'password';
             toggle.textContent = isPassword ? 'Hide' : 'Show';
@@ -252,48 +541,193 @@ function setupKeyVisibilityToggles() {
     });
 }
 
-// Save settings to Browser storage
-async function saveSettings() {
-    const rawProviderSelection = document.getElementById('active-provider').value; // Can be empty string for "None"
-    const providerSelection = resolveOllamaProvider(rawProviderSelection);
-    // Prompt customization
-    const promptCustomization = document.getElementById('prompt-customization').checked;
-    const systemPrompt = document.getElementById('system-prompt').value;
-    const userPrompt = document.getElementById('user-prompt').value;
-    const settings = {
-        serverCacheEnabled: document.getElementById('hn-companion-server-enabled').checked,
-        providerSelection,
-        ollama: {
-            cloud: isOllamaCloudMode(),
-            url: document.getElementById('ollama-url').value.replace(/\/+$/, '') || DEFAULT_OLLAMA_URL,
-            apiKey: document.getElementById('ollama-key').value,
-            model: document.getElementById('ollama-model').value
-        },
-        google: {
-            apiKey: document.getElementById('google-key').value,
-            model: document.getElementById('google-model').value
-        },
-        anthropic: {
-            apiKey: document.getElementById('anthropic-key').value,
-            model: document.getElementById('anthropic-model').value
-        },
-        openai: {
-            apiKey: document.getElementById('openai-key').value,
-            model: document.getElementById('openai-model').value
-        },
-        openrouter: {
-            apiKey: document.getElementById('openrouter-key').value,
-            model: document.getElementById('openrouter-model').value
-        },
-        promptCustomization,
-        systemPrompt: promptCustomization ? systemPrompt : undefined,
-        userPrompt: promptCustomization ? userPrompt : undefined
+function setupDismissableDetails() {
+    const closeDetailsExcept = (activeDetails) => {
+        document.querySelectorAll('details[data-dismiss-on-outside][open]').forEach((details) => {
+            if (details !== activeDetails) {
+                details.removeAttribute('open');
+            }
+        });
     };
 
+    document.addEventListener('click', (event) => {
+        const activeDetails = event.target.closest?.('details[data-dismiss-on-outside]');
+        closeDetailsExcept(activeDetails || null);
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            closeDetailsExcept(null);
+        }
+    });
+}
+
+// ---- Ollama model fetching --------------------------------------------------
+
+function getOllamaLocalUrl() {
+    return val('ollama-url').replace(/\/+$/, '') || DEFAULT_OLLAMA_URL;
+}
+
+async function ensureOllamaModels(providerId, {requestPermission = false} = {}) {
+    const isCloud = providerId === 'ollama-cloud';
+    const permKey = isCloud ? 'ollama-cloud' : 'ollama';
+    const selectId = isCloud ? 'ollama-cloud-model' : 'ollama-model';
+    const origins = OPTIONAL_HOST_PERMISSIONS[permKey];
+
+    // In Firefox, permissions.request() must be the first awaited call in a user
+    // action. Expanding the Ollama cards is a user action, so request first
+    // there. Background prefetch still uses contains() to avoid surprise prompts.
+    const granted = requestPermission
+        ? await requestOptionalHostPermissions(origins)
+        : await hasOptionalHostPermissions(origins);
+
+    if (!granted) {
+        setOllamaModelSelectStatus(selectId, 'Permission required to load models');
+        return;
+    }
+    await fetchOllamaModels(isCloud ? 'cloud' : 'local');
+}
+
+async function fetchOllamaModels(mode) {
+    const isCloud = mode === 'cloud';
+    const selectId = isCloud ? 'ollama-cloud-model' : 'ollama-model';
+    const select = $(selectId);
+    if (!select) return;
+    const currentSelection = select.value;
+
     try {
-        // Note: Permission request is now handled in the form submit handler
-        // to preserve user gesture context for Firefox compatibility.
+        const url = isCloud ? OLLAMA_CLOUD_URL : getOllamaLocalUrl();
+        const fetchOptions = {url: `${url}/api/tags`, method: 'GET', isErrorExpected: true};
+        if (isCloud) {
+            const apiKey = val('ollama-key');
+            if (apiKey) fetchOptions.headers = {'Authorization': `Bearer ${apiKey}`};
+        }
+
+        const data = await sendBackgroundMessage('FETCH_API_REQUEST', fetchOptions);
+        select.options.length = 0;
+
+        if (!data.models || data.models.length === 0) {
+            const option = document.createElement('option');
+            option.value = '';
+            option.textContent = 'No models available';
+            select.appendChild(option);
+        } else {
+            const models = data.models.map((m) => m.name).sort();
+            if (isCloud) {
+                const grouped = new Map();
+                for (const name of models) {
+                    const slashIdx = name.indexOf('/');
+                    const provider = slashIdx > 0 ? name.substring(0, slashIdx) : 'ollama';
+                    const modelName = slashIdx > 0 ? name.substring(slashIdx + 1) : name;
+                    if (!grouped.has(provider)) grouped.set(provider, []);
+                    grouped.get(provider).push({value: name, label: modelName});
+                }
+                for (const provider of [...grouped.keys()].sort()) {
+                    const optgroup = document.createElement('optgroup');
+                    optgroup.label = provider;
+                    for (const model of grouped.get(provider)) {
+                        const option = document.createElement('option');
+                        option.value = model.value;
+                        option.textContent = model.label;
+                        optgroup.appendChild(option);
+                    }
+                    select.appendChild(optgroup);
+                }
+            } else {
+                for (const name of models) {
+                    const option = document.createElement('option');
+                    option.value = name;
+                    option.textContent = name;
+                    select.appendChild(option);
+                }
+            }
+
+            const savedModel = isCloud ? savedOllamaCloudModel : savedOllamaLocalModel;
+            const modelToSelect = currentSelection || savedModel;
+            if (modelToSelect && Array.from(select.options).some((opt) => opt.value === modelToSelect)) {
+                select.value = modelToSelect;
+            }
+        }
+    } catch (error) {
+        await Logger.debug('Could not fetch Ollama models (Ollama may not be running):', error.message);
+        setOllamaModelSelectStatus(selectId, isCloud ? 'Could not load models' : 'Ollama not running');
+    }
+
+    updateProviderBadges();
+    updateActiveAndReadiness();
+}
+
+// ---- Save / Load ------------------------------------------------------------
+
+async function saveSettings() {
+    const generationEnabled = $('generation-enabled').checked;
+    const rawSelection = getSelectedProvider();
+
+    const openAICompatibleSettings = {
+        preset: val('oaicompat-preset'),
+        baseURL: val('oaicompat-url').trim().replace(/\/+$/, ''),
+        apiKey: val('oaicompat-key'),
+        model: val('oaicompat-model').trim(),
+    };
+
+    // Stored providerSelection always holds the picked provider (selection is
+    // retained even when generation is off). 'openrouter' is the legacy alias
+    // for the OpenRouter preset; ollama-cloud collapses to 'ollama' + flag.
+    const providerSelection = (rawSelection === 'openai-compatible' && openAICompatibleSettings.preset === 'openrouter')
+        ? 'openrouter'
+        : resolveOllamaProvider(rawSelection);
+
+    const ollamaCloud = rawSelection === 'ollama-cloud'
+        ? true
+        : (rawSelection === 'ollama' ? false : savedOllamaCloud);
+    const ollamaLocalModel = val('ollama-model') || savedOllamaLocalModel;
+    const ollamaCloudModel = val('ollama-cloud-model') || savedOllamaCloudModel;
+    const ollamaModel = ollamaCloud ? ollamaCloudModel : ollamaLocalModel;
+
+    const promptCustomization = $('prompt-customization').checked;
+    const systemPrompt = val('system-prompt');
+    const userPrompt = val('user-prompt');
+
+    const settings = {
+        serverCacheEnabled: $('hn-companion-server-enabled').checked,
+        generationEnabled,
+        providerSelection,
+        ollama: {
+            cloud: ollamaCloud,
+            url: val('ollama-url').replace(/\/+$/, '') || DEFAULT_OLLAMA_URL,
+            apiKey: val('ollama-key'),
+            model: ollamaModel,
+            localModel: ollamaLocalModel,
+            cloudModel: ollamaCloudModel,
+        },
+        google: {apiKey: val('google-key'), model: val('google-model')},
+        anthropic: {apiKey: val('anthropic-key'), model: val('anthropic-model')},
+        openai: {apiKey: val('openai-key'), model: val('openai-model')},
+        'openai-compatible': openAICompatibleSettings,
+        promptCustomization,
+        systemPrompt: promptCustomization ? systemPrompt : undefined,
+        userPrompt: promptCustomization ? userPrompt : undefined,
+    };
+
+    // Transitional compatibility for synced settings: older builds only know the
+    // OpenRouter provider id and settings key. Correct only for the OpenRouter
+    // preset; other OpenAI-compatible endpoints can't work on old builds.
+    if (openAICompatibleSettings.preset === 'openrouter') {
+        settings.openrouter = {
+            apiKey: openAICompatibleSettings.apiKey,
+            model: openAICompatibleSettings.model,
+        };
+    }
+
+    savedOllamaCloud = ollamaCloud;
+    savedOllamaLocalModel = ollamaLocalModel;
+    savedOllamaCloudModel = ollamaCloudModel;
+
+    try {
+        // Permission requests happen in the submit handler to preserve the user
+        // gesture (Firefox requirement); storage writes don't need it.
         await storage.setItem('sync:settings', settings);
+        savedOpenAICompatibleSettings = {...openAICompatibleSettings};
 
         const saveButton = document.querySelector('button[type="submit"]');
         const originalText = saveButton.textContent;
@@ -306,174 +740,93 @@ async function saveSettings() {
     }
 }
 
-// Fetch Ollama models from API
-async function fetchOllamaModels() {
-    try {
-        const ollamaUrl = getOllamaEffectiveUrl();
-        const selectElement = document.getElementById('ollama-model');
-
-        // Remember current selection before clearing
-        const currentSelection = selectElement.value;
-
-        const fetchOptions = {
-            url: `${ollamaUrl}/api/tags`,
-            method: 'GET',
-            isErrorExpected: true
-        };
-        const extraHeaders = getOllamaFetchHeaders();
-        if (Object.keys(extraHeaders).length > 0) {
-            fetchOptions.headers = extraHeaders;
-        }
-
-        const data = await sendBackgroundMessage('FETCH_API_REQUEST', fetchOptions);
-
-        // Clear existing options
-        selectElement.options.length = 0
-
-        // If no models found, add a placeholder option
-        if (data.models.length === 0) {
-            const option = document.createElement('option');
-            option.value = '';
-            option.textContent = 'No models available';
-            selectElement.appendChild(option);
-        }
-        else {
-            const models = data.models.map(m => m.name).sort();
-
-            if (isOllamaCloudMode()) {
-                const grouped = new Map();
-                for (const name of models) {
-                    const slashIdx = name.indexOf('/');
-                    const provider = slashIdx > 0 ? name.substring(0, slashIdx) : 'ollama';
-                    const modelName = slashIdx > 0 ? name.substring(slashIdx + 1) : name;
-                    if (!grouped.has(provider)) grouped.set(provider, []);
-                    grouped.get(provider).push({ value: name, label: modelName });
-                }
-                const sortedProviders = [...grouped.keys()].sort();
-                for (const provider of sortedProviders) {
-                    const optgroup = document.createElement('optgroup');
-                    optgroup.label = provider;
-                    for (const model of grouped.get(provider)) {
-                        const option = document.createElement('option');
-                        option.value = model.value;
-                        option.textContent = model.label;
-                        optgroup.appendChild(option);
-                    }
-                    selectElement.appendChild(optgroup);
-                }
-            } else {
-                for (const name of models) {
-                    const option = document.createElement('option');
-                    option.value = name;
-                    option.textContent = name;
-                    selectElement.appendChild(option);
-                }
-            }
-
-            // Restore selection: prefer current selection, fall back to saved settings
-            const settings = await storage.getItem('sync:settings');
-            const savedModel = settings?.ollama?.model;
-            const modelToSelect = currentSelection || savedModel;
-
-            if (modelToSelect) {
-                const optionExists = Array.from(selectElement.options).some(opt => opt.value === modelToSelect);
-                if (optionExists) {
-                    selectElement.value = modelToSelect;
-                }
-            }
-        }
-    } catch (error) {
-        await Logger.debug('Could not fetch Ollama models:', error.message);
-        const selectElement = document.getElementById('ollama-model');
-        selectElement.options.length = 0;
-
-        const option = document.createElement('option');
-        option.value = '';
-        option.textContent = error.message?.includes('403')
-            ? 'CORS blocked — see setup guide above'
-            : 'Ollama not running';
-        selectElement.appendChild(option);
-    }
-}
-
-// Load settings from browser storage
 async function loadSettings() {
     try {
         const settings = await storage.getItem('sync:settings');
-        const systemPromptTextarea = document.getElementById('system-prompt');
-        const userPromptTextarea = document.getElementById('user-prompt');
-        const promptCustomizationCheckbox = document.getElementById('prompt-customization');
+        const systemPromptTextarea = $('system-prompt');
+        const userPromptTextarea = $('user-prompt');
+        const promptCustomizationCheckbox = $('prompt-customization');
 
         if (settings) {
-            // Set HN Companion Server enabled state
-            if(settings.serverCacheEnabled !== undefined) {
-                document.getElementById('hn-companion-server-enabled').checked = settings.serverCacheEnabled;
+            if (settings.serverCacheEnabled !== undefined) {
+                $('hn-companion-server-enabled').checked = settings.serverCacheEnabled;
             }
-            // Set provider selection in dropdown (can be empty string for "None")
-            const providerDropdown = document.getElementById('active-provider');
-            if (providerDropdown && settings.providerSelection !== undefined) {
-                const dropdownValue = (settings.providerSelection === 'ollama' && settings.ollama?.cloud)
-                    ? 'ollama-cloud'
-                    : settings.providerSelection;
-                providerDropdown.value = dropdownValue;
-            }
-            const badgeValue = (settings.providerSelection === 'ollama' && settings.ollama?.cloud)
-                ? 'ollama-cloud'
-                : (settings.providerSelection ?? '');
-            updateActiveProviderBadge(badgeValue);
 
-            // Set Ollama settings
+            // Migration: derive generation enablement for settings saved before
+            // `generationEnabled` existed (non-empty providerSelection => on).
+            const generationEnabled = settings.generationEnabled ?? Boolean(settings.providerSelection);
+            $('generation-enabled').checked = generationEnabled;
+
+            savedOllamaCloud = settings.ollama?.cloud || false;
+
+            // Restore the selected provider radio (retained even when off).
+            const radioValue = toRadioValue(settings.providerSelection, savedOllamaCloud);
+            if (radioValue) {
+                const radio = $(`provider-${radioValue}`);
+                if (radio) radio.checked = true;
+            }
+
             if (settings.ollama) {
-                setOllamaMode(settings.ollama.cloud || false);
-                document.getElementById('ollama-url').value = settings.ollama.url || DEFAULT_OLLAMA_URL;
-                document.getElementById('ollama-key').value = settings.ollama.apiKey || '';
-                if (settings.ollama.model) {
-                    document.getElementById('ollama-model').value = settings.ollama.model;
-                }
+                $('ollama-url').value = settings.ollama.url || DEFAULT_OLLAMA_URL;
+                $('ollama-key').value = settings.ollama.apiKey || '';
+                // Keep separate local/cloud selections for the split cards while
+                // preserving the legacy `model` value used by summarization.
+                savedOllamaLocalModel = settings.ollama.localModel || (!savedOllamaCloud ? settings.ollama.model : '') || '';
+                savedOllamaCloudModel = settings.ollama.cloudModel || (savedOllamaCloud ? settings.ollama.model : '') || '';
+                preselectModel('ollama-model', savedOllamaLocalModel);
+                preselectModel('ollama-cloud-model', savedOllamaCloudModel);
             }
 
-            // Set Google settings
             if (settings.google) {
-                document.getElementById('google-key').value = settings.google.apiKey || '';
-                document.getElementById('google-model').value = settings.google.model || 'gemini-2.5-pro';
+                $('google-key').value = settings.google.apiKey || '';
+                setSelectValueWithFallback('google-model', settings.google.model, 'gemini-3.5-flash');
             }
-
-            // Set Anthropic settings
             if (settings.anthropic) {
-                document.getElementById('anthropic-key').value = settings.anthropic.apiKey || '';
-                document.getElementById('anthropic-model').value = settings.anthropic.model || 'claude-opus-4-1';
+                $('anthropic-key').value = settings.anthropic.apiKey || '';
+                setSelectValueWithFallback('anthropic-model', settings.anthropic.model, 'claude-opus-4-8');
             }
-
-            // Set OpenAI settings
             if (settings.openai) {
-                document.getElementById('openai-key').value = settings.openai.apiKey || '';
-                document.getElementById('openai-model').value = settings.openai.model || 'gpt-5';
+                $('openai-key').value = settings.openai.apiKey || '';
+                setSelectValueWithFallback('openai-model', settings.openai.model, 'gpt-5.5');
             }
 
-            // Set OpenRouter settings
-            if (settings.openrouter) {
-                document.getElementById('openrouter-key').value = settings.openrouter.apiKey || '';
-                document.getElementById('openrouter-model').value = settings.openrouter.model || 'deepseek/deepseek-chat';
+            // OpenAI-compatible, migrating from the legacy 'openrouter' shape.
+            const compat = settings['openai-compatible']
+                || (settings.openrouter
+                    ? {
+                        preset: 'openrouter',
+                        baseURL: OPENAI_COMPATIBLE_PRESETS.openrouter.baseURL,
+                        apiKey: settings.openrouter.apiKey,
+                        model: settings.openrouter.model,
+                    }
+                    : null);
+            if (compat) {
+                const presetId = OPENAI_COMPATIBLE_PRESETS[compat.preset] ? compat.preset : 'custom';
+                savedOpenAICompatibleSettings = {
+                    preset: presetId,
+                    baseURL: compat.baseURL || OPENAI_COMPATIBLE_PRESETS[presetId].baseURL || '',
+                    apiKey: compat.apiKey || '',
+                    model: compat.model || '',
+                };
+                $('oaicompat-preset').value = presetId;
+                $('oaicompat-url').value = savedOpenAICompatibleSettings.baseURL;
+                $('oaicompat-key').value = savedOpenAICompatibleSettings.apiKey;
+                $('oaicompat-model').value = savedOpenAICompatibleSettings.model;
+                applyOpenAICompatiblePreset(presetId, {fillUrl: false});
             }
 
-            // Prompt customization
-            const promptCustomization = settings?.promptCustomization || false;
+            const promptCustomization = settings.promptCustomization || false;
             promptCustomizationCheckbox.checked = promptCustomization;
-            if (promptCustomization) {
-                systemPromptTextarea.value = settings?.systemPrompt || AI_SYSTEM_PROMPT;
-                userPromptTextarea.value = settings?.userPrompt || AI_USER_PROMPT_STRING;
-            } else {
-                systemPromptTextarea.value = AI_SYSTEM_PROMPT;
-                userPromptTextarea.value = AI_USER_PROMPT_STRING;
-            }
+            systemPromptTextarea.value = (promptCustomization && settings.systemPrompt) || AI_SYSTEM_PROMPT;
+            userPromptTextarea.value = (promptCustomization && settings.userPrompt) || AI_USER_PROMPT_STRING;
             setPromptCustomizationState(promptCustomization);
         } else {
-            // First-time user: set defaults explicitly
-            const providerDropdown = document.getElementById('active-provider');
-            if (providerDropdown) {
-                providerDropdown.value = ''; // None
-            }
-            updateActiveProviderBadge('');
+            // First-time user: cache on, generation on, Google selected (matches
+            // background DEFAULT_SETTINGS). Google has no key yet => "Missing API key".
+            $('hn-companion-server-enabled').checked = true;
+            $('generation-enabled').checked = true;
+            const google = $('provider-google');
+            if (google) google.checked = true;
 
             systemPromptTextarea.value = AI_SYSTEM_PROMPT;
             userPromptTextarea.value = AI_USER_PROMPT_STRING;
@@ -485,122 +838,173 @@ async function loadSettings() {
     }
 }
 
-// Initialize event listeners and load settings
+// ---- Init -------------------------------------------------------------------
+
 document.addEventListener('DOMContentLoaded', async () => {
-    // Load saved settings
+    // Preset options must exist before loadSettings() restores the saved
+    // preset, or the select's value assignment is silently dropped.
+    populateOpenAICompatiblePresetSelect();
     await loadSettings();
 
-    // Only attempt to load Ollama models if permission is already granted
-    const ollamaPermKey = isOllamaCloudMode() ? 'ollama-cloud' : 'ollama';
-    if (await hasOptionalHostPermissions(OPTIONAL_HOST_PERMISSIONS[ollamaPermKey])) {
-        await fetchOllamaModels();
-    } else {
-        setOllamaModelSelectStatus('Expand to load models');
+    // Ensure the OpenAI-compatible card has correct URL/lock/placeholder state
+    // before computing readiness. Fill the preset's base URL only when nothing
+    // was loaded (first-time users).
+    const presetEl = $('oaicompat-preset');
+    if (presetEl) {
+        applyOpenAICompatiblePreset(presetEl.value, {fillUrl: !val('oaicompat-url')});
     }
 
-    // Add save button event listener
-    const form = document.querySelector('form');
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
+    switchTab('general');
+    refreshUI();
 
-        // IMPORTANT: Firefox loses "user action handler" status after any await.
-        // permissions.request() MUST be the FIRST await to preserve user gesture context.
-        // See: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/User_actions
+    // Prefetch models for a pre-selected Ollama provider if permission is granted.
+    const selected = getSelectedProvider();
+    if (selected === 'ollama' && await hasOptionalHostPermissions(OPTIONAL_HOST_PERMISSIONS.ollama)) {
+        await fetchOllamaModels('local');
+    } else if (selected === 'ollama-cloud' && await hasOptionalHostPermissions(OPTIONAL_HOST_PERMISSIONS['ollama-cloud'])) {
+        await fetchOllamaModels('cloud');
+    }
 
-        // 1. Determine provider selection SYNCHRONOUSLY (no await before permissions.request)
-        const providerSelection = document.getElementById('active-provider').value; // Can be empty for "None"
-
-        // 2. Request permission FIRST (MUST be first await to preserve user gesture in Firefox)
-        const permKey = providerSelection === 'ollama-cloud' ? 'ollama-cloud' : providerSelection;
-        const origins = OPTIONAL_HOST_PERMISSIONS[permKey] || [];
-        if (origins.length > 0) {
-            const permissionGranted = await requestOptionalHostPermissions(origins);
-            if (!permissionGranted) {
-                window.alert('Permission was not granted. Requests to the selected AI provider may fail until you allow access.');
+    // Tabs
+    document.querySelectorAll('[data-tab]').forEach((btn) => {
+        btn.addEventListener('click', () => switchTab(btn.getAttribute('data-tab')));
+        btn.addEventListener('keydown', (event) => {
+            if (event.key === 'ArrowRight') {
+                event.preventDefault();
+                focusAdjacentTab(btn, 1);
+            } else if (event.key === 'ArrowLeft') {
+                event.preventDefault();
+                focusAdjacentTab(btn, -1);
+            } else if (event.key === 'Home') {
+                event.preventDefault();
+                const first = document.querySelector('[data-tab]');
+                if (first) {
+                    first.focus();
+                    switchTab(first.getAttribute('data-tab'));
+                }
+            } else if (event.key === 'End') {
+                event.preventDefault();
+                const tabs = document.querySelectorAll('[data-tab]');
+                const last = tabs[tabs.length - 1];
+                if (last) {
+                    last.focus();
+                    switchTab(last.getAttribute('data-tab'));
+                }
             }
-        }
-
-        // 3. Now proceed with saving (user gesture no longer needed for storage operations)
-        await saveSettings();
-    });
-
-    // Add cancel button event listener
-    const cancelButton = document.getElementById('cancel-button');
-    if (cancelButton) {
-        cancelButton.addEventListener('click', () => {
-            window.close();
-        });
-    }
-
-    // Add dropdown change listener for active provider selection
-    const activeProviderDropdown = document.getElementById('active-provider');
-    if (activeProviderDropdown) {
-        activeProviderDropdown.addEventListener('change', async () => {
-            await handleActiveProviderChange(activeProviderDropdown.value);
-        });
-    }
-
-    // Add provider toggle buttons to expand/collapse provider settings
-    const providerToggles = document.querySelectorAll('[data-provider-toggle]');
-    providerToggles.forEach((toggle) => {
-        toggle.addEventListener('click', async () => {
-            const providerId = toggle.getAttribute('data-provider-toggle');
-            await toggleProviderCard(providerId);
         });
     });
 
-    // Add click listeners to provider card headers to expand/collapse
-    const providerCards = document.querySelectorAll('[data-provider-card]');
-    providerCards.forEach((card) => {
-        card.addEventListener('click', async (e) => {
-            // Prevent triggering if clicking on inputs, buttons, links, details, or the body
-            if (e.target.closest('input, button, a, details, summary, select, textarea, [data-provider-body]')) {
+    // Server cache + generation master toggles
+    $('hn-companion-server-enabled').addEventListener('change', updateNoSummaryGuard);
+    $('generation-enabled').addEventListener('change', () => {
+        updateGenerationCollapse();
+        updateNoSummaryGuard();
+        updateActiveAndReadiness();
+    });
+
+    // Provider radio selection
+    document.querySelectorAll('input[name="provider"]').forEach((radio) => {
+        radio.addEventListener('change', () => selectProvider(radio.value));
+    });
+
+    // Chevron buttons expand/collapse a card without changing selection
+    document.querySelectorAll('[data-provider-toggle]').forEach((toggle) => {
+        toggle.addEventListener('click', () => toggleProviderCard(toggle.getAttribute('data-provider-toggle')));
+    });
+
+    // Clicking a card body (outside controls) selects that provider
+    document.querySelectorAll('[data-provider-card]').forEach((card) => {
+        card.addEventListener('click', (e) => {
+            if (e.target.closest('button, a, details, summary, input, select, textarea, [data-provider-body]')) {
                 return;
             }
-            const providerId = card.getAttribute('data-provider-card');
-            await toggleProviderCard(providerId);
+            const value = card.getAttribute('data-provider-card');
+            const radio = $(`provider-${value}`);
+            if (radio && !radio.checked) {
+                radio.checked = true;
+                radio.dispatchEvent(new Event('change', {bubbles: true}));
+            }
         });
     });
 
-    // Add event listener for prompt customization checkbox
-    const promptCustomizationCheckbox = document.getElementById('prompt-customization');
-    promptCustomizationCheckbox.addEventListener('change', (e) => {
+    // Config inputs that affect readiness/badges
+    ['google-key', 'anthropic-key', 'openai-key', 'ollama-key', 'ollama-url',
+        'ollama-model', 'ollama-cloud-model', 'oaicompat-url', 'oaicompat-model',
+        'google-model', 'anthropic-model', 'openai-model'].forEach((id) => {
+        const el = $(id);
+        if (el) {
+            el.addEventListener('input', () => {
+                updateProviderBadges();
+                updateActiveAndReadiness();
+            });
+            el.addEventListener('change', () => {
+                updateProviderBadges();
+                updateActiveAndReadiness();
+            });
+        }
+    });
+
+    // OpenAI-compatible preset selector
+    if (presetEl) {
+        presetEl.addEventListener('change', () => {
+            const shouldRestoreSavedPreset = savedOpenAICompatibleSettings?.preset === presetEl.value;
+            applyOpenAICompatiblePreset(presetEl.value, {
+                fillUrl: !shouldRestoreSavedPreset,
+                resetProviderFields: !shouldRestoreSavedPreset,
+            });
+            if (shouldRestoreSavedPreset) {
+                restoreSavedOpenAICompatibleSettings(presetEl.value);
+            }
+            updateProviderBadges();
+            updateActiveAndReadiness();
+        });
+    }
+
+    // Prompt customization toggle
+    $('prompt-customization').addEventListener('change', (e) => {
         setPromptCustomizationState(e.target.checked);
     });
 
-    // Ollama local/cloud mode toggle buttons — sync with active provider dropdown
-    const syncDropdownToOllamaMode = (isCloud) => {
-        const dropdown = document.getElementById('active-provider');
-        const currentIsOllama = dropdown.value === 'ollama' || dropdown.value === 'ollama-cloud';
-        if (currentIsOllama) {
-            dropdown.value = isCloud ? 'ollama-cloud' : 'ollama';
-            updateActiveProviderBadge(dropdown.value);
-        }
-    };
-
-    document.getElementById('ollama-mode-local').addEventListener('click', () => {
-        setOllamaMode(false);
-        syncDropdownToOllamaMode(false);
-        fetchOllamaModels();
-    });
-    document.getElementById('ollama-mode-cloud').addEventListener('click', async () => {
-        setOllamaMode(true);
-        syncDropdownToOllamaMode(true);
-        const origins = OPTIONAL_HOST_PERMISSIONS['ollama-cloud'];
-        let granted = await hasOptionalHostPermissions(origins);
-        if (!granted) {
-            granted = await requestOptionalHostPermissions(origins);
-        }
-        if (granted) {
-            await fetchOllamaModels();
-        } else {
-            setOllamaModelSelectStatus('Permission required to load models');
-        }
-    });
-
     setupKeyVisibilityToggles();
+    setupDismissableDetails();
 
-    // Set initial active provider badge state (can be empty for "None")
-    const activeProvider = document.getElementById('active-provider').value;
-    updateActiveProviderBadge(activeProvider);
+    // Save
+    document.querySelector('form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        // Firefox loses user-gesture status after any await, so permissions.request()
+        // MUST be the first await. Determine the selection synchronously first.
+        const generationEnabled = $('generation-enabled').checked;
+        const providerSelection = getSelectedProvider();
+
+        if (generationEnabled && providerSelection === 'openai-compatible') {
+            const pattern = getOpenAICompatibleOriginPattern();
+            if (!pattern) {
+                window.alert('Enter a valid http(s) Base URL for the OpenAI-compatible provider before saving.');
+                return;
+            }
+            if (!isSupportedOpenAICompatibleOrigin(pattern)) {
+                window.alert('That OpenAI-compatible endpoint is not in HN Companion’s supported endpoint list. Use a supported hosted provider or a localhost / 127.0.0.1 endpoint.');
+                return;
+            }
+        }
+
+        if (generationEnabled && providerSelection) {
+            const origins = getProviderPermissionOrigins(providerSelection);
+            if (origins.length > 0) {
+                const granted = await requestOptionalHostPermissions(origins);
+                if (!granted) {
+                    window.alert('Permission was not granted. Requests to the selected AI provider may fail until you allow access.');
+                }
+            }
+        }
+
+        await saveSettings();
+    });
+
+    // Cancel
+    const cancelButton = $('cancel-button');
+    if (cancelButton) {
+        cancelButton.addEventListener('click', () => window.close());
+    }
 });

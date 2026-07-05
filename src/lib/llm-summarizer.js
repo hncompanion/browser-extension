@@ -3,25 +3,42 @@ import {generateText, streamText} from 'ai';
 import {createOpenAI} from '@ai-sdk/openai';
 import {createAnthropic} from '@ai-sdk/anthropic';
 import {createGoogleGenerativeAI} from '@ai-sdk/google';
-import {createOpenRouter} from '@openrouter/ai-sdk-provider';
 import {Logger} from "./utils.js";
 
-function createModel(aiProvider, modelId, apiKey) {
+const OPENAI_COMPATIBLE_OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
+
+function createModel({aiProvider, modelId, apiKey, baseURL}) {
     switch (aiProvider) {
         case 'openai':
-            return createOpenAI({ apiKey })(modelId);
+            return createOpenAI({apiKey})(modelId);
 
         case 'anthropic':
             return createAnthropic({
                 apiKey,
-                headers: { 'anthropic-dangerous-direct-browser-access': 'true' },
+                headers: {'anthropic-dangerous-direct-browser-access': 'true'},
             })(modelId);
 
         case 'google':
-            return createGoogleGenerativeAI({ apiKey })(modelId);
+            return createGoogleGenerativeAI({apiKey})(modelId);
 
-        case 'openrouter':
-            return createOpenRouter({ apiKey }).chat(modelId);
+        // 'openai-compatible' covers supported OpenAI Chat Completions
+        // endpoints (OpenRouter, Groq, Together, or localhost /v1 servers).
+        // 'openrouter' is kept as a legacy alias for settings saved before
+        // the providers were unified.
+        case 'openai-compatible':
+        case 'openrouter': {
+            const compatibleBaseURL = baseURL || (aiProvider === 'openrouter' ? OPENAI_COMPATIBLE_OPENROUTER_BASE_URL : '');
+            if (!compatibleBaseURL) {
+                throw new Error('Missing Base URL for OpenAI-compatible provider');
+            }
+            const compatible = createOpenAI({
+                // Some local servers (llama.cpp, LM Studio) don't require a key;
+                // the SDK still needs a non-empty value, so fall back to a placeholder.
+                apiKey: apiKey || 'not-needed',
+                baseURL: compatibleBaseURL,
+            });
+            return compatible.chat(modelId);
+        }
 
         default:
             throw new Error(`Unsupported AI provider: ${aiProvider}, model: ${modelId}`);
@@ -40,14 +57,14 @@ function improveError(error, data) {
 
 export async function summarizeText(data) {
     try {
-        const { aiProvider, modelId, apiKey, systemPrompt, userPrompt, parameters = {} } = data;
+        const {systemPrompt, userPrompt, parameters = {}} = data;
 
-        const model = createModel(aiProvider, modelId, apiKey);
+        const model = createModel(data);
         if (!model) {
-            throw new Error(`Failed to initialize model for provider: ${aiProvider}, model: ${modelId}`);
+            throw new Error(`Failed to initialize model for provider: ${data.aiProvider}, model: ${data.modelId}`);
         }
 
-        const { text: summary } = await generateText({
+        const {text: summary} = await generateText({
             model,
             system: systemPrompt,
             prompt: userPrompt,
@@ -70,11 +87,11 @@ export async function summarizeText(data) {
 
 export async function streamSummarizeText(data, onChunk, onDone, onError, abortSignal) {
     try {
-        const { aiProvider, modelId, apiKey, systemPrompt, userPrompt, parameters = {} } = data;
+        const {systemPrompt, userPrompt, parameters = {}} = data;
 
-        const model = createModel(aiProvider, modelId, apiKey);
+        const model = createModel(data);
         if (!model) {
-            throw new Error(`Failed to initialize model for provider: ${aiProvider}, model: ${modelId}`);
+            throw new Error(`Failed to initialize model for provider: ${data.aiProvider}, model: ${data.modelId}`);
         }
 
         const result = streamText({

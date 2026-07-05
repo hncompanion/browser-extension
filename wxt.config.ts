@@ -1,10 +1,17 @@
 import {defineConfig} from 'wxt';
 // @ts-ignore
 import tailwindcss from '@tailwindcss/vite';
+// @ts-ignore
+import {ALL_OPTIONAL_HOST_PERMISSIONS} from './src/lib/host-permissions.js';
 
 // See https://wxt.dev/api/config.html
 export default defineConfig({
     srcDir: 'src',
+    zip: {
+        // Keep release artifact names stable (browser-extension-x.y.z-chrome.zip)
+        // instead of relying on the checkout directory name.
+        name: 'browser-extension',
+    },
     manifest: ({browser}) => {
         let manifest = {
             name: "Hacker News Companion",
@@ -17,14 +24,7 @@ export default defineConfig({
                 "https://hn.algolia.com/*",
                 "https://app.hncompanion.com/*"
             ],
-            optional_host_permissions: [
-                "https://api.openai.com/*",
-                "https://api.anthropic.com/*",
-                "https://openrouter.ai/*",
-                "https://generativelanguage.googleapis.com/*",
-                "http://localhost:11434/*",
-                "https://ollama.com/*"
-            ],
+            optional_host_permissions: ALL_OPTIONAL_HOST_PERMISSIONS,
             icons: {
                 16: '/icon/icon-16.png',
                 32: '/icon/icon-32.png',
