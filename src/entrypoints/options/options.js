@@ -43,6 +43,21 @@ const OPENAI_COMPATIBLE_PRESETS = Object.fromEntries([
     }],
 ]);
 
+const OPENAI_COMPATIBLE_PRESET_GROUPS = [
+    {
+        label: 'Common',
+        presets: ['openrouter', 'groq', 'mistral', 'deepseek', 'zai', 'custom'],
+    },
+    {
+        label: 'Gateways',
+        presets: ['vercel', 'tokenrouter', 'cloudflare', 'huggingface'],
+    },
+    {
+        label: 'More providers',
+        presets: ['together', 'fireworks', 'deepinfra', 'cerebras', 'cohere', 'xai', 'perplexity'],
+    },
+];
+
 // Provider radio values used in the UI. Ollama is split into two cards
 // (local + cloud) that both persist to the single `ollama` settings object,
 // distinguished by the `cloud` flag.
@@ -77,6 +92,7 @@ const OPENAI_COMPATIBLE_MODEL_NAME_CLASS = 'mt-0.5 block truncate text-gray-500 
 let savedOllamaCloud = false;
 let savedOllamaLocalModel = '';
 let savedOllamaCloudModel = '';
+let savedOpenAICompatibleSettings = null;
 
 const $ = (id) => document.getElementById(id);
 const val = (id) => ($(id)?.value ?? '');
@@ -180,11 +196,31 @@ function populateOpenAICompatiblePresetSelect() {
     const select = $('oaicompat-preset');
     if (!select) return;
     select.options.length = 0;
-    for (const [id, preset] of Object.entries(OPENAI_COMPATIBLE_PRESETS)) {
+    const added = new Set();
+
+    const appendOption = (parent, id) => {
+        const preset = OPENAI_COMPATIBLE_PRESETS[id];
+        if (!preset || added.has(id)) return;
         const option = document.createElement('option');
         option.value = id;
         option.textContent = preset.label;
-        select.appendChild(option);
+        parent.appendChild(option);
+        added.add(id);
+    };
+
+    for (const group of OPENAI_COMPATIBLE_PRESET_GROUPS) {
+        const optgroup = document.createElement('optgroup');
+        optgroup.label = group.label;
+        for (const id of group.presets) {
+            appendOption(optgroup, id);
+        }
+        if (optgroup.children.length > 0) {
+            select.appendChild(optgroup);
+        }
+    }
+
+    for (const id of Object.keys(OPENAI_COMPATIBLE_PRESETS)) {
+        appendOption(select, id);
     }
 }
 
@@ -272,6 +308,18 @@ function applyOpenAICompatiblePreset(presetId, {fillUrl = true, resetProviderFie
     if (keyHelp) {
         renderOpenAICompatibleKeyHelp(keyHelp, preset, isCustom);
     }
+}
+
+function restoreSavedOpenAICompatibleSettings(presetId) {
+    if (savedOpenAICompatibleSettings?.preset !== presetId) return false;
+
+    const urlInput = $('oaicompat-url');
+    const modelInput = $('oaicompat-model');
+    const keyInput = $('oaicompat-key');
+    if (urlInput) urlInput.value = savedOpenAICompatibleSettings.baseURL || '';
+    if (modelInput) modelInput.value = savedOpenAICompatibleSettings.model || '';
+    if (keyInput) keyInput.value = savedOpenAICompatibleSettings.apiKey || '';
+    return true;
 }
 
 function setPromptCustomizationState(isEnabled) {
@@ -679,6 +727,7 @@ async function saveSettings() {
         // Permission requests happen in the submit handler to preserve the user
         // gesture (Firefox requirement); storage writes don't need it.
         await storage.setItem('sync:settings', settings);
+        savedOpenAICompatibleSettings = {...openAICompatibleSettings};
 
         const saveButton = document.querySelector('button[type="submit"]');
         const originalText = saveButton.textContent;
@@ -753,10 +802,16 @@ async function loadSettings() {
                     : null);
             if (compat) {
                 const presetId = OPENAI_COMPATIBLE_PRESETS[compat.preset] ? compat.preset : 'custom';
+                savedOpenAICompatibleSettings = {
+                    preset: presetId,
+                    baseURL: compat.baseURL || OPENAI_COMPATIBLE_PRESETS[presetId].baseURL || '',
+                    apiKey: compat.apiKey || '',
+                    model: compat.model || '',
+                };
                 $('oaicompat-preset').value = presetId;
-                $('oaicompat-url').value = compat.baseURL || OPENAI_COMPATIBLE_PRESETS[presetId].baseURL || '';
-                $('oaicompat-key').value = compat.apiKey || '';
-                $('oaicompat-model').value = compat.model || '';
+                $('oaicompat-url').value = savedOpenAICompatibleSettings.baseURL;
+                $('oaicompat-key').value = savedOpenAICompatibleSettings.apiKey;
+                $('oaicompat-model').value = savedOpenAICompatibleSettings.model;
                 applyOpenAICompatiblePreset(presetId, {fillUrl: false});
             }
 
@@ -892,10 +947,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     // OpenAI-compatible preset selector
     if (presetEl) {
         presetEl.addEventListener('change', () => {
+            const shouldRestoreSavedPreset = savedOpenAICompatibleSettings?.preset === presetEl.value;
             applyOpenAICompatiblePreset(presetEl.value, {
-                fillUrl: true,
-                resetProviderFields: true,
+                fillUrl: !shouldRestoreSavedPreset,
+                resetProviderFields: !shouldRestoreSavedPreset,
             });
+            if (shouldRestoreSavedPreset) {
+                restoreSavedOpenAICompatibleSettings(presetEl.value);
+            }
             updateProviderBadges();
             updateActiveAndReadiness();
         });
