@@ -8,14 +8,14 @@
     "@openrouter/ai-sdk-provider": "^2.3.3",
     "@tailwindcss/aspect-ratio": "^0.4.2",
     "@tailwindcss/forms": "^0.5.11",
-    "@tailwindcss/vite": "^4.2.2",
+    "@tailwindcss/vite": "^4.3.2",
     "@tailwindplus/elements": "^1.0.22",
     "ai": "^6.0.146",
-    "dompurify": "^3.3.3",
-    "jsdom": "^29.0.1",
+    "dompurify": "^3.4.11",
+    "jsdom": "^29.1.1",
     "marked": "^17.0.6",
-    "tailwindcss": "^4.2.2",
-    "wxt": "^0.20.20"
+    "tailwindcss": "^4.3.2",
+    "wxt": "^0.20.27"
   },
   "scripts": {
     "dev": "NODE_OPTIONS=\"--localstorage-file=$(pwd)/.wxt/node-localstorage\" wxt",
@@ -27,10 +27,5 @@
     "test": "node --test 'tests/**/*.test.js'",
     "providers:check": "node scripts/providers.js --check"
   },
-  "packageManager": "pnpm@10.2.0+sha512.0d27364e0139c6aadeed65ada153135e0ca96c8da42123bd50047f961339dc7a758fc2e944b428f52be570d1bd3372455c1c65fa2e7aa0bfbf931190f9552001",
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild"
-    ]
-  }
+  "packageManager": "pnpm@10.2.0+sha512.0d27364e0139c6aadeed65ada153135e0ca96c8da42123bd50047f961339dc7a758fc2e944b428f52be570d1bd3372455c1c65fa2e7aa0bfbf931190f9552001"
 }
