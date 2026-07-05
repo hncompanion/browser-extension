@@ -353,16 +353,16 @@
                                                 <div class="hidden px-5 pb-6 pl-12 space-y-5" id="openai-compatible-body" data-provider-body="openai-compatible">
                                             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                                 <div>
-                                                        <label for="oaicompat-preset" class="block text-sm/6 font-medium text-gray-900 dark:text-white">Service</label>
+                                                        <label for="oaicompat-preset" class="block text-sm/6 font-medium text-gray-900 dark:text-white">Provider</label>
                                                         <select id="oaicompat-preset" name="oaicompat-preset"
                                                                 class="mt-2 block w-full rounded-md bg-white px-3 py-2 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:*:bg-gray-800 dark:focus-visible:outline-indigo-500">
                                                         <!-- Options populated from the provider catalog (options.js) -->
                                                     </select>
                                                 </div>
                                                 <div>
-                                                        <label for="oaicompat-model" class="block text-sm/6 font-medium text-gray-900 dark:text-white">Model identifier</label>
+                                                        <label for="oaicompat-model" class="block text-sm/6 font-medium text-gray-900 dark:text-white">Model ID</label>
                                                         <el-autocomplete class="relative mt-2 block">
-                                                            <input type="text" id="oaicompat-model" name="oaicompat-model" placeholder="model identifier"
+                                                            <input type="text" id="oaicompat-model" name="oaicompat-model" placeholder="e.g. model-name"
                                                                    class="block w-full rounded-md bg-white py-2 pl-3 pr-10 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500 dark:focus:outline-indigo-500">
                                                             <button type="button" class="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" aria-label="Show model suggestions">
                                                                 <svg viewBox="0 0 20 20" fill="currentColor" class="size-5" aria-hidden="true">
@@ -383,7 +383,7 @@
                                                                 <div class="absolute left-0 z-10 mt-2 w-80 rounded-md bg-white p-4 text-sm text-gray-600 shadow-lg ring-1 ring-black/5 dark:bg-gray-800 dark:text-white">🔗 Enter the provider's base API URL, usually ending in <code>/v1</code>, without <code>/chat/completions</code>.<p class="pt-3">Custom endpoints can include a localhost OpenAI-compatible proxy such as LiteLLM.</p></div>
                                                             </details>
                                                         </div>
-                                                        <input type="url" id="oaicompat-url" name="oaicompat-url" placeholder="http://localhost:1234/v1"
+                                                        <input type="url" id="oaicompat-url" name="oaicompat-url" placeholder="http://localhost:4000/v1"
                                                                class="mt-2 block w-full rounded-md bg-white px-3 py-2 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 disabled:opacity-60 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:focus:outline-indigo-500">
                                             </div>
                                             <div>
@@ -391,7 +391,7 @@
                                                     <label for="oaicompat-key" class="block text-sm/6 font-medium text-gray-900 dark:text-white">API key</label>
                                                     <details class="relative inline-block" data-dismiss-on-outside>
                                                         <summary class="list-none cursor-pointer text-gray-400 hover:text-gray-500"><svg class="size-4" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M15 8A7 7 0 1 1 1 8a7 7 0 0 1 14 0Zm-6 3.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM7.293 5.293a1 1 0 1 1 .99 1.667c-.459.134-1.033.566-1.033 1.29v.25a.75.75 0 1 0 1.5 0v-.115a2.5 2.5 0 1 0-2.518-4.153.75.75 0 1 0 1.061 1.06Z"/></svg></summary>
-                                                        <div class="absolute left-0 z-10 mt-2 w-72 rounded-md bg-white p-4 text-sm text-gray-600 shadow-lg ring-1 ring-black/5 dark:bg-gray-800 dark:text-white"><span id="oaicompat-key-help">🔑 Enter the API key for the selected service.</span><p class="pt-3">Stored in your browser's local storage and synced across your devices. Localhost proxies usually need no key unless you configured proxy authentication.</p></div>
+                                                        <div class="absolute left-0 z-10 mt-2 w-72 rounded-md bg-white p-4 text-sm text-gray-600 shadow-lg ring-1 ring-black/5 dark:bg-gray-800 dark:text-white"><span id="oaicompat-key-help">🔑 Enter the API key for the selected provider.</span><p class="pt-3">Stored in your browser's local storage and synced across your devices. Localhost proxies usually need no key unless you configured proxy authentication.</p></div>
                                                     </details>
                                                 </div>
                                                 <div class="relative mt-2">

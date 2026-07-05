@@ -15,7 +15,7 @@ import {OPENAI_COMPATIBLE_PROVIDERS} from "../../lib/openai-compatible-providers
 const DEFAULT_OLLAMA_URL = 'http://localhost:11434';
 const OLLAMA_CLOUD_URL = 'https://ollama.com';
 
-// OpenAI-compatible service presets. Selecting one pre-fills the base URL and
+// OpenAI-compatible provider presets. Selecting one pre-fills the base URL and
 // whether an API key is expected. 'custom' lets the user point at a supported
 // local or hosted endpoint from OPENAI_COMPATIBLE_PERMISSION_ORIGINS.
 const OPENAI_COMPATIBLE_PRESETS = Object.fromEntries([
@@ -29,7 +29,7 @@ const OPENAI_COMPATIBLE_PRESETS = Object.fromEntries([
         models: provider.suggestedModels || [],
         modelPlaceholder: provider.suggestedModels?.[0]
             ? `e.g. ${provider.suggestedModels[0].id}`
-            : 'model identifier',
+            : 'model ID',
     }]),
     ['custom', {
         label: 'Custom…',
@@ -39,7 +39,7 @@ const OPENAI_COMPATIBLE_PRESETS = Object.fromEntries([
         keysUrl: '',
         docUrl: '',
         models: [],
-        modelPlaceholder: 'model identifier',
+        modelPlaceholder: 'e.g. model-name',
     }],
 ]);
 
@@ -214,10 +214,11 @@ function renderOpenAICompatibleKeyHelp(container, preset, isCustom) {
 }
 
 // Apply an OpenAI-compatible preset to the form: fill the base URL, lock it for
-// fixed known services, update the key hint, and refresh the model placeholder
+// fixed known providers, update the key hint, and refresh the model placeholder
 // and suggestion list. When `fillUrl` is false the existing URL value is
-// preserved (used on load).
-function applyOpenAICompatiblePreset(presetId, fillUrl = true) {
+// preserved (used on load). When `resetProviderFields` is true, provider-specific
+// model and key values are cleared so they do not leak across presets.
+function applyOpenAICompatiblePreset(presetId, {fillUrl = true, resetProviderFields = false} = {}) {
     const preset = OPENAI_COMPATIBLE_PRESETS[presetId] || OPENAI_COMPATIBLE_PRESETS.custom;
     const isCustom = presetId === 'custom';
     const isEditableBaseURL = isCustom || preset.editableBaseURL;
@@ -229,12 +230,15 @@ function applyOpenAICompatiblePreset(presetId, fillUrl = true) {
     const keyHelp = $('oaicompat-key-help');
 
     if (urlInput) {
-        if (fillUrl && !isCustom) {
-            urlInput.value = preset.baseURL;
+        if (fillUrl) {
+            urlInput.value = isCustom ? '' : preset.baseURL;
         }
         urlInput.disabled = !isEditableBaseURL;
     }
     if (modelInput) {
+        if (resetProviderFields) {
+            modelInput.value = '';
+        }
         modelInput.placeholder = preset.modelPlaceholder;
     }
     if (modelList) {
@@ -260,7 +264,10 @@ function applyOpenAICompatiblePreset(presetId, fillUrl = true) {
         }
     }
     if (keyInput) {
-        keyInput.placeholder = preset.keyRequired ? 'Enter API key' : 'API key (optional for local servers)';
+        if (resetProviderFields) {
+            keyInput.value = '';
+        }
+        keyInput.placeholder = preset.keyRequired ? 'Enter API key' : 'API key (optional)';
     }
     if (keyHelp) {
         renderOpenAICompatibleKeyHelp(keyHelp, preset, isCustom);
@@ -305,7 +312,7 @@ function getProviderConfig(provider) {
         case 'openai-compatible': {
             const url = val('oaicompat-url').trim();
             const model = val('oaicompat-model').trim();
-            return {configured: !!url && !!model, missing: !url ? 'a Base URL' : 'a model identifier'};
+            return {configured: !!url && !!model, missing: !url ? 'a Base URL' : 'a model ID'};
         }
         default:
             return {configured: false, missing: 'setup'};
@@ -750,7 +757,7 @@ async function loadSettings() {
                 $('oaicompat-url').value = compat.baseURL || OPENAI_COMPATIBLE_PRESETS[presetId].baseURL || '';
                 $('oaicompat-key').value = compat.apiKey || '';
                 $('oaicompat-model').value = compat.model || '';
-                applyOpenAICompatiblePreset(presetId, false);
+                applyOpenAICompatiblePreset(presetId, {fillUrl: false});
             }
 
             const promptCustomization = settings.promptCustomization || false;
@@ -789,7 +796,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // was loaded (first-time users).
     const presetEl = $('oaicompat-preset');
     if (presetEl) {
-        applyOpenAICompatiblePreset(presetEl.value, !val('oaicompat-url'));
+        applyOpenAICompatiblePreset(presetEl.value, {fillUrl: !val('oaicompat-url')});
     }
 
     switchTab('general');
@@ -885,7 +892,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     // OpenAI-compatible preset selector
     if (presetEl) {
         presetEl.addEventListener('change', () => {
-            applyOpenAICompatiblePreset(presetEl.value, true);
+            applyOpenAICompatiblePreset(presetEl.value, {
+                fillUrl: true,
+                resetProviderFields: true,
+            });
             updateProviderBadges();
             updateActiveAndReadiness();
         });
