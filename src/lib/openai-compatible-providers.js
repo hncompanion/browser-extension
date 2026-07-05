@@ -7,7 +7,7 @@
 // in host-permissions.js — scripts/providers.js and tests enforce this.
 //
 // Where models.dev publishes an `api` URL it is the source for baseURL
-// (openrouter, fireworks, novita, zai, deepseek). The rest list only their
+// (openrouter, fireworks, zai, deepseek). The rest list only their
 // AI SDK package there, so their OpenAI-compatible endpoints are maintained
 // here and cross-checked against models.dev if it later publishes one.
 //
@@ -139,7 +139,7 @@ export const OPENAI_COMPATIBLE_PROVIDERS = [
     },
     {
         id: 'xai',
-        label: 'xAI (Grok)',
+        label: 'xAI',
         apiSurface: 'chat-completions',
         modelsDevId: 'xai',
         baseURL: 'https://api.x.ai/v1',
@@ -150,21 +150,6 @@ export const OPENAI_COMPATIBLE_PROVIDERS = [
             {id: 'grok-4.3', name: 'Grok 4.3', context: 1000000, output: 30000},
             {id: 'grok-4.20-0309-non-reasoning', name: 'Grok 4.20 Non-Reasoning', context: 1000000, output: 30000},
             {id: 'grok-4.20-0309-reasoning', name: 'Grok 4.20 Reasoning', context: 1000000, output: 30000},
-        ],
-    },
-    {
-        id: 'novita',
-        label: 'Novita AI',
-        apiSurface: 'chat-completions',
-        modelsDevId: 'novita-ai',
-        baseURL: 'https://api.novita.ai/openai',
-        keyRequired: true,
-        keysUrl: 'https://novita.ai/settings/key-management',
-        docsUrl: 'https://novita.ai/docs/guides/introduction',
-        suggestedModels: [
-            {id: 'zai-org/glm-5.2', name: 'GLM-5.2', context: 1048576, output: 131072},
-            {id: 'deepseek/deepseek-v4-flash', name: 'DeepSeek V4 Flash', context: 1048576, output: 393216},
-            {id: 'inclusionai/ling-2.6-flash', name: 'Ling-2.6 Flash', context: 262144, output: 32768},
         ],
     },
     {
@@ -228,15 +213,34 @@ export const OPENAI_COMPATIBLE_PROVIDERS = [
         ],
     },
     {
-        id: 'sambanova',
-        label: 'SambaNova',
+        id: 'cloudflare',
+        label: 'Cloudflare Workers AI',
         apiSurface: 'chat-completions',
         modelsDevId: null,
-        baseURL: 'https://api.sambanova.ai/v1',
+        baseURL: 'https://api.cloudflare.com/client/v4/accounts/<ACCOUNT_ID>/ai/v1',
         keyRequired: true,
-        keysUrl: 'https://cloud.sambanova.ai/apis',
-        docsUrl: 'https://docs.sambanova.ai/docs/en/features/openai-compatibility',
-        suggestedModels: [],
+        editableBaseURL: true,
+        keysUrl: 'https://dash.cloudflare.com/profile/api-tokens',
+        docsUrl: 'https://developers.cloudflare.com/workers-ai/configuration/open-ai-compatibility/',
+        suggestedModels: [
+            {id: '@cf/openai/gpt-oss-120b', name: 'GPT OSS 120B', context: 131072, output: 32768},
+            {id: '@cf/meta/llama-3.1-8b-instruct', name: 'Llama 3.1 8B Instruct', context: 8192, output: 8192},
+        ],
+    },
+    {
+        id: 'huggingface',
+        label: 'Hugging Face',
+        apiSurface: 'chat-completions',
+        modelsDevId: null,
+        baseURL: 'https://router.huggingface.co/v1',
+        keyRequired: true,
+        keysUrl: 'https://huggingface.co/settings/tokens',
+        docsUrl: 'https://huggingface.co/docs/inference-providers/tasks/chat-completion',
+        suggestedModels: [
+            {id: 'openai/gpt-oss-120b:cerebras', name: 'GPT OSS 120B via Cerebras', context: 131072, output: 32768},
+            {id: 'Qwen/Qwen3-Coder-480B-A35B-Instruct:cerebras', name: 'Qwen3 Coder via Cerebras', context: 131072, output: 32768},
+            {id: 'zai-org/GLM-4.5:fireworks-ai', name: 'GLM-4.5 via Fireworks AI', context: 131072, output: 32768},
+        ],
     },
     {
         id: 'tokenrouter',

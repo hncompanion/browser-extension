@@ -23,6 +23,7 @@ const OPENAI_COMPATIBLE_PRESETS = Object.fromEntries([
         label: provider.label,
         baseURL: provider.baseURL,
         keyRequired: provider.keyRequired,
+        editableBaseURL: provider.editableBaseURL || false,
         keysUrl: provider.keysUrl,
         docUrl: provider.docsUrl,
         models: provider.suggestedModels || [],
@@ -34,6 +35,7 @@ const OPENAI_COMPATIBLE_PRESETS = Object.fromEntries([
         label: 'Custom…',
         baseURL: '',
         keyRequired: false,
+        editableBaseURL: true,
         keysUrl: '',
         docUrl: '',
         models: [],
@@ -211,30 +213,26 @@ function renderOpenAICompatibleKeyHelp(container, preset, isCustom) {
     container.append('.');
 }
 
-// Apply an OpenAI-compatible preset to the form: fill the base URL (and lock it
-// for known services), update the key hint, and refresh the model placeholder
+// Apply an OpenAI-compatible preset to the form: fill the base URL, lock it for
+// fixed known services, update the key hint, and refresh the model placeholder
 // and suggestion list. When `fillUrl` is false the existing URL value is
 // preserved (used on load).
 function applyOpenAICompatiblePreset(presetId, fillUrl = true) {
     const preset = OPENAI_COMPATIBLE_PRESETS[presetId] || OPENAI_COMPATIBLE_PRESETS.custom;
     const isCustom = presetId === 'custom';
+    const isEditableBaseURL = isCustom || preset.editableBaseURL;
 
     const urlInput = $('oaicompat-url');
     const modelInput = $('oaicompat-model');
     const modelList = $('oaicompat-model-list');
     const keyInput = $('oaicompat-key');
     const keyHelp = $('oaicompat-key-help');
-    const urlHint = $('oaicompat-url-hint');
 
     if (urlInput) {
         if (fillUrl && !isCustom) {
             urlInput.value = preset.baseURL;
         }
-        // Known services have a fixed endpoint; only Custom is editable.
-        urlInput.disabled = !isCustom;
-    }
-    if (urlHint) {
-        urlHint.classList.toggle('hidden', !isCustom);
+        urlInput.disabled = !isEditableBaseURL;
     }
     if (modelInput) {
         modelInput.placeholder = preset.modelPlaceholder;
@@ -485,6 +483,27 @@ function setupKeyVisibilityToggles() {
             toggle.textContent = isPassword ? 'Hide' : 'Show';
             toggle.setAttribute('aria-pressed', isPassword ? 'true' : 'false');
         });
+    });
+}
+
+function setupDismissableDetails() {
+    const closeDetailsExcept = (activeDetails) => {
+        document.querySelectorAll('details[data-dismiss-on-outside][open]').forEach((details) => {
+            if (details !== activeDetails) {
+                details.removeAttribute('open');
+            }
+        });
+    };
+
+    document.addEventListener('click', (event) => {
+        const activeDetails = event.target.closest?.('details[data-dismiss-on-outside]');
+        closeDetailsExcept(activeDetails || null);
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            closeDetailsExcept(null);
+        }
     });
 }
 
@@ -878,6 +897,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     setupKeyVisibilityToggles();
+    setupDismissableDetails();
 
     // Save
     document.querySelector('form').addEventListener('submit', async (e) => {

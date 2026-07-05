@@ -343,7 +343,7 @@
                                                     <span class="text-sm font-semibold text-gray-900 dark:text-white">OpenAI-compatible</span>
                                                             <span class="hidden items-center rounded-md px-2 py-1 text-xs font-medium" data-provider-status="openai-compatible"></span>
                                                         </div>
-                                                        <p class="mt-2 text-sm/6 text-gray-500 dark:text-gray-400">OpenRouter, Groq, Together, LM Studio, llama.cpp, vLLM, or another OpenAI-compatible endpoint.</p>
+                                                        <p class="mt-2 text-sm/6 text-gray-500 dark:text-gray-400">OpenAI-compatible providers, AI gateways, or custom endpoints.</p>
                                             </div>
                                             <button type="button" class="flex size-8 shrink-0 items-center justify-center rounded-md border border-gray-300 bg-white text-gray-500 shadow-sm hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700" data-provider-toggle="openai-compatible" aria-controls="openai-compatible-body" aria-expanded="false">
                                                 <span class="sr-only">Show OpenAI-compatible settings</span>
@@ -376,22 +376,29 @@
                                                 </div>
                                             </div>
                                             <div>
-                                                        <label for="oaicompat-url" class="block text-sm/6 font-medium text-gray-900 dark:text-white">Base URL</label>
+                                                        <div class="flex items-center gap-2">
+                                                            <label for="oaicompat-url" class="block text-sm/6 font-medium text-gray-900 dark:text-white">Base URL</label>
+                                                            <details class="relative inline-block" data-dismiss-on-outside>
+                                                                <summary class="list-none cursor-pointer text-gray-400 hover:text-gray-500"><svg class="size-4" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M15 8A7 7 0 1 1 1 8a7 7 0 0 1 14 0Zm-6 3.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM7.293 5.293a1 1 0 1 1 .99 1.667c-.459.134-1.033.566-1.033 1.29v.25a.75.75 0 1 0 1.5 0v-.115a2.5 2.5 0 1 0-2.518-4.153.75.75 0 1 0 1.061 1.06Z"/></svg></summary>
+                                                                <div class="absolute left-0 z-10 mt-2 w-80 rounded-md bg-white p-4 text-sm text-gray-600 shadow-lg ring-1 ring-black/5 dark:bg-gray-800 dark:text-white">🔗 Enter the provider's base API URL, usually ending in <code>/v1</code>, without <code>/chat/completions</code>.<p class="pt-3">Custom endpoints can include a localhost OpenAI-compatible proxy such as LiteLLM.</p></div>
+                                                            </details>
+                                                        </div>
                                                         <input type="url" id="oaicompat-url" name="oaicompat-url" placeholder="http://localhost:1234/v1"
                                                                class="mt-2 block w-full rounded-md bg-white px-3 py-2 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 disabled:opacity-60 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:focus:outline-indigo-500">
-                                                <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400" id="oaicompat-url-hint">Works with supported OpenAI-compatible servers, including local LM Studio, llama.cpp, and vLLM on localhost. Use its <code>/v1</code> base URL.</p>
                                             </div>
-                                            <div class="flex items-center gap-3">
-                                                <div class="relative grow">
-                                                        <label for="oaicompat-key" class="sr-only">API key</label>
+                                            <div>
+                                                <div class="flex items-center gap-2">
+                                                    <label for="oaicompat-key" class="block text-sm/6 font-medium text-gray-900 dark:text-white">API key</label>
+                                                    <details class="relative inline-block" data-dismiss-on-outside>
+                                                        <summary class="list-none cursor-pointer text-gray-400 hover:text-gray-500"><svg class="size-4" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M15 8A7 7 0 1 1 1 8a7 7 0 0 1 14 0Zm-6 3.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM7.293 5.293a1 1 0 1 1 .99 1.667c-.459.134-1.033.566-1.033 1.29v.25a.75.75 0 1 0 1.5 0v-.115a2.5 2.5 0 1 0-2.518-4.153.75.75 0 1 0 1.061 1.06Z"/></svg></summary>
+                                                        <div class="absolute left-0 z-10 mt-2 w-72 rounded-md bg-white p-4 text-sm text-gray-600 shadow-lg ring-1 ring-black/5 dark:bg-gray-800 dark:text-white"><span id="oaicompat-key-help">🔑 Enter the API key for the selected service.</span><p class="pt-3">Stored in your browser's local storage and synced across your devices. Localhost proxies usually need no key unless you configured proxy authentication.</p></div>
+                                                    </details>
+                                                </div>
+                                                <div class="relative mt-2">
                                                         <input type="password" id="oaicompat-key" name="oaicompat-key" placeholder="Enter API key"
                                                                class="block w-full rounded-md bg-white px-3 py-2 pr-16 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:focus:outline-indigo-500">
                                                     <button type="button" class="absolute inset-y-0 right-2 my-auto rounded-md px-2 text-xs font-semibold text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200" data-toggle-visibility="oaicompat-key" aria-pressed="false">Show</button>
                                                 </div>
-                                                <details class="relative">
-                                                    <summary class="list-none cursor-pointer text-gray-400 hover:text-gray-500"><svg class="size-4" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M15 8A7 7 0 1 1 1 8a7 7 0 0 1 14 0Zm-6 3.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM7.293 5.293a1 1 0 1 1 .99 1.667c-.459.134-1.033.566-1.033 1.29v.25a.75.75 0 1 0 1.5 0v-.115a2.5 2.5 0 1 0-2.518-4.153.75.75 0 1 0 1.061 1.06Z"/></svg></summary>
-                                                    <div class="absolute right-0 z-10 mt-2 w-72 rounded-md bg-white p-4 text-sm text-gray-600 shadow-lg ring-1 ring-black/5 dark:bg-gray-800 dark:text-white"><span id="oaicompat-key-help">🔑 Enter the API key for the selected service.</span><p class="pt-3">Stored in your browser's local storage and synced across your devices. Local servers (e.g. llama.cpp, LM Studio) usually need no key.</p></div>
-                                                </details>
                                             </div>
                                         </div>
                                     </div>
