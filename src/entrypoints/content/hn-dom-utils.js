@@ -4,6 +4,16 @@
  */
 
 /**
+ * Selector for the author link of a comment or post.
+ *
+ * HN used to mark these links with class="hnuser" but no longer does, so match
+ * the user link by its position in the comment header / post subline instead.
+ * Scoped to direct children so profile links in comment text and the top bar
+ * don't match. `.hnuser` is kept in case HN restores the class.
+ */
+export const AUTHOR_SELECTOR = ':is(.hnuser, .comhead > a[href^="user?id="], .subline > a[href^="user?id="])';
+
+/**
  * Creates a span with highlighted author styling.
  * @param {string} author - Author name
  * @returns {HTMLElement}
@@ -35,7 +45,7 @@ export function createCommentAnchor(commentId) {
 
     // Set link's text and title such that it shows author name if found, else 'comment #123456'
     const commentElement = document.getElementById(commentId);
-    const authorElement = commentElement?.querySelector('.hnuser');
+    const authorElement = commentElement?.querySelector(AUTHOR_SELECTOR);
     const authorName = authorElement?.textContent;
 
     if (authorName) {

@@ -4,6 +4,7 @@
  */
 
 import {Logger} from "../../lib/utils.js";
+import {AUTHOR_SELECTOR} from './hn-dom-utils.js';
 
 /**
  * Creates home page keyboard shortcut handlers.
@@ -98,7 +99,7 @@ export function getCommentsPageKeyboardShortcuts(handlers) {
         },
         '[': () => {
             const currentComment = getCurrentComment();
-            const authorElement = currentComment?.querySelector('.hnuser');
+            const authorElement = currentComment?.querySelector(AUTHOR_SELECTOR);
             if (authorElement) {
                 const author = authorElement.textContent;
                 handlers.navigateAuthorComments(author, currentComment, 'prev');
@@ -106,7 +107,7 @@ export function getCommentsPageKeyboardShortcuts(handlers) {
         },
         ']': () => {
             const currentComment = getCurrentComment();
-            const authorElement = currentComment?.querySelector('.hnuser');
+            const authorElement = currentComment?.querySelector(AUTHOR_SELECTOR);
             if (authorElement) {
                 const author = authorElement.textContent;
                 handlers.navigateAuthorComments(author, currentComment, 'next');

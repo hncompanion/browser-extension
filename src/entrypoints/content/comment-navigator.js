@@ -4,6 +4,7 @@
  */
 
 import {Logger} from "../../lib/utils.js";
+import {AUTHOR_SELECTOR} from './hn-dom-utils.js';
 
 /**
  * Creates a CommentNavigator instance for managing comment navigation state.
@@ -50,7 +51,7 @@ export class CommentNavigator {
 
         // Un-highlight the current comment's author before updating
         if (this.currentComment) {
-            const prevAuthorElement = this.currentComment.querySelector('.hnuser');
+            const prevAuthorElement = this.currentComment.querySelector(AUTHOR_SELECTOR);
             if (prevAuthorElement) {
                 prevAuthorElement.classList.remove('highlight-author');
             }
@@ -60,7 +61,7 @@ export class CommentNavigator {
         this.currentComment = comment;
 
         // Highlight the new comment's author
-        const newAuthorElement = comment.querySelector('.hnuser');
+        const newAuthorElement = comment.querySelector(AUTHOR_SELECTOR);
         if (newAuthorElement) {
             newAuthorElement.classList.add('highlight-author');
         }
@@ -240,7 +241,7 @@ export function createAuthorCommentsMap() {
     const comments = document.querySelectorAll('.athing.comtr');
 
     comments.forEach(comment => {
-        const authorElement = comment.querySelector('.hnuser');
+        const authorElement = comment.querySelector(AUTHOR_SELECTOR);
         if (authorElement) {
             const author = authorElement.textContent;
 

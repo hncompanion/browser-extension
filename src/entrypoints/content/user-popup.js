@@ -6,6 +6,7 @@
 import {sendBackgroundMessage} from "../../lib/messaging.js";
 import {sanitizeHtmlToFragment, enforceSafeLinks} from '../../lib/sanitize.js';
 import {decodeHtmlEntities} from '../../lib/dom-utils.js';
+import {AUTHOR_SELECTOR} from './hn-dom-utils.js';
 
 /**
  * Creates the author popup DOM element.
@@ -86,7 +87,7 @@ export async function fetchUserInfo(username, userInfoCache) {
 export function setupUserHover(popup, userInfoCache, state) {
     let hoverTimeout = null;
 
-    document.querySelectorAll('.hnuser').forEach(authorElement => {
+    document.querySelectorAll(AUTHOR_SELECTOR).forEach(authorElement => {
         authorElement.addEventListener('mouseenter', (e) => {
             const target = e.target;
 
@@ -170,7 +171,7 @@ export function setupUserHover(popup, userInfoCache, state) {
 
     // Add event listener for clicks outside the popup
     document.addEventListener('click', (e) => {
-        if (!popup.contains(e.target) && !e.target.classList.contains('hnuser')) {
+        if (!popup.contains(e.target) && !e.target.closest?.(AUTHOR_SELECTOR)) {
             popup.style.display = 'none';
         }
     });

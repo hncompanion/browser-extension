@@ -15,7 +15,7 @@ import {buildFragment, createStrong, createInternalLink} from '../../lib/dom-uti
 import {stripAnchors} from '../../lib/text-utils.js';
 
 // Import HN-specific DOM utilities
-import {createHighlightedAuthor, createLoadingMessage} from './hn-dom-utils.js';
+import {AUTHOR_SELECTOR, createHighlightedAuthor, createLoadingMessage} from './hn-dom-utils.js';
 
 // Import help modal functions
 import {createHelpModal, createHelpIcon, toggleHelpModal} from './help-modal.js';
@@ -268,7 +268,7 @@ class HNEnhancer {
         const subline = document.querySelector('.subtext .subline');
         if (!subline) return;
 
-        const authorElement = subline.querySelector('.hnuser');
+        const authorElement = subline.querySelector(AUTHOR_SELECTOR);
         if (!authorElement) return;
 
         const author = authorElement.textContent;
@@ -318,7 +318,7 @@ class HNEnhancer {
     }
 
     injectAuthorCommentsNavLinks(comment) {
-        const authorElement = comment.querySelector('.hnuser');
+        const authorElement = comment.querySelector(AUTHOR_SELECTOR);
         if (authorElement && !authorElement.querySelector('.comment-count')) {
             const author = authorElement.textContent;
             const authorCommentsList = this.authorComments.get(author);
@@ -442,7 +442,7 @@ class HNEnhancer {
     // ==================== Utilities ====================
 
     getPostAuthor() {
-        const postAuthorElement = document.querySelector('.fatitem .hnuser');
+        const postAuthorElement = document.querySelector(`.fatitem ${AUTHOR_SELECTOR}`);
         return postAuthorElement ? postAuthorElement.textContent : null;
     }
 
