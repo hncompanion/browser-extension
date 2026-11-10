@@ -45,14 +45,21 @@ function createModel({aiProvider, modelId, apiKey, baseURL}) {
     }
 }
 
+// No streamed output for this long means the provider has stalled. Reasoning
+// models can be quiet for a while before the first token, so keep it generous.
+const STREAM_IDLE_TIMEOUT_MS = 120_000;
+
 function improveError(error, data) {
-    const errorPrefix = `AI SDK API error. Reason: ${error.reason}. ` +
-        `AI Provider: ${data?.aiProvider}, Model: ${data?.modelId}`;
+    // The SDK retries 429/5xx responses and then wraps the failure in a
+    // RetryError; the HTTP status lives on the last attempt's error.
+    const statusCode = error?.statusCode ?? error?.lastError?.statusCode;
+    const errorPrefix = `AI SDK API error${statusCode ? ` (HTTP ${statusCode})` : ''}. ` +
+        `AI Provider: ${data?.aiProvider}, Model: ${data?.modelId}.`;
     if (error instanceof Error) {
         error.message = `${errorPrefix} Message: ${error.message}`;
         return error;
     }
-    return new Error(`${errorPrefix}. Message: ${String(error)}`);
+    return new Error(`${errorPrefix} Message: ${String(error)}`);
 }
 
 export async function summarizeText(data) {
@@ -85,7 +92,7 @@ export async function summarizeText(data) {
     }
 }
 
-export async function streamSummarizeText(data, onChunk, onDone, onError, abortSignal) {
+export async function streamSummarizeText(data, onChunk, onDone, onError, abortSignal, {idleTimeoutMs = STREAM_IDLE_TIMEOUT_MS} = {}) {
     try {
         const {systemPrompt, userPrompt, parameters = {}} = data;
 
@@ -93,6 +100,13 @@ export async function streamSummarizeText(data, onChunk, onDone, onError, abortS
         if (!model) {
             throw new Error(`Failed to initialize model for provider: ${data.aiProvider}, model: ${data.modelId}`);
         }
+
+        // streamText does not throw provider failures (bad key, rate limit,
+        // quota): textStream just ends and result.text rejects with a generic
+        // "No output generated" error. Capture the real error via onError so
+        // the user sees what actually went wrong.
+        let streamError = null;
+        let abortedBySdk = false;
 
         const result = streamText({
             model,
@@ -103,7 +117,14 @@ export async function streamSummarizeText(data, onChunk, onDone, onError, abortS
             frequencyPenalty: parameters.frequencyPenalty,
             presencePenalty: parameters.presencePenalty,
             maxOutputTokens: parameters.maxOutputTokens,
-            abortSignal
+            abortSignal,
+            timeout: {chunkMs: idleTimeoutMs},
+            onError: ({error}) => {
+                streamError ??= error;
+            },
+            onAbort: () => {
+                abortedBySdk = true;
+            }
         });
 
         for await (const delta of result.textStream) {
@@ -111,7 +132,18 @@ export async function streamSummarizeText(data, onChunk, onDone, onError, abortS
             onChunk(delta);
         }
 
-        const fullText = await result.text;
+        let fullText;
+        try {
+            fullText = await result.text;
+        } catch (textError) {
+            // An abort we did not request is the idle timeout firing; the SDK
+            // only reports it as a bare "This operation was aborted".
+            if (!streamError && abortedBySdk && !abortSignal?.aborted) {
+                throw new Error(`Request timed out: no output from the AI provider for ${Math.round(idleTimeoutMs / 1000)}s.`);
+            }
+            throw streamError ?? textError;
+        }
+        if (streamError) throw streamError;
         onDone(fullText);
 
     } catch (caughtError) {

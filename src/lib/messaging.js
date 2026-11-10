@@ -46,6 +46,7 @@ export function sendStreamingMessage(type, data, onChunk) {
     return new Promise((resolve, reject) => {
         const startTime = performance.now();
         const port = browser.runtime.connect({ name: 'HN_STREAM' });
+        let settled = false;
 
         port.onMessage.addListener((message) => {
             switch (message.type) {
@@ -54,11 +55,13 @@ export function sendStreamingMessage(type, data, onChunk) {
                     break;
                 case 'done': {
                     const duration = Math.round((performance.now() - startTime) / 1000);
+                    settled = true;
                     port.disconnect();
                     resolve({ summary: message.text, duration });
                     break;
                 }
                 case 'error': {
+                    settled = true;
                     port.disconnect();
                     reject(new Error(message.error));
                     break;
@@ -66,11 +69,15 @@ export function sendStreamingMessage(type, data, onChunk) {
             }
         });
 
+        // The background end can go away without sending 'done' or 'error'
+        // (e.g. the service worker is stopped mid-stream). Always settle, or
+        // the caller waits forever with the loading state on screen.
         port.onDisconnect.addListener(() => {
+            if (settled) return;
+            settled = true;
             const error = browser.runtime.lastError;
-            if (error) {
-                reject(new Error(error.message || 'Port disconnected'));
-            }
+            reject(new Error(error?.message
+                || 'Connection to the extension background was lost before the summary finished. Please try again.'));
         });
 
         port.postMessage({ type, data });

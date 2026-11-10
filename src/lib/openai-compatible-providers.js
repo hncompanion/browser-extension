@@ -40,7 +40,7 @@ export const OPENAI_COMPATIBLE_PROVIDERS = [
         keysUrl: 'https://console.groq.com/keys',
         docsUrl: 'https://console.groq.com/docs/models',
         suggestedModels: [
-            {id: 'groq/compound', name: 'Compound', context: 131072, output: 8192},
+            {id: 'openai/gpt-oss-120b', name: 'GPT OSS 120B', context: 131072, output: 65536},
             {id: 'llama-3.3-70b-versatile', name: 'Llama 3.3 70B Versatile', context: 131072, output: 32768},
             {id: 'llama-3.1-8b-instant', name: 'Llama 3.1 8B Instant', context: 131072, output: 131072},
         ],
@@ -56,7 +56,7 @@ export const OPENAI_COMPATIBLE_PROVIDERS = [
         docsUrl: 'https://docs.together.ai/docs/serverless-models',
         suggestedModels: [
             {id: 'Qwen/Qwen3.7-Max', name: 'Qwen3.7 Max', context: 1000000, output: 500000},
-            {id: 'moonshotai/Kimi-K2.7-Code', name: 'Kimi K2.7 Code', context: 262144, output: 131072},
+            {id: 'moonshotai/Kimi-K3', name: 'Kimi K3', context: 1048576, output: 131072},
             {id: 'meta-llama/Llama-3.3-70B-Instruct-Turbo', name: 'Llama 3.3 70B Instruct Turbo', context: 131072, output: 131072},
         ],
     },
@@ -70,9 +70,9 @@ export const OPENAI_COMPATIBLE_PROVIDERS = [
         keysUrl: 'https://app.fireworks.ai/settings/users/api-keys',
         docsUrl: 'https://fireworks.ai/docs/',
         suggestedModels: [
-            {id: 'accounts/fireworks/routers/glm-5p2-fast', name: 'GLM 5.2 Fast', context: 1048575, output: 131072},
-            {id: 'accounts/fireworks/models/deepseek-v4-flash', name: 'DeepSeek V4 Flash', context: 1000000, output: 384000},
-            {id: 'accounts/fireworks/routers/kimi-k2p7-code-fast', name: 'Kimi K2.7 Code Fast', context: 262000, output: 262000},
+            {id: 'accounts/fireworks/routers/glm-latest', name: 'GLM Latest', context: 1048573, output: 262144},
+            {id: 'accounts/fireworks/routers/deepseek-flash-latest', name: 'DeepSeek Flash Latest', context: 1000000, output: 384000},
+            {id: 'accounts/fireworks/routers/kimi-latest', name: 'Kimi Latest', context: 1048576, output: 131072},
         ],
     },
     {
@@ -115,9 +115,8 @@ export const OPENAI_COMPATIBLE_PROVIDERS = [
         keysUrl: 'https://cloud.cerebras.ai',
         docsUrl: 'https://inference-docs.cerebras.ai/models/overview',
         suggestedModels: [
-            {id: 'zai-glm-4.7', name: 'Z.AI GLM-4.7', context: 131072, output: 40960},
             {id: 'gpt-oss-120b', name: 'GPT OSS 120B', context: 131072, output: 40960},
-            {id: 'gemma-4-31b', name: 'Gemma 4 31B IT', context: 131072, output: 40960},
+            {id: 'qwen-3.8-27b', name: 'Qwen3.8 27B', context: 131072, output: 40960},
         ],
     },
     {
@@ -177,8 +176,8 @@ export const OPENAI_COMPATIBLE_PROVIDERS = [
         keysUrl: 'https://platform.deepseek.com/api_keys',
         docsUrl: 'https://api-docs.deepseek.com/',
         suggestedModels: [
-            {id: 'deepseek-chat', name: 'DeepSeek Chat', context: 1000000, output: 384000},
-            {id: 'deepseek-reasoner', name: 'DeepSeek Reasoner', context: 1000000, output: 384000},
+            {id: 'deepseek-flash', name: 'DeepSeek Flash', context: 1048576, output: 393216},
+            {id: 'deepseek-v4-pro', name: 'DeepSeek V4 Pro', context: 1048576, output: 393216},
             {id: 'deepseek-v4-flash', name: 'DeepSeek V4 Flash', context: 1000000, output: 384000},
         ],
     },
