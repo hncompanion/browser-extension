@@ -125,7 +125,6 @@ export function createHelpModal(toggleFn) {
 
     // Close modal when clicking outside
     modal.addEventListener('click', (e) => {
-        e.preventDefault();
         if (e.target === modal) {
             toggleFn(false);
         }
